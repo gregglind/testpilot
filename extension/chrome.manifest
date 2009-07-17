@@ -1,1 +1,3 @@
 resource testpilot ./
+content testpilot content/
+overlay chrome://browser/content/browser.xul chrome://testpilot/content/browser.xul

@@ -175,7 +175,8 @@ def xpi(options):
 
     resolve_options(options)
 
-    zfname = "%s-%s.xpi" % (options.ext_name.lower(), options.ext_version)
+    name = options.ext_name.lower().replace(" ", "")
+    zfname = "%s-%s.xpi" % (name, options.ext_version)
     zf = zipfile.ZipFile(zfname, "w", zipfile.ZIP_DEFLATED)
     for dirpath, dirnames, filenames in os.walk(options.path_to_ext_root):
         for filename in filenames:

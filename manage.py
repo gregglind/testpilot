@@ -200,6 +200,8 @@ def start_jsbridge(options):
     profile = mozrunner.FirefoxProfile(
         plugins=plugins,
         preferences={'browser.startup.homepage' : 'about:blank',
+                     'javascript.options.showInConsole' : True,
+                     'browser.dom.window.dump.enabled' : True,
                      'startup.homepage_welcome_url' : 'about:blank'}
         )
     runner = mozrunner.FirefoxRunner(profile=profile,

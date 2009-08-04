@@ -39,6 +39,9 @@ EXPORTED_SYMBOLS = ["TestPilotSetup"];
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
+Components.utils.import("resource://testpilot/modules/notifications.js");
+Components.utils.import("resource://testpilot/modules/Observers.js");
+
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
 const VERSION_PREF ="extensions.testpilot.lastversion";
 const FIRST_RUN_PREF ="extensions.testpilot.firstRunUrl";
@@ -46,11 +49,13 @@ const FIRST_RUN_PREF ="extensions.testpilot.firstRunUrl";
 let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
 
+
 let TestPilotSetup = {
   isNewlyInstalledOrUpgraded: false,
   isSetupComplete: false,
+  notificationsButton: null,
 
-  onBrowserWindowLoaded: function onBrowserWindowLoaded(window) {
+  onBrowserWindowLoaded: function TPS_onBrowserWindowLoaded(window) {
     if (!this.isSetupComplete) {
       // Compare the version in our preferences from our version in the
       // install.rdf.
@@ -64,8 +69,29 @@ let TestPilotSetup = {
         let tab = browser.addTab(url);
         browser.selectedTab = tab;
       }
+      this.notificationsButton = window.document
+          .getElementById("pilot-notifications-button");
       this.isSetupComplete = true;
+      var self = this;
+      Observers.add("testpilot:notification:added", this.onNotificationAdded,
+                    self);
+      Observers.add("testpilot:notification:removed", this.onNotificationRemoved,
+                    self);
+
+      // Try out notification system....
+      let notification = new Notification("Note ye well!", "Description", null,
+                                          Notifications.PRIORITY_WARNING);
+      Notifications.replaceTitle(notification);
     }
+  },
+
+  onNotificationAdded: function TPS_onNotificationAdded() {
+    this.notificationsButton.hidden = false;
+  },
+
+  onNotificationRemoved: function TPS_onNotificationRemoved() {
+    if (Notifications.notifications.length == 0)
+      this.notificationsButton.hidden = true;
   },
 
   get version() {

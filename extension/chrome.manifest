@@ -1,3 +1,4 @@
 resource testpilot ./
 content testpilot content/
+locale testpilot en-US locale/en-US/
 overlay chrome://browser/content/browser.xul chrome://testpilot/content/browser.xul

@@ -1,4 +1,16 @@
 <?xml version="1.0"?>
+<?xml-stylesheet href="chrome://testpilot/content/notification.css" type="text/css"?>
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <script src="browser.js"></script>
+<statusbar id="status-bar">
+  <statusbarpanel id="pilot-notifications-button"
+                  class="statusbarpanel-iconic"
+                  insertbefore="security-button"
+                  hidden="true"
+                  popup="pilot-notifications-panel"
+                  image="chrome://global/skin/icons/warning-16.png"/>
+  <panel id="pilot-notifications-panel" position="before_end">
+    <notificationbox id="pilot-notifications-box"/>
+  </panel>
+</statusbar>
 </overlay>

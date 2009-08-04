@@ -81,6 +81,7 @@ TestPilotSurvey.prototype = {
   addTaskNotification: function TPS_addTaskNotification(window) {
     let desc = "There is a Test Pilot survey for you to take.";
     let browser = window.getBrowser();
+    let surveyUrl = this._surveyUrl;
 
     let takeSurvey = function() {
       let tab = browser.addTab(surveyUrl);

@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-EXPORTED_SYMBOLS = ["TestPilotSetup"];
+EXPORTED_SYMBOLS = ["TestPilotSetup", "TestPilotSurvey"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -50,11 +50,67 @@ let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
 
 
+function TestPilotSurvey(surveyUrl) {
+  this._init(surveyUrl);
+}
+TestPilotSurvey.prototype = {
+  _init: function TestPilotSurvey__init(surveyUrl) {
+    this._surveyUrl = surveyUrl;
+  },
+
+  checkStatus: function TestPilotSurvey_isTaskComplete(window) {
+    var self = this;
+    // Note, the following depends on SurveyMonkey and will break if
+    // SurveyMonkey changes their 'survey complete' page.
+    let surveyCompletedText = "Thanks for taking the survey.";
+    var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
+    req.open('GET', self._surveyUrl, true);
+    req.onreadystatechange = function (aEvt) {
+      if (req.readyState == 4) {
+        if (req.status == 200)
+          if (req.responseText.indexOf(surveyCompletedText) == -1) {
+            self.addTaskNotification(window);
+          }
+        else
+          dump("Error loading page\n");
+      }
+    };
+    req.send(null);
+  },
+
+  addTaskNotification: function TPS_addTaskNotification(window) {
+    let desc = "There is a Test Pilot survey for you to take.";
+    let browser = window.getBrowser();
+
+    let takeSurvey = function() {
+      let tab = browser.addTab(surveyUrl);
+      browser.selectedTab = tab;
+      return true;
+    };
+
+    let takeSurveyButton = new NotificationButton(
+      "Take it now",
+      "T",
+      takeSurvey
+    );
+    let notification = new Notification("Test Pilot Survey", desc, null,
+                                        Notifications.PRIORITY_INFO,
+                                        [takeSurveyButton]);
+    Notifications.replaceTitle(notification);
+  }
+};
+
+
 let TestPilotSetup = {
   isNewlyInstalledOrUpgraded: false,
   isSetupComplete: false,
   notificationsButton: null,
   window: null,
+  taskList: [],
+
+  addTask: function TPS_addTask(testPilotTask) {
+    this.taskList.push(testPilotTask);
+  },
 
   onBrowserWindowLoaded: function TPS_onBrowserWindowLoaded(window) {
     if (!this.isSetupComplete) {
@@ -80,6 +136,11 @@ let TestPilotSetup = {
       Observers.add("testpilot:notification:removed", this.onNotificationRemoved,
                     self);
 
+      // TODO take this out of here and put it somewhere else... or hit a
+      // Test Pilot Central site and download a list of tasks.
+      let surveyUrl = "http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d";
+      TestPilotSetup.addTask(new TestPilotSurvey(surveyUrl));
+
       this.checkForTasks();
     }
   },
@@ -98,43 +159,12 @@ let TestPilotSetup = {
   },
 
   checkForTasks: function TPS_checkForTasks() {
-    let surveyUrl = "http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d";
-    let surveyCompletedText = "Thanks for taking the survey.";
-    let desc = "There is a Test Pilot survey for you to take.";
-
-    let browser = this.window.getBrowser();
-
-    let takeSurvey = function() {
-      let tab = browser.addTab(surveyUrl);
-      browser.selectedTab = tab;
-      return true;
-    };
-
-    let addNotification = function() {
-      let takeSurveyButton = new NotificationButton(
-        "Take it now",
-        "T",
-        takeSurvey
-      );
-      let notification = new Notification("Test Pilot Survey", desc, null,
-                                          Notifications.PRIORITY_INFO,
-                                          [takeSurveyButton]);
-      Notifications.replaceTitle(notification);
-    };
-
-    // Do I need to clear notification list?
-    var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
-    req.open('GET', surveyUrl, true);
-    req.onreadystatechange = function (aEvt) {
-      if (req.readyState == 4) {
-        if (req.status == 200)
-          if (req.responseText.indexOf(surveyCompletedText) == -1) {
-            addNotification();
-          }
-        else
-          dump("Error loading page\n");
-      }
-    };
-    req.send(null);
+    let i;
+    for (i = 0; i < this.taskList.length; i++) {
+      this.taskList[i].checkStatus(this.window);
+    }
   }
 };
+
+
+

@@ -54,6 +54,7 @@ let TestPilotSetup = {
   isNewlyInstalledOrUpgraded: false,
   isSetupComplete: false,
   notificationsButton: null,
+  window: null,
 
   onBrowserWindowLoaded: function TPS_onBrowserWindowLoaded(window) {
     if (!this.isSetupComplete) {
@@ -69,6 +70,7 @@ let TestPilotSetup = {
         let tab = browser.addTab(url);
         browser.selectedTab = tab;
       }
+      this.window = window;
       this.notificationsButton = window.document
           .getElementById("pilot-notifications-button");
       this.isSetupComplete = true;
@@ -78,10 +80,7 @@ let TestPilotSetup = {
       Observers.add("testpilot:notification:removed", this.onNotificationRemoved,
                     self);
 
-      // Try out notification system....
-      let notification = new Notification("Note ye well!", "Description", null,
-                                          Notifications.PRIORITY_WARNING);
-      Notifications.replaceTitle(notification);
+      this.checkForTasks();
     }
   },
 
@@ -96,5 +95,46 @@ let TestPilotSetup = {
 
   get version() {
     return Application.extensions.get(EXTENSION_ID).version;
+  },
+
+  checkForTasks: function TPS_checkForTasks() {
+    let surveyUrl = "http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d";
+    let surveyCompletedText = "Thanks for taking the survey.";
+    let desc = "There is a Test Pilot survey for you to take.";
+
+    let browser = this.window.getBrowser();
+
+    let takeSurvey = function() {
+      let tab = browser.addTab(surveyUrl);
+      browser.selectedTab = tab;
+      return true;
+    };
+
+    let addNotification = function() {
+      let takeSurveyButton = new NotificationButton(
+        "Take it now",
+        "T",
+        takeSurvey
+      );
+      let notification = new Notification("Test Pilot Survey", desc, null,
+                                          Notifications.PRIORITY_INFO,
+                                          [takeSurveyButton]);
+      Notifications.replaceTitle(notification);
+    };
+
+    // Do I need to clear notification list?
+    var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
+    req.open('GET', surveyUrl, true);
+    req.onreadystatechange = function (aEvt) {
+      if (req.readyState == 4) {
+        if (req.status == 200)
+          if (req.responseText.indexOf(surveyCompletedText) == -1) {
+            addNotification();
+          }
+        else
+          dump("Error loading page\n");
+      }
+    };
+    req.send(null);
   }
 };

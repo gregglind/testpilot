@@ -147,12 +147,9 @@ let TestPilotSetup = {
   },
 
   onNotificationAdded: function TPS_onNotificationAdded() {
-    this.notificationsButton.hidden = false;
   },
 
   onNotificationRemoved: function TPS_onNotificationRemoved() {
-    if (Notifications.notifications.length == 0)
-      this.notificationsButton.hidden = true;
   },
 
   get version() {

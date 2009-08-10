@@ -6,9 +6,8 @@
   <statusbarpanel id="pilot-notifications-button"
                   class="statusbarpanel-iconic"
                   insertbefore="security-button"
-                  hidden="true"
                   popup="pilot-notifications-panel"
-                  image="chrome://global/skin/icons/warning-16.png"/>
+                  image="chrome://testpilot/skin/testpilot_16x16.png"/>
   <panel id="pilot-notifications-panel" position="before_end">
     <notificationbox id="pilot-notifications-box"/>
   </panel>

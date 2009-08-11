@@ -150,9 +150,14 @@ let TestPilotSetup = {
     // Begin blinking icon
     if (!this._blinker) {
       var theButton = this.notificationsButton;
+      var rotation = false;
       this._blinker = this.window.setInterval( function() {
-                                                 theButton.hidden = !theButton.hidden;
-                                               }, 1500 );
+                                                 rotation = !(rotation);
+                                                 if (rotation)
+                                                   theButton.image = "chrome://global/skin/icons/warning-16.png";
+                                                 else
+                                                   theButton.image = "chrome://testpilot/skin/testpilot_16x16.png";
+                                               }, 1000 );
     }
   },
 
@@ -161,7 +166,7 @@ let TestPilotSetup = {
     if (Notifications.notifications.length == 0) {
       if (this._blinker) {
         this.window.clearInterval(this._blinker);
-        this.notificationsButton.hidden = false;
+        this.notificationsButton.image = "chrome://testpilot/skin/testpilot_16x16.png";
         this._blinker = null;
       }
     }

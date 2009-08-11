@@ -45,6 +45,8 @@ Components.utils.import("resource://testpilot/modules/Observers.js");
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
 const VERSION_PREF ="extensions.testpilot.lastversion";
 const FIRST_RUN_PREF ="extensions.testpilot.firstRunUrl";
+const TEST_PILOT_HOME_PAGE = "http://testpilot.mozillalabs.com";
+const SURVEY_URL = "http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d";
 
 let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
@@ -137,10 +139,11 @@ let TestPilotSetup = {
       Observers.add("testpilot:notification:removed", this.onNotificationRemoved,
                     self);
 
+      this.setClickHandler();
+
       // TODO take this out of here and put it somewhere else... or hit a
       // Test Pilot Central site and download a list of tasks.
-      let surveyUrl = "http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d";
-      TestPilotSetup.addTask(new TestPilotSurvey(surveyUrl));
+      TestPilotSetup.addTask(new TestPilotSurvey(SURVEY_URL));
 
       this.checkForTasks();
     }
@@ -154,11 +157,12 @@ let TestPilotSetup = {
       this._blinker = this.window.setInterval( function() {
                                                  rotation = !(rotation);
                                                  if (rotation)
-                                                   theButton.image = "chrome://global/skin/icons/warning-16.png";
+                                                   theButton.image = "chrome://global/skin/icons/information-16.png";
                                                  else
                                                    theButton.image = "chrome://testpilot/skin/testpilot_16x16.png";
                                                }, 1000 );
     }
+    this.removeClickHandler();
   },
 
   onNotificationRemoved: function TPS_onNotificationRemoved() {
@@ -169,7 +173,24 @@ let TestPilotSetup = {
         this.notificationsButton.image = "chrome://testpilot/skin/testpilot_16x16.png";
         this._blinker = null;
       }
+      this.setClickHandler();
     }
+  },
+
+  setClickHandler: function() {
+    var browser = this.window.getBrowser();
+    this.notificationsButton.onclick = function() {
+      let tab = browser.addTab( TEST_PILOT_HOME_PAGE );
+      browser.selectedTab = tab;
+      return false;
+    };
+    this.notificationsButton.popup = "";
+  },
+
+  removeClickHandler: function() {
+    this.notificationsButton.onclick = null;
+    this.notificationsButton.popup = "pilot-notifications-panel";
+    //this.window.document.getElementById("pilot-notifications-panel");
   },
 
   get version() {

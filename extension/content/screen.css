@@ -17,17 +17,23 @@ body {
 	
 }
 
-	h1 {font-family: 'DroidSans'; color: #3a3a3a; font-size: 28px; font-weight: normal; letter-spacing: -1px}
+h1 {
+    font-family: 'DroidSans';
+    color: #3a3a3a;
+    font-size: 28px;
+    font-weight: normal;
+    letter-spacing: -1px;
+    text-align: center;}
 	
-	p, ul {font-size: 12px;}
+p, ul {font-size: 18px;}
 	
-	a:link, a:hover, a:active, a:focus, a:visited {color: #9f423b; text-decoration: none;}
-	a:hover {color: #9f423b; text-decoration: none;}
+a:link, a:hover, a:active, a:focus, a:visited {color: #9f423b; text-decoration: none;}
+a:hover {color: #9f423b; text-decoration: none;}
 
 	
-	li {list-style-type: circle;}
+li {list-style-type: circle;}
 
-	.spacer {height: 75px;}
+.spacer {height: 75px;}
 
 
 @font-face{
@@ -118,4 +124,16 @@ src: url('../fonts/DroidSans-Bold.ttf') format('truetype');
 .mozLogo {
 	margin-bottom: -10px;
 	margin-right: 6px;
+}
+
+#survey-explanation {
+    float: left;
+    width: 40%;
+    margin: 20px;
+}
+
+#icon-explanation {
+    float: right;
+    width: 40%;
+    margin: 20px;
 }

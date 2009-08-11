@@ -7,7 +7,13 @@
 	<title>Mozilla Labs Test Pilot</title>
 	<link rel="stylesheet" type="text/css" media="all" href="screen.css">
 
-</head><body>
+<script language="">
+  Components.utils.import("resource://testpilot/modules/setup.js");
+  function displayIconLeftPos() {
+    document.getElementById("debug").innerHTML = TestPilotSetup.iconLeftPos;
+  }
+</script>
+</head><body onload="displayIconLeftPos();">
 
 		<div id="container">
 		
@@ -17,25 +23,29 @@
 
 				<!--<div id="download"><div class="button"><img class="downloadButton" src="download_arrow.png"><span class="downloadH1">Get it Now!</span> <span class="downloadH2"><a href="">Download Test Pilot</a></span></div></div>-->
 
-<div id="download"><h1>Thank You for Installing Test Pilot</h1></div>
-				<div id="intro">
+<div id="thanks"><h1>Thank You for Installing Test Pilot! <span id="debug"></span></h1></div>
+				<div id="survey-explanation">
 					
 
                                   <div class="button">
-                                    <span class="downloadH1">You should take the survey.</span>
+				    <p>
+                                    You should take the survey.  Explanation of survey goes here.
+				    </p>
+				    <p>
                                     <span class="downloadH2"><a  href="http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d">Take The Survey</a></span>
+				    </p>
 					
 				</div></div>
 				
-				<div id="links">
-				
-					<div class="button">
-                                          Take a look down in the corner there.  See the test pilot icon in the status bar?  It will blink to let you know when there is a new test happening or a new survey for you to take.
-                                        </div>
-				
+				<div id="icon-explanation">
+				  <div class="button">
+				    <p>Explanation of test pilot status bar icon goes here.</p>
+				    <p>Have an arrow pointing to the bottom right of the status bar where the icon should be.</p>
+                                  </div>
 				</div>
 			
 			</div>
+
 			
 			<div id="footer"><img class="mozLogo" src="mozilla-logo.png">Copyright © 2005-2009 Mozilla. All rights reserved. &nbsp; &nbsp; <a href="http://testpilot.mozillalabs.com/privacypolicy">Privacy Policy</a> &nbsp; &nbsp; <a href="http://testpilot.mozillalabs.com/legal">Legal Notices</a></div>
 		

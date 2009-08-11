@@ -193,6 +193,10 @@ let TestPilotSetup = {
     //this.window.document.getElementById("pilot-notifications-panel");
   },
 
+  get iconLeftPos() {
+    return this.notificationsButton.boxObject.x;
+  },
+
   get version() {
     return Application.extensions.get(EXTENSION_ID).version;
   },

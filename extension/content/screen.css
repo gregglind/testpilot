@@ -1,0 +1,121 @@
+html {
+	padding-bottom: 0px; 
+	padding-top: 20px;
+	padding-left: 0px;
+	padding-right: 0px;
+}
+
+body { 
+	font-family: 'Lucida Grande', 'Lucida Sans Unicode', Lucida, Arial, Helvetica, sans-serif;
+	font-family: 'DroidSans';
+	background: #fff url('bg.jpg') repeat-x top center;
+	padding: 0px; 
+	color:#787878;
+	font-size:12px;
+	line-height: 18px;
+	margin: 0 auto;
+	
+}
+
+	h1 {font-family: 'DroidSans'; color: #3a3a3a; font-size: 28px; font-weight: normal; letter-spacing: -1px}
+	
+	p, ul {font-size: 12px;}
+	
+	a:link, a:hover, a:active, a:focus, a:visited {color: #9f423b; text-decoration: none;}
+	a:hover {color: #9f423b; text-decoration: none;}
+
+	
+	li {list-style-type: circle;}
+
+	.spacer {height: 75px;}
+
+
+@font-face{
+font-family: 'DroidSans'; 
+src: url('../fonts/DroidSans.ttf') format('truetype');
+}
+
+@font-face{
+font-family: 'DroidSans-Bold'; 
+src: url('../fonts/DroidSans-Bold.ttf') format('truetype');
+}
+
+#container {
+	margin: 0px auto;
+	width: 950px;
+
+}
+
+#logo {
+	margin-left: 20px;
+}
+
+#content {
+	margin-top: 350px;
+	height: 300px;
+	padding: 8px 24px 24px 24px;
+	font-family: 'DroidSans';
+	text-align: left;
+	//-moz-border-radius: 0.5em;
+	//-webkit-border-radius: 0.5em;
+	//border: 1px solid #e7eaec;
+	//background-color: rgba(255, 255, 255, 0.9);
+	//-moz-box-shadow:
+		rgba(133, 153, 166, 0.2) 0px 1px 24px;
+}
+
+#download {
+	margin-bottom: 24px;
+	margin-top: 12px;
+}
+
+.downloadButton {
+	margin-bottom: -8px;
+	margin-top: -2px;
+	margin-right: 12px;
+}
+
+.downloadH1 {font-family: 'DroidSans-bold'; color: #3a3a3a; font-size: 28px; font-weight: normal; letter-spacing: -1px; margin-right: 8px;}
+
+.downloadH2 {font-family: 'DroidSans'; color: #3a3a3a; font-size: 28px; font-weight: normal; letter-spacing: -1px}
+
+#intro {
+	float: left;
+	width: 500px;
+}
+
+#links {
+	float: right;
+	padding: 24px 0px;
+	margin-right: 0px;
+}
+
+.button {
+	font-family: 'DroidSans';
+	font-size: 16px;
+	padding: 8px 12px;
+	color: rgba(0, 0, 0, 0.8);
+	-moz-border-radius: 0.5em;
+	-webkit-border-radius: 0.5em;
+	-moz-box-shadow: 
+		inset rgba(0, 0, 0, 0.2) 0 1px 1px,
+		inset rgba(255, 255, 255, 1) 0 3px 1px,
+		inset rgba(255, 255, 255, 0.3) 0 16px 0px,
+		inset rgba(0, 0, 0, 0.2) 0 -1px 1px,
+		inset rgba(0, 0, 0, 0.1) 0 -2px 1px, 
+		rgba(255, 255, 255, 1) 0 1px,
+		rgba(133, 153, 166, 0.3) 0px 1px 12px;
+	background-color: #e7eaec;
+	//display: inline;
+}
+
+#footer {
+	padding: 8px 24px 24px 24px;
+	font-size: 9px;
+
+}
+
+.mozLogo {
+	margin-bottom: -10px;
+	margin-right: 6px;
+}

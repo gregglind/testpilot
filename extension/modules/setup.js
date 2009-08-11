@@ -147,9 +147,24 @@ let TestPilotSetup = {
   },
 
   onNotificationAdded: function TPS_onNotificationAdded() {
+    // Begin blinking icon
+    if (!this._blinker) {
+      var theButton = this.notificationsButton;
+      this._blinker = this.window.setInterval( function() {
+                                                 theButton.hidden = !theButton.hidden;
+                                               }, 1500 );
+    }
   },
 
   onNotificationRemoved: function TPS_onNotificationRemoved() {
+    // If notifications are gone, stop blinking icon.
+    if (Notifications.notifications.length == 0) {
+      if (this._blinker) {
+        this.window.clearInterval(this._blinker);
+        this.notificationsButton.hidden = false;
+        this._blinker = null;
+      }
+    }
   },
 
   get version() {

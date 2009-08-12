@@ -135,6 +135,12 @@ TestPilotSurvey.prototype = {
     this._menuItem.removeAttribute("icon");
     this._isNew = false;
     Observers.notify("testpilot:notification:removed", "", null);
+  },
+
+  onUrlLoad: function TPS_onUrlLoad(url) {
+    if (url == this._surveyUrl && this._isNew) {
+      this.stopBeingNew();
+    }
   }
 
 };
@@ -178,7 +184,19 @@ let TestPilotSetup = {
                     self);
 
       dump("Adding event listner.\n");
+      try {
       this.notificationsMenu.addEventListener("command", this.onMenuSelection, false);
+      var appcontent = window.document.getElementById("appcontent");
+      if (appcontent) {
+	appcontent.addEventListener("DOMContentLoaded", function(event) {
+          var newUrl =  event.originalTarget.URL;
+          for (i = 0; i < self.taskList.length; i++) {
+            self.taskList[i].onUrlLoad(newUrl);
+          }
+	}, true);
+      } } catch ( e ) {
+        dump("Error: " + e + "\n");
+      }
       dump("event listner added.\n");
 
       // TODO take this out of here and put it somewhere else... or hit a
@@ -187,6 +205,8 @@ let TestPilotSetup = {
 
       this.checkForTasks();
     }
+
+    // add listener for "DOMContentLoaded", gets passed event, look at event.originalTarget.URL
   },
 
   onNotificationAdded: function TPS_onNotificationAdded() {

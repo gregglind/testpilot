@@ -11,6 +11,7 @@
     <menupopup id="pilot-menu">
       <menuitem label="Tests" disabled="true" id="menu-item-tests"/>
       <menuitem label="  No Tests Yet" disabled="true"/>
+      <menuitem label="  See Upcoming Tests" oncommand="openUpcomingTestsPage();"/>
       <menuseparator/>
       <menuitem label="Surveys" disabled="true" id="menu-item-surveys"/>
       <menuseparator id="survey-menu-separator"/>

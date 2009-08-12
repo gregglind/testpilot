@@ -65,3 +65,10 @@ function openAboutTestPilotPage() {
   var tab = browser.addTab(url);
   browser.selectedTab = tab;
 }
+
+function openUpcomingTestsPage() {
+  var url = "https://wiki.mozilla.org/Labs/Test_Pilot";
+  var browser = window.getBrowser();
+  var tab = browser.addTab(url);
+  browser.selectedTab = tab;
+}

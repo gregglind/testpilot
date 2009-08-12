@@ -21,5 +21,7 @@
     <em:name>Test Pilot</em:name>
     <em:description>Help improve Firefox user experience by trying out new features.</em:description>
     <em:creator>Mozilla Corporation</em:creator>
+    <em:homepageURL>http://testpilot.mozillalabs.com/</em:homepageURL>
+    <em:iconURL>chrome://testpilot/skin/testpilot_32x32.png</em:iconURL>
   </Description>
 </RDF>

@@ -137,3 +137,11 @@ src: url('../fonts/DroidSans-Bold.ttf') format('truetype');
     width: 40%;
     margin: 20px;
 }
+
+#magic-arrow {
+    position: absolute;
+    left: 1000px;
+    top: 400px;
+    width: 200px;
+    border: solid;
+}

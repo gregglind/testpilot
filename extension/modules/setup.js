@@ -239,6 +239,10 @@ let TestPilotSetup = {
     return this.notificationsButton.boxObject.x;
   },
 
+  get iconTopPos() {
+    return this.notificationsButton.boxObject.y;
+  },
+
   get version() {
     return Application.extensions.get(EXTENSION_ID).version;
   },

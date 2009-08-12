@@ -7,7 +7,10 @@
     <script language="">
       Components.utils.import("resource://testpilot/modules/setup.js");
       function displayIconLeftPos() {
-        document.getElementById("debug").innerHTML = TestPilotSetup.iconLeftPos;
+        var left = TestPilotSetup.iconLeftPos;
+        var top = TestPilotSetup.iconTopPos;
+        document.getElementById("magic-arrow").style.top = (top - 120) + "px";
+        document.getElementById("magic-arrow").style.left = (left - 200) + "px";
       }
     </script>
   </head>
@@ -21,7 +24,8 @@
 	<div id="survey-explanation">
           <div class="button">
 	    <p>
-              You should take the survey.  Explanation of survey goes here.
+	      Welcome to the Test Pilot community.  Please let us know a bit more
+	      about yourself by taking this survey.
 	    </p>
 	    <p>
               <span class="downloadH2">
@@ -36,6 +40,9 @@
             <p>Have an arrow pointing to the bottom right of the status bar where the icon should be.</p>
           </div>
 	</div>
+      </div>
+      <div id="magic-arrow">
+	Magic arrow here!
       </div>
       <div id="footer">
          <img class="mozLogo" src="mozilla-logo.png">Copyright © 2005-2009 Mozilla. All rights reserved. &nbsp; &nbsp; <a href="http://testpilot.mozillalabs.com/privacypolicy">Privacy Policy</a> &nbsp; &nbsp; <a href="http://testpilot.mozillalabs.com/legal">Legal Notices</a>

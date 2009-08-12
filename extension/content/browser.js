@@ -21,3 +21,10 @@
      false
    );
  })();
+
+function openAboutTestPilotPage() {
+  var url = "http://testpilot.mozillalabs.com";
+  var browser = window.getBrowser();
+  var tab = browser.addTab(url);
+  browser.selectedTab = tab;
+}

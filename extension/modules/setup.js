@@ -39,7 +39,6 @@ EXPORTED_SYMBOLS = ["TestPilotSetup", "TestPilotSurvey"];
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-Components.utils.import("resource://testpilot/modules/notifications.js");
 Components.utils.import("resource://testpilot/modules/Observers.js");
 
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
@@ -52,16 +51,27 @@ let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
 
 
-function TestPilotSurvey(surveyUrl) {
-  this._init(surveyUrl);
+function TestPilotSurvey(surveyUrl, surveyTitle) {
+  this._init(surveyUrl, surveyTitle);
 }
 TestPilotSurvey.prototype = {
-  _init: function TestPilotSurvey__init(surveyUrl) {
+  _init: function TestPilotSurvey__init(surveyUrl, surveyTitle) {
     this._surveyUrl = surveyUrl;
+    this._surveyTitle = surveyTitle;
+    this._isNew = false;
   },
 
-  checkStatus: function TestPilotSurvey_isTaskComplete(window) {
+  get title() {
+    return this._surveyTitle;
+  },
+
+  get isNew() {
+    return this._isNew;
+  },
+
+  checkStatus: function TestPilotSurvey_isTaskComplete(window, menu) {
     var self = this;
+    dump("Checking survey status...\n");
     // Note, the following depends on SurveyMonkey and will break if
     // SurveyMonkey changes their 'survey complete' page.
     let surveyCompletedText = "Thanks for taking the survey.";
@@ -69,38 +79,63 @@ TestPilotSurvey.prototype = {
     req.open('GET', self._surveyUrl, true);
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
-        if (req.status == 200)
+        if (req.status == 200) {
           if (req.responseText.indexOf(surveyCompletedText) == -1) {
-            self.addTaskNotification(window);
-          }
-        else
+            dump("Survey is new.\n");
+	    self._isNew = true;
+            self.addNewSurveyNotification(window, menu);
+          } else {
+            dump("Survey is completed.\n");
+	    self._isNew = false;
+	    self.addCompletedSurveyNotification(window, menu);
+	  }
+        } else {
           dump("Error loading page\n");
+	}
       }
     };
     req.send(null);
   },
 
-  addTaskNotification: function TPS_addTaskNotification(window) {
-    let desc = "There is a Test Pilot survey for you to take.";
-    let browser = window.getBrowser();
-    let surveyUrl = this._surveyUrl;
+  addMenuItem: function TPS_addMenuItem(window, menu, beforeWhat, withIcon) {
+    this._browser = window.getBrowser();
+    let newMenuItem = window.document.createElement("menuitem");
+    newMenuItem.setAttribute("label", "  " + this._surveyTitle);
+    if (withIcon) {
+      newMenuItem.setAttribute("class", "menuitem-iconic");
+      newMenuItem.setAttribute("image", "chrome://testpilot/skin/new.png");
+    }
+    newMenuItem.taskObject = this;
+    let refElement = window.document.getElementById(beforeWhat);
+    let insertedElement = menu.insertBefore(newMenuItem, refElement);
+    
+    this._menuItem = newMenuItem;
+    Observers.notify("testpilot:notification:added", "", null);
+  },
 
-    let takeSurvey = function() {
-      let tab = browser.addTab(surveyUrl);
-      browser.selectedTab = tab;
-      return true;
-    };
+  addNewSurveyNotification: function TPS_addNewSurveyNotification(window, menu) {
+    this.addMenuItem(window, menu, "survey-menu-separator", true);
+  },
 
-    let takeSurveyButton = new NotificationButton(
-      "Take it now",
-      "T",
-      takeSurvey
-    );
-    let notification = new Notification("Test Pilot Survey", desc, null,
-                                        Notifications.PRIORITY_INFO,
-                                        [takeSurveyButton]);
-    Notifications.replaceTitle(notification);
+  addCompletedSurveyNotification: function TPS_addNewSurveyNotification(window, menu) {
+    // TODO
+    // Add a menu separator, then a grey item called 'Completed Surveys', or something, then this:
+    this.addMenuItem(window, menu, "survey-menu-separator", false);
+  },
+
+  takeSurvey: function TPS_takeSurvy(event) {
+    let tab = this._browser.addTab(this._surveyUrl);
+    this._browser.selectedTab = tab;
+    this.stopBeingNew();
+  },
+
+  stopBeingNew: function TPS_stopBeingNew() {
+    this._menuItem.removeAttribute("class");
+    this._menuItem.removeAttribute("icon");
+    this._isNew = false;
+    Observers.notify("testpilot:notification:removed", "", null);
   }
+
 };
 
 
@@ -132,6 +167,8 @@ let TestPilotSetup = {
       this.window = window;
       this.notificationsButton = window.document
           .getElementById("pilot-notifications-button");
+      this.notificationsMenu = window.document
+          .getElementById("pilot-menu");
       this.isSetupComplete = true;
       var self = this;
       Observers.add("testpilot:notification:added", this.onNotificationAdded,
@@ -139,11 +176,13 @@ let TestPilotSetup = {
       Observers.add("testpilot:notification:removed", this.onNotificationRemoved,
                     self);
 
-      this.setClickHandler();
+      dump("Adding event listner.\n");
+      this.notificationsMenu.addEventListener("command", this.onMenuSelection, false);
+      dump("event listner added.\n");
 
       // TODO take this out of here and put it somewhere else... or hit a
       // Test Pilot Central site and download a list of tasks.
-      TestPilotSetup.addTask(new TestPilotSurvey(SURVEY_URL));
+      TestPilotSetup.addTask(new TestPilotSurvey(SURVEY_URL, "Survey For New Test Pilots"));
 
       this.checkForTasks();
     }
@@ -151,46 +190,48 @@ let TestPilotSetup = {
 
   onNotificationAdded: function TPS_onNotificationAdded() {
     // Begin blinking icon
-    if (!this._blinker) {
-      var theButton = this.notificationsButton;
-      var rotation = false;
-      this._blinker = this.window.setInterval( function() {
-                                                 rotation = !(rotation);
-                                                 if (rotation)
-                                                   theButton.image = "chrome://global/skin/icons/information-16.png";
-                                                 else
-                                                   theButton.image = "chrome://testpilot/skin/testpilot_16x16.png";
-                                               }, 1000 );
+    if (this.thereAreNewTasks()) {
+      if (!this._blinker) {
+        var theButton = this.notificationsButton;
+        var rotation = false;
+        this._blinker = this.window.setInterval(
+          function() {
+            rotation = !(rotation);
+            if (rotation)
+              theButton.image = "chrome://testpilot/skin/new.png";
+            else
+              theButton.image = "chrome://testpilot/skin/testpilot_16x16.png";
+          }, 1000 );
+      }
     }
-    this.removeClickHandler();
+  },
+
+  thereAreNewTasks: function TPS_thereAreNewTasks() {
+    for (i = 0; i < this.taskList.length; i++) {
+      if (this.taskList[i].isNew) {
+	return true;
+      }
+    }
+    return false;
   },
 
   onNotificationRemoved: function TPS_onNotificationRemoved() {
-    // If notifications are gone, stop blinking icon.
-    if (Notifications.notifications.length == 0) {
+    // If new items are gone, stop blinking the icon:
+    if (!this.thereAreNewTasks()) {
       if (this._blinker) {
         this.window.clearInterval(this._blinker);
         this.notificationsButton.image = "chrome://testpilot/skin/testpilot_16x16.png";
         this._blinker = null;
       }
-      this.setClickHandler();
     }
   },
 
-  setClickHandler: function() {
-    var browser = this.window.getBrowser();
-    this.notificationsButton.onclick = function() {
-      let tab = browser.addTab( TEST_PILOT_HOME_PAGE );
-      browser.selectedTab = tab;
-      return false;
-    };
-    this.notificationsButton.popup = "";
-  },
-
-  removeClickHandler: function() {
-    this.notificationsButton.onclick = null;
-    this.notificationsButton.popup = "pilot-notifications-panel";
-    //this.window.document.getElementById("pilot-notifications-panel");
+  onMenuSelection: function TPS_onMenuSelection(event) {
+    let label = event.target.getAttribute("label");
+    dump("You selected menu item with label " + label + "\n");
+    if (event.target.taskObject) {
+      event.target.taskObject.takeSurvey();
+    }
   },
 
   get iconLeftPos() {
@@ -204,7 +245,7 @@ let TestPilotSetup = {
   checkForTasks: function TPS_checkForTasks() {
     let i;
     for (i = 0; i < this.taskList.length; i++) {
-      this.taskList[i].checkStatus(this.window);
+      this.taskList[i].checkStatus(this.window, this.notificationsMenu);
     }
   }
 };

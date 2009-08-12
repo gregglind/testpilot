@@ -1,15 +1,22 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://testpilot/content/notification.css" type="text/css"?>
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <script src="browser.js"></script>
 <statusbar id="status-bar">
   <statusbarpanel id="pilot-notifications-button"
                   class="statusbarpanel-iconic"
                   insertbefore="security-button"
-                  popup="pilot-notifications-panel"
+                  popup="pilot-menu"
                   image="chrome://testpilot/skin/testpilot_16x16.png"/>
-  <panel id="pilot-notifications-panel" position="before_end">
-    <notificationbox id="pilot-notifications-box"/>
-  </panel>
+  <popupset>
+    <menupopup id="pilot-menu">
+      <menuitem label="Tests" disabled="true" id="menu-item-tests"/>
+      <menuitem label="  No Tests Yet" disabled="true"/>
+      <menuseparator/>
+      <menuitem label="Surveys" disabled="true" id="menu-item-surveys"/>
+      <menuseparator id="survey-menu-separator"/>
+      <menuitem label="About Test Pilot" oncommand="openAboutTestPilotPage();"/>
+    </menupopup>
+  </popupset>
+
 </statusbar>
 </overlay>

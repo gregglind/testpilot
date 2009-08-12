@@ -1,54 +1,45 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en"><head>
-
-
-
-	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-	<title>Mozilla Labs Test Pilot</title>
-	<link rel="stylesheet" type="text/css" media="all" href="screen.css">
-
-<script language="">
-  Components.utils.import("resource://testpilot/modules/setup.js");
-  function displayIconLeftPos() {
-    document.getElementById("debug").innerHTML = TestPilotSetup.iconLeftPos;
-  }
-</script>
-</head><body onload="displayIconLeftPos();">
-
-		<div id="container">
-		
-			<div id="logo"><img src="logo.png"></div>
-			
-			<div id="content">
-
-				<!--<div id="download"><div class="button"><img class="downloadButton" src="download_arrow.png"><span class="downloadH1">Get it Now!</span> <span class="downloadH2"><a href="">Download Test Pilot</a></span></div></div>-->
-
-<div id="thanks"><h1>Thank You for Installing Test Pilot! <span id="debug"></span></h1></div>
-				<div id="survey-explanation">
-					
-
-                                  <div class="button">
-				    <p>
-                                    You should take the survey.  Explanation of survey goes here.
-				    </p>
-				    <p>
-                                    <span class="downloadH2"><a  href="http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d">Take The Survey</a></span>
-				    </p>
-					
-				</div></div>
-				
-				<div id="icon-explanation">
-				  <div class="button">
-				    <p>Explanation of test pilot status bar icon goes here.</p>
-				    <p>Have an arrow pointing to the bottom right of the status bar where the icon should be.</p>
-                                  </div>
-				</div>
-			
-			</div>
-
-			
-			<div id="footer"><img class="mozLogo" src="mozilla-logo.png">Copyright © 2005-2009 Mozilla. All rights reserved. &nbsp; &nbsp; <a href="http://testpilot.mozillalabs.com/privacypolicy">Privacy Policy</a> &nbsp; &nbsp; <a href="http://testpilot.mozillalabs.com/legal">Legal Notices</a></div>
-		
-		</div>
-
-</body></html>
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Mozilla Labs Test Pilot</title>
+    <link rel="stylesheet" type="text/css" media="all" href="screen.css">
+    <script language="">
+      Components.utils.import("resource://testpilot/modules/setup.js");
+      function displayIconLeftPos() {
+        document.getElementById("debug").innerHTML = TestPilotSetup.iconLeftPos;
+      }
+    </script>
+  </head>
+  <body onload="displayIconLeftPos();">
+    <div id="container">
+      <div id="logo"><img src="logo.png"></div>
+      <div id="content">
+        <div id="thanks">
+	  <h1>Thank You for Installing Test Pilot!</h1>
+	</div>
+	<div id="survey-explanation">
+          <div class="button">
+	    <p>
+              You should take the survey.  Explanation of survey goes here.
+	    </p>
+	    <p>
+              <span class="downloadH2">
+	        <a  href="http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d">Take The Survey</a>
+	      </span>
+	    </p>
+          </div>
+	</div>
+        <div id="icon-explanation">
+	  <div class="button">
+            <p>Explanation of test pilot status bar icon goes here.</p>
+            <p>Have an arrow pointing to the bottom right of the status bar where the icon should be.</p>
+          </div>
+	</div>
+      </div>
+      <div id="footer">
+         <img class="mozLogo" src="mozilla-logo.png">Copyright © 2005-2009 Mozilla. All rights reserved. &nbsp; &nbsp; <a href="http://testpilot.mozillalabs.com/privacypolicy">Privacy Policy</a> &nbsp; &nbsp; <a href="http://testpilot.mozillalabs.com/legal">Legal Notices</a>
+      </div>
+    </div>
+  </body>
+</html>

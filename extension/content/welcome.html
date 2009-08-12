@@ -1,52 +1,56 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en">
-  <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <title>Mozilla Labs Test Pilot</title>
-    <link rel="stylesheet" type="text/css" media="all" href="screen.css">
-    <script language="">
-      Components.utils.import("resource://testpilot/modules/setup.js");
-      function displayIconLeftPos() {
-        var left = TestPilotSetup.iconLeftPos;
-        var top = TestPilotSetup.iconTopPos;
-        document.getElementById("magic-arrow").style.top = (top - 120) + "px";
-        document.getElementById("magic-arrow").style.left = (left - 200) + "px";
-      }
-    </script>
-  </head>
-  <body onload="displayIconLeftPos();">
-    <div id="container">
-      <div id="logo"><img src="logo.png"></div>
-      <div id="content">
-        <div id="thanks">
-	  <h1>Thank You for Installing Test Pilot!</h1>
-	</div>
-	<div id="survey-explanation">
-          <div class="button">
-	    <p>
-	      Welcome to the Test Pilot community.  Please let us know a bit more
-	      about yourself by taking this survey.
-	    </p>
-	    <p>
-              <span class="downloadH2">
-	        <a  href="http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d">Take The Survey</a>
-	      </span>
-	    </p>
-          </div>
-	</div>
-        <div id="icon-explanation">
-	  <div class="button">
-            <p>Explanation of test pilot status bar icon goes here.</p>
-            <p>Have an arrow pointing to the bottom right of the status bar where the icon should be.</p>
-          </div>
-	</div>
-      </div>
-      <div id="magic-arrow">
-	Magic arrow here!
-      </div>
-      <div id="footer">
-         <img class="mozLogo" src="mozilla-logo.png">Copyright © 2005-2009 Mozilla. All rights reserved. &nbsp; &nbsp; <a href="http://testpilot.mozillalabs.com/privacypolicy">Privacy Policy</a> &nbsp; &nbsp; <a href="http://testpilot.mozillalabs.com/legal">Legal Notices</a>
-      </div>
-    </div>
-  </body>
-</html>
+    <!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml" lang="en"><head>
+
+
+
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<title>Mozilla Labs Test Pilot</title>
+	<link rel="stylesheet" type="text/css" media="all" href="screen.css" />
+
+
+</head><body>
+
+		<div id="container">
+		
+			<div id="logo"><a href="index.html"><img src="logo.png" border="0"></a></div>
+			
+			<div id="contentWelcome">
+
+				<div id="thanks">
+				
+					<h1>Thank You for Installing Test Pilot!</h1>
+				
+				</div>
+				
+				<div id="icon-explanation">
+				  
+				  <div class="button">
+
+				    <p><h2>Test Pilot Add-on</h2></p>
+					<p><img src="chrome://testpilot/skin/testpilot_16x16.png"> &laquo; look for this icon in the bottom right of the browser window.</p>
+				    <p>You can click on it to see a menu of available tests and surveys.</p>
+				    <p>The icon will blink when there are new things for you to see.</p>
+					
+                                 </div>
+				
+				</div>
+				<div id="survey-explanation">
+					
+                    <div class="button">
+				    	
+	    	<p><h2><a  href="http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d">Take The Survey &raquo;</a></h2></p>
+		      <p>Welcome to the Test Pilot community.  Please let us know a bit more
+	      about yourself by taking this survey.</p>
+
+					</div>
+
+				</div>
+				
+			
+			</div>
+			
+			<div id="footer"><img class="mozLogo" src="mozilla-logo.png">Copyright &copy; 2005-2009 Mozilla. All rights reserved. &nbsp; &nbsp; <a href="http://www.mozilla.com/en-US/privacy-policy.html">Privacy Policy</a> &nbsp; &nbsp; <a href="http://www.mozilla.com/en-US/about/legal.html">Legal Notices</a></div>
+		
+		</div>
+
+</body></html>

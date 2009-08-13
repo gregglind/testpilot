@@ -75,7 +75,7 @@ TestPilotSurvey.prototype = {
     dump("Checking survey status...\n");
     // Note, the following depends on SurveyMonkey and will break if
     // SurveyMonkey changes their 'survey complete' page.
-    let surveyCompletedText = "Thanks for taking the survey.";
+    let surveyCompletedText = "Thank you for completing our survey!";
     var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
     req.open('GET', self._surveyUrl, true);
     req.onreadystatechange = function (aEvt) {

@@ -36,6 +36,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 (function() {
+   var observerSvc = Components.classes["@mozilla.org/observer-service;1"]
+                               .getService(Ci.nsIObserverService);
+
    function notifyTestPilot() {
      var jsm = {};
      Components.utils.import("resource://testpilot/modules/setup.js",
@@ -43,20 +46,15 @@
      jsm.TestPilotSetup.onBrowserWindowLoaded(window);
    }
 
-   window.addEventListener(
-     "load",
-     function onWindowLoad(event) {
-       window.removeEventListener("load", onWindowLoad, false);
-       gBrowser.addEventListener(
-         "load",
-         function onBrowserLoad(event) {
-           gBrowser.removeEventListener("load", onBrowserLoad, false);
-           notifyTestPilot();
-         },
-         false);
-     },
-     false
-   );
+   // TODO what happens here if there are multiple windows?
+   var observer = {
+     observe: function(subject, topic, data) {
+       observerSvc.removeObserver(this, "sessionstore-windows-restored");
+       notifyTestPilot();
+     }
+   };
+
+   observerSvc.addObserver(observer, "sessionstore-windows-restored", false);
  })();
 
 function openAboutTestPilotPage() {

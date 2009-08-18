@@ -55,8 +55,11 @@ DbUtils.openDatabase = function openDatabase(file) {
    * has never been initialized */
   var connection = null;
   try {
+    dump("Trying to open file...\n");
     connection = _storSvc.openDatabase(file);
+    dump("Opening file done...\n");
   } catch(e) {
+    dump("Opening file failed...\n");
     Components.utils.reportError(
       "Opening database failed, database may not have been initialized");
   }
@@ -65,15 +68,18 @@ DbUtils.openDatabase = function openDatabase(file) {
 
 DbUtils.createTable = function createTable(connection, tableName, schema){
   var file = connection.databaseFile;
+  dump("File is " + file + "\n");
+  // Problem 1: The file is null here.
   try{
     if(!connection.tableExists(tableName)){
-      connection.executeSimpleSQL(schema);
+      connection.executeSimpleSQL(schema); // Problem 2: This fails.
     }
     else{
       dump("database table: " + tableName + " already exists\n");
     }
   }
   catch(e) {
+    dump("Actual exception is " + e + "\n");
     Cu.reportError("Test Pilot's " + tableName +
         " database table appears to be corrupt, resetting it.");
     if(file.exists()){
@@ -81,7 +87,7 @@ DbUtils.createTable = function createTable(connection, tableName, schema){
       file.remove(false);
     }
     connection = _storSvc.openDatabase(file);
-    connection.executeSimpleSQL(schema);
+    connection.executeSimpleSQL(schema); // This fails.
   }
   return connection;
 };

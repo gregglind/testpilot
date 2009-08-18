@@ -1,0 +1,17 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html> <head>
+<title></title>
+<script type="application/javascript">
+  function showdbcontents() {
+    Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
+    var debug = document.getElementById("debug");
+    debug.innerHTML = TabsExperimentDataStore.barfAllData();
+  }
+</script>
+</head>
+
+<body onload="showdbcontents();">
+<h1>Test Pilot Tabs Experiment Contents</h1>
+<p><span id="debug"></span></p>
+
+</body> </html>

@@ -34,10 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-EXPORTED_SYMBOLS = ["ExperimentDataStore", "TabsExperimentConstants"];
+EXPORTED_SYMBOLS = ["ExperimentDataStore", "TabsExperimentConstants", "TabsExperimentDataStore"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 Cu.import("resource://testpilot/modules/dbutils.js");
 var _dirSvc = Cc["@mozilla.org/file/directory_service;1"]
@@ -52,7 +53,7 @@ const TabsExperimentConstants = {
   SWITCH_EVENT: 4,
   LOAD_EVENT: 5,
   QUIT_EVENT: 6,
-  RESTORE_EVENT: 7
+  RESTORE_EVENT: 7,
 
   NEWTAB_BUTTON: 1,
   NEWTAB_MENU: 2,
@@ -60,22 +61,24 @@ const TabsExperimentConstants = {
   NEWTAB_LINK: 4,
 };
 
-var TABS_EXPERIMENT_FILE = "testpilot_tabs_experiment_results.sqlite";
+const TABS_EXPERIMENT_FILE = "testpilot_tabs_experiment_results.sqlite";
 /* In this schema, each row represents a single UI event. */
+
+const TABS_TABLE_NAME = "testpilot_tabs_experiment";
 
 // event.timeStamp is milliseconds since epoch
 // This schema is subject to change before the Tabs Experiment is released:
-var TABS_EXPERIMENT_SCHEMA = 
-  "CREATE TABLE testpilot_tabs_experiment(" +
+const TABS_EXPERIMENT_SCHEMA = 
+  "CREATE TABLE " + TABS_TABLE_NAME + "(" +
   " event_code INTEGER," +
   " tab_position INTEGER," +
   " tab_parent_position INTEGER," +
   " tab_window INTEGER," +
-  " tab_parent_window INTEGER,"
+  " tab_parent_window INTEGER," +
   " ui_method INTEGER," +
   " tab_site_hash INTEGER," +
   " num_tabs INTEGER," +
-  " timestamp INTEGER"; // is there a different data type better for timestamp?
+  " timestamp INTEGER);"; // is there a different data type better for timestamp?
 
 function ExperimentDataStore(fileName, tableName, schema) {
   this._init(fileName, tableName, schema);
@@ -87,20 +90,24 @@ ExperimentDataStore.prototype = {
     this._schema = schema;
     let file = _dirSvc.get("ProfD", Ci.nsIFile);
     file.append(this._fileName);
-    this._connection = DbUtils.openDatabase(this._file);
-    // TODO only create table if it's not already there... How is this done in Ubiq?
+    // openDatabase creates the file if it's not there yet:
+    this._connection = DbUtils.openDatabase(file);
+    // CreateTable creates the table only if it does not already exist:
     this._connection = DbUtils.createTable(this._connection, this._tableName, this._schema);
   },
 
   storeEvent: function EDS_storeEvent( uiEvent ) {
     // uiEvent is assumed to have attribute names matching db columns
-
+    
   },
 
   barfAllData: function EDS_barfAllData() {
+    return "Barf!";
   }
 };
 
-
-var TabsExperimentDataStore = new ExperimentDataStore(TABS_EXPERIMENT_FILE, TABS_EXPERIMENT_SCHEMA);
+// TODO Make sure this is only run once even if module imported multiple times:
+var TabsExperimentDataStore = new ExperimentDataStore(TABS_EXPERIMENT_FILE, 
+						      TABS_TABLE_NAME,
+						      TABS_EXPERIMENT_SCHEMA);
 

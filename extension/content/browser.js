@@ -43,7 +43,7 @@
      var jsm = {};
      Components.utils.import("resource://testpilot/modules/setup.js",
                              jsm);
-     jsm.TestPilotSetup.onBrowserWindowLoaded(window);
+     jsm.TestPilotSetup.onBrowserWindowLoaded();
    }
 
    // TODO what happens here if there are multiple windows?

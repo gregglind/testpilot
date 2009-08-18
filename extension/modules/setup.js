@@ -42,9 +42,29 @@ const Ci = Components.interfaces;
 
 Components.utils.import("resource://testpilot/modules/Observers.js");
 
+/* These constants represent the status of a user task.  User tasks can either
+ * be surveys or tests.  A task is either NEW (the user has never seen it before
+ * and needs to be somehow notified that it exists), PENDING (user has seen it but
+ * has neither chosen to participate nor to opt out), IN_PROGRESS (data is currently
+ * being collected), CANCELED (user has opted out), SUBMITTED (user has submitted data).
+ * FINISHED is a test which has ended but which the user has neither canceled nor submitted
+ * yet; we'll keep prompting for a certain period of time, but if it's an opt-out test then
+ * it will automatically submit at the end of that time.
+ * A task can never go backwards in this sequence, so we can do > and < comparisons on them.
+ * Status of a task will be stored in a preference called extensions.testpilot.taskstatus.(taskname).
+ */
+
+const TASK_STATUS_NEW = 0;
+const TASK_STATUS_PENDING = 1;
+const TASK_STATUS_IN_PROGRESS = 2;
+const TASK_STATUS_FINISHED = 3;
+const TASK_STATUS_CANCELLED = 4;
+const TASK_STATUS_SUBMITTED = 5;
+
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
 const VERSION_PREF ="extensions.testpilot.lastversion";
 const FIRST_RUN_PREF ="extensions.testpilot.firstRunUrl";
+const STATUS_PREF_PREFIX = "extensions.testpilot.taskstatus.";
 const TEST_PILOT_HOME_PAGE = "http://testpilot.mozillalabs.com";
 const SURVEY_URL = "http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d";
 
@@ -52,14 +72,25 @@ let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
 
 
-function TestPilotSurvey(surveyUrl, surveyTitle) {
-  this._init(surveyUrl, surveyTitle);
+function TestPilotSurvey(surveyUrl, surveyTitle, surveyId, window, menu) {
+  this._init(surveyUrl, surveyTitle, surveyId, window, menu);
 }
 TestPilotSurvey.prototype = {
-  _init: function TestPilotSurvey__init(surveyUrl, surveyTitle) {
+  _init: function TestPilotSurvey__init(surveyUrl, surveyTitle, surveyId, window, menu) {
     this._surveyUrl = surveyUrl;
     this._surveyTitle = surveyTitle;
-    this._isNew = false;
+    this._id = surveyId;
+    this._menuItem = null;
+    this._browser = window.getBrowser();
+
+    // Check prefs for status, default to NEW
+    this._status = Application.prefs.getValue(STATUS_PREF_PREFIX + this._id, TASK_STATUS_NEW);
+    // Add menu item for myself:
+    this.addMenuItem(window, menu);
+
+    if (this._status < TASK_STATUS_SUBMITTED) {
+      this.checkForCompletion();
+    }
   },
 
   get title() {
@@ -67,12 +98,13 @@ TestPilotSurvey.prototype = {
   },
 
   get isNew() {
-    return this._isNew;
+    dump("Called isNew() for a task.  This task status is " + this._status + "\n");
+    return (this._status == TASK_STATUS_NEW);
   },
 
-  checkStatus: function TestPilotSurvey_isTaskComplete(window, menu) {
+  checkForCompletion: function TestPilotSurvey_checkForCompletion(window, menu) {
     var self = this;
-    dump("Checking survey status...\n");
+    dump("Checking for survey completion...\n");
     // Note, the following depends on SurveyMonkey and will break if
     // SurveyMonkey changes their 'survey complete' page.
     let surveyCompletedText = "Thank you for completing our survey!";
@@ -81,14 +113,9 @@ TestPilotSurvey.prototype = {
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
         if (req.status == 200) {
-          if (req.responseText.indexOf(surveyCompletedText) == -1) {
-            dump("Survey is new.\n");
-	    self._isNew = true;
-            self.addNewSurveyNotification(window, menu);
-          } else {
+          if (req.responseText.indexOf(surveyCompletedText) > -1) {
             dump("Survey is completed.\n");
-	    self._isNew = false;
-	    self.addCompletedSurveyNotification(window, menu);
+	    self.changeStatus( TASK_STATUS_SUBMITTED );
 	  }
         } else {
           dump("Error loading page\n");
@@ -98,48 +125,60 @@ TestPilotSurvey.prototype = {
     req.send(null);
   },
 
-  addMenuItem: function TPS_addMenuItem(window, menu, beforeWhat, withIcon) {
-    this._browser = window.getBrowser();
+  changeStatus: function TPS_changeStatus(newStatus) {
+    this._status = newStatus;
+    // Set the pref:
+    Application.prefs.setValue(STATUS_PREF_PREFIX + this._id, newStatus);
+
+    // Change menu item if there is one:
+    if (this._menuItem) {
+      if (newStatus > TASK_STATUS_NEW) {
+	// Take off "new" icon if we're not new anymore:
+        this._menuItem.removeAttribute("class");
+        this._menuItem.removeAttribute("icon");
+      }
+      if (newStatus == TASK_STATUS_SUBMITTED) {
+	// Disable menu item, change name to show it is completed:
+	this._menuItem.setAttribute("disabled", true);
+	this._menuItem.setAttribute("label", "  (Completed)" + this._surveyTitle);
+      }
+    }
+
+    // Stop the blinking!
+    Observers.notify("testpilot:task:changed", "", null);
+  },
+
+  addMenuItem: function TPS_addMenuItem(window, menu) {
+
     let newMenuItem = window.document.createElement("menuitem");
     newMenuItem.setAttribute("label", "  " + this._surveyTitle);
-    if (withIcon) {
+
+    if (this._status == TASK_STATUS_NEW) {
       newMenuItem.setAttribute("class", "menuitem-iconic");
       newMenuItem.setAttribute("image", "chrome://testpilot/skin/new.png");
     }
+    if (this._status == TASK_STATUS_SUBMITTED) {
+      newMenuItem.setAttribute("disabled", true);
+      newMenuItem.setAttribute("label", "  (Completed)" + this._surveyTitle);
+    }
     newMenuItem.taskObject = this;
-    let refElement = window.document.getElementById(beforeWhat);
+    let refElement = window.document.getElementById("survey-menu-separator");
     let insertedElement = menu.insertBefore(newMenuItem, refElement);
     
     this._menuItem = newMenuItem;
-    Observers.notify("testpilot:notification:added", "", null);
-  },
-
-  addNewSurveyNotification: function TPS_addNewSurveyNotification(window, menu) {
-    this.addMenuItem(window, menu, "survey-menu-separator", true);
-  },
-
-  addCompletedSurveyNotification: function TPS_addNewSurveyNotification(window, menu) {
-    // TODO
-    // Add a menu separator, then a grey item called 'Completed Surveys', or something, then this:
-    this.addMenuItem(window, menu, "survey-menu-separator", false);
   },
 
   takeSurvey: function TPS_takeSurvy(event) {
     let tab = this._browser.addTab(this._surveyUrl);
     this._browser.selectedTab = tab;
-    this.stopBeingNew();
-  },
-
-  stopBeingNew: function TPS_stopBeingNew() {
-    this._menuItem.removeAttribute("class");
-    this._menuItem.removeAttribute("icon");
-    this._isNew = false;
-    Observers.notify("testpilot:notification:removed", "", null);
+    if (this._status == TASK_STATUS_NEW) {
+      this.changeStatus(TASK_STATUS_PENDING);
+    }
   },
 
   onUrlLoad: function TPS_onUrlLoad(url) {
-    if (url == this._surveyUrl && this._isNew) {
-      this.stopBeingNew();
+    if (url == this._surveyUrl && this._status == TASK_STATUS_NEW) {
+      this.changeStatus( TASK_STATUS_PENDING );
     }
   }
 
@@ -155,12 +194,20 @@ let TestPilotSetup = {
 
   addTask: function TPS_addTask(testPilotTask) {
     this.taskList.push(testPilotTask);
+    this.onTaskStatusChanged();
   },
 
-  onBrowserWindowLoaded: function TPS_onBrowserWindowLoaded(window) {
+  onBrowserWindowLoaded: function TPS_onBrowserWindowLoaded() {
     if (!this.isSetupComplete) {
+      try {
       // Compare the version in our preferences from our version in the
       // install.rdf.
+
+       var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                           .getService(Ci.nsIWindowMediator);
+       var window = wm.getMostRecentWindow("navigator:browser");
+       dump("Window is " + window + "\n");
+
       let currVersion = Application.prefs.getValue(VERSION_PREF, "firstrun");
       if (currVersion != this.version) {
         Application.prefs.setValue(VERSION_PREF, this.version);
@@ -176,11 +223,9 @@ let TestPilotSetup = {
           .getElementById("pilot-notifications-button");
       this.notificationsMenu = window.document
           .getElementById("pilot-menu");
-      this.isSetupComplete = true;
+
       var self = this;
-      Observers.add("testpilot:notification:added", this.onNotificationAdded,
-                    self);
-      Observers.add("testpilot:notification:removed", this.onNotificationRemoved,
+      Observers.add("testpilot:task:changed", this.onTaskStatusChanged,
                     self);
 
       dump("Adding event listner.\n");
@@ -201,17 +246,36 @@ let TestPilotSetup = {
 
       // TODO take this out of here and put it somewhere else... or hit a
       // Test Pilot Central site and download a list of tasks.
-      TestPilotSetup.addTask(new TestPilotSurvey(SURVEY_URL, "Survey For New Test Pilots"));
+      TestPilotSetup.addTask(new TestPilotSurvey(SURVEY_URL,
+                                                 "Survey For New Test Pilots",
+                                                 "survey_for_new_pilots",
+                                                 this.window,
+                                                 this.notificationsMenu));
 
       this.checkForTasks();
+      this.isSetupComplete = true;
+      } catch (e) {
+	dump("Error in TP startup: " + e + "\n");
+      }
     }
 
     // add listener for "DOMContentLoaded", gets passed event, look at event.originalTarget.URL
   },
 
-  onNotificationAdded: function TPS_onNotificationAdded() {
-    // Begin blinking icon
+  thereAreNewTasks: function TPS_thereAreNewTasks() {
+    dump("taskList.length is " + this.taskList.length + "\n");
+    for (i = 0; i < this.taskList.length; i++) {
+      if (this.taskList[i].isNew) {
+	return true;
+      }
+    }
+    return false;
+  },
+
+  onTaskStatusChanged: function TPS_onTaskRemoved() {
+    // Blink menu if there are new tasks; stop blinking if there are not.
     if (this.thereAreNewTasks()) {
+      dump("There are new tasks.  I will blink.\n");
       if (!this._blinker) {
         var theButton = this.notificationsButton;
         var rotation = false;
@@ -224,21 +288,7 @@ let TestPilotSetup = {
               theButton.image = "chrome://testpilot/skin/testpilot_16x16.png";
           }, 1000 );
       }
-    }
-  },
-
-  thereAreNewTasks: function TPS_thereAreNewTasks() {
-    for (i = 0; i < this.taskList.length; i++) {
-      if (this.taskList[i].isNew) {
-	return true;
-      }
-    }
-    return false;
-  },
-
-  onNotificationRemoved: function TPS_onNotificationRemoved() {
-    // If new items are gone, stop blinking the icon:
-    if (!this.thereAreNewTasks()) {
+    } else {
       if (this._blinker) {
         this.window.clearInterval(this._blinker);
         this.notificationsButton.image = "chrome://testpilot/skin/testpilot_16x16.png";
@@ -268,10 +318,7 @@ let TestPilotSetup = {
   },
 
   checkForTasks: function TPS_checkForTasks() {
-    let i;
-    for (i = 0; i < this.taskList.length; i++) {
-      this.taskList[i].checkStatus(this.window, this.notificationsMenu);
-    }
+    // TODO look at RSS feed for new tasks.
   }
 };
 

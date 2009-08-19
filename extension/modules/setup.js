@@ -41,6 +41,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Components.utils.import("resource://testpilot/modules/Observers.js");
+Components.utils.import("resource://testpilot/modules/tabs_observer.js");
 
 /* These constants represent the status of a user task.  User tasks can either
  * be surveys or tests.  A task is either NEW (the user has never seen it before
@@ -254,6 +255,10 @@ let TestPilotSetup = {
 
       this.checkForTasks();
       this.isSetupComplete = true;
+
+       // TODO This is just temporary; ultimately the TabsExperiment needs to be wrapped in a
+       // Task with a start date and an end date.
+       TabsExperimentObserver.install(window.getBrowser());
       } catch (e) {
 	dump("Error in TP startup: " + e + "\n");
       }
@@ -261,6 +266,8 @@ let TestPilotSetup = {
 
     // add listener for "DOMContentLoaded", gets passed event, look at event.originalTarget.URL
   },
+
+  // TODO need an uninstall method that calls TabsExperimentObserver.uninstall();.
 
   thereAreNewTasks: function TPS_thereAreNewTasks() {
     dump("taskList.length is " + this.taskList.length + "\n");

@@ -5,9 +5,6 @@
   function showdbcontents() {
     Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
     var debug = document.getElementById("debug");
-    TabsExperimentDataStore.storeEvent( {event_code: TabsExperimentConstants.CLOSE_EVENT,
-                                         tab_position: 3,
-                                         timestamp: 10055231});
     debug.innerHTML = TabsExperimentDataStore.barfAllData();
   }
 </script>

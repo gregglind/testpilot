@@ -59,27 +59,34 @@ var TabsExperimentObserver = {
 
   onTabOpened: function TabsExperimentObserver_onTabOpened(event) {
     dump("Timestamping open event with " + event.timeStamp + "\n");
+    dump("Event.target is a " + event.target.tagName + "\n"); // it's the tab!
+    // Should be able to somehow use this to get number of the tab...
+    /* let i;
+    for (i in event) {
+      dump("  Event." + i + " = " + event[i] + "\n");
+      }*/
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.OPEN_EVENT,
-      timestamp: event.timeStamp
-	  // TODO getting negative timestamps... is this a signed/unsigned integer thing?  Or is it from trying
-	  // to cram a long into a db column made for an integer?
+      timestamp: Date.now()
     });
     // TODO add tab_position, tab_parent_position, tab_window, tab_parent_window,
     // ui_method, tab_site_hash, and num_tabs.
+    // event has properties:
+    // target, originalTarget, currentTarget, type.
+    // Maybe target is the tab XUL element?
   },
 
   onTabClosed: function TabsExperimentObserver_onTabClosed(event) {
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.CLOSE_EVENT,
-      timestamp: event.timeStamp
+      timestamp: Date.now()
     });
   },
 
   onTabSelected: function TabsExperimentObserver_onTabSelected(event) {
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.SWITCH_EVENT,
-      timestamp: event.timeStamp
+      timestamp: Date.now()
     });
   }
 };

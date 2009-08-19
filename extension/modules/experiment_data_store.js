@@ -121,7 +121,7 @@ ExperimentDataStore.prototype = {
     insStmt.bindInt32Parameter(5, uiEvent.ui_method);
     insStmt.bindInt32Parameter(6, uiEvent.tab_site_hash);
     insStmt.bindInt32Parameter(7, uiEvent.num_tabs);
-    insStmt.bindInt32Parameter(8, uiEvent.timestamp);
+    insStmt.bindDoubleParameter(8, uiEvent.timestamp);
     insStmt.execute();
     insStmt.finalize();
   },

@@ -79,6 +79,7 @@ const TABS_EXPERIMENT_SCHEMA =
   " tab_site_hash INTEGER," +
   " num_tabs INTEGER," +
   " timestamp INTEGER);"; // is there a different data type better for timestamp?
+// For all fields, 0 means unspecified
 
 function ExperimentDataStore(fileName, tableName, schema) {
   this._init(fileName, tableName, schema);
@@ -96,13 +97,55 @@ ExperimentDataStore.prototype = {
     this._connection = DbUtils.createTable(this._connection, this._tableName, this._schema);
   },
 
+  _createStatement: function _createStatement(selectSql) {
+    try {
+      var selStmt = this._connection.createStatement(selectSql);
+      return selStmt;
+    } catch (e) {
+      throw new Error(this._connection.lastErrorString);
+    }
+  },
+
   storeEvent: function EDS_storeEvent( uiEvent ) {
     // uiEvent is assumed to have attribute names matching db columns
-    
+    // TODO rewrite this to be schema-independent.
+    let insertSql = "INSERT INTO " + this._tableName +
+                    " VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)";
+    let insStmt = this._createStatement(insertSql);
+    // If uiEvent is missing some of these fields, they end up as 0.
+    insStmt.bindInt32Parameter(0, uiEvent.event_code);
+    insStmt.bindInt32Parameter(1, uiEvent.tab_position);
+    insStmt.bindInt32Parameter(2, uiEvent.tab_parent_position);
+    insStmt.bindInt32Parameter(3, uiEvent.tab_window);
+    insStmt.bindInt32Parameter(4, uiEvent.tab_parent_window);
+    insStmt.bindInt32Parameter(5, uiEvent.ui_method);
+    insStmt.bindInt32Parameter(6, uiEvent.tab_site_hash);
+    insStmt.bindInt32Parameter(7, uiEvent.num_tabs);
+    insStmt.bindInt32Parameter(8, uiEvent.timestamp);
+    insStmt.execute();
+    insStmt.finalize();
   },
 
   barfAllData: function EDS_barfAllData() {
-    return "Barf!";
+    // Note this works without knowing what the schema is
+    let selectSql = "SELECT * FROM " + this._tableName;
+    let selStmt = this._createStatement(selectSql);
+    let records = [];
+    let i;
+    while (selStmt.executeStep()) {
+      let newRecord = {};
+      let numCols = selStmt.columnCount;
+      for (i = 0; i < numCols; i++) {
+	let colName = selStmt.getColumnName(i);
+	newRecord[colName] = selStmt.getInt32(i);
+      }
+      records.push(newRecord);
+    }
+    selStmt.finalize();
+    // convert object to JSON string
+    let nativeJSON = Cc["@mozilla.org/dom/json;1"]
+                 .createInstance(Ci.nsIJSON);
+    return nativeJSON.encode(records);
   }
 };
 

@@ -7,11 +7,19 @@
     var debug = document.getElementById("debug");
     debug.innerHTML = TabsExperimentDataStore.barfAllData();
   }
+
+  function wipeDb() {
+    Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
+    TabsExperimentDataStore.wipeAllData();
+    var debug = document.getElementById("debug");
+    debug.innerHTML = "Wiped!";
+  }
 </script>
 </head>
 
 <body onload="showdbcontents();">
 <h1>Test Pilot Tabs Experiment Contents</h1>
+<p><button onclick="wipeDb();">Wipe</button>
 <p><span id="debug"></span></p>
 
 </body> </html>

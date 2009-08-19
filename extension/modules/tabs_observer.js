@@ -58,6 +58,7 @@ var TabsExperimentObserver = {
   },
 
   onTabOpened: function TabsExperimentObserver_onTabOpened(event) {
+    dump("Timestamping open event with " + event.timeStamp + "\n");
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.OPEN_EVENT,
       timestamp: event.timeStamp

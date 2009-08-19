@@ -146,6 +146,13 @@ ExperimentDataStore.prototype = {
     let nativeJSON = Cc["@mozilla.org/dom/json;1"]
                  .createInstance(Ci.nsIJSON);
     return nativeJSON.encode(records);
+  },
+
+  wipeAllData: function EDS_wipeAllData() {
+    let wipeSql = "DELETE FROM " + this._tableName;
+    let wipeStmt = this._createStatement(wipeSql);
+    wipeStmt.execute();
+    wipeStmt.finalize();
   }
 };
 

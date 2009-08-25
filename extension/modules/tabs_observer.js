@@ -42,12 +42,15 @@ const Cu = Components.utils;
 
 Cu.import("resource://testpilot/modules/experiment_data_store.js");
 
+// TODO make sure this can be correctly installed on multiple windows!!!
 var TabsExperimentObserver = {
   install: function TabsExperimentObserver_install(browser) {
     let container = browser.tabContainer;
     container.addEventListener("TabOpen", this.onTabOpened, false);
     container.addEventListener("TabClose", this.onTabClosed, false);
     container.addEventListener("TabSelect", this.onTabSelected, false);
+
+    // TODO what other events can we listen for here?
   },
 
   uninstall: function TabsExperimentObserver_uninstall(browser) {
@@ -58,16 +61,19 @@ var TabsExperimentObserver = {
   },
 
   onTabOpened: function TabsExperimentObserver_onTabOpened(event) {
-    dump("Timestamping open event with " + event.timeStamp + "\n");
-    dump("Event.target is a " + event.target.tagName + "\n"); // it's the tab!
-    // Should be able to somehow use this to get number of the tab...
+    // What else can I grab out of this event?
+    // have we got event.button?  event.charCode or keyCode?
+
+    // And the tab URL, which I would then chop/hash/compare to figure out what's up
     /* let i;
     for (i in event) {
       dump("  Event." + i + " = " + event[i] + "\n");
       }*/
+    let index = event.target.parentNode.getIndexOfItem(event.target);  
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.OPEN_EVENT,
-      timestamp: Date.now()
+	  timestamp: Date.now(),
+	  tab_position: index
     });
     // TODO add tab_position, tab_parent_position, tab_window, tab_parent_window,
     // ui_method, tab_site_hash, and num_tabs.
@@ -77,16 +83,20 @@ var TabsExperimentObserver = {
   },
 
   onTabClosed: function TabsExperimentObserver_onTabClosed(event) {
+    let index = event.target.parentNode.getIndexOfItem(event.target);  
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.CLOSE_EVENT,
-      timestamp: Date.now()
+	  timestamp: Date.now(),
+	  tab_position: index
     });
   },
 
   onTabSelected: function TabsExperimentObserver_onTabSelected(event) {
+    let index = event.target.parentNode.getIndexOfItem(event.target);  
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.SWITCH_EVENT,
-      timestamp: Date.now()
+	  timestamp: Date.now(),
+	  tab_position: index
     });
   }
 };

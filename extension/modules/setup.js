@@ -185,6 +185,24 @@ TestPilotSurvey.prototype = {
 
 };
 
+let MetadataCollector = {
+  // Collects metadata such as what country you're in, what extensions you have installed, etc.
+  collectExtensions: function MetadataCollector_collect() {
+      //http://lxr.mozilla.org/aviarybranch/source/toolkit/mozapps/extensions/public/nsIExtensionManager.idl
+      //http://lxr.mozilla.org/aviarybranch/source/toolkit/mozapps/update/public/nsIUpdateService.idl#45
+      var ExtManager = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);
+      var nsIUpdateItem = Ci.nsIUpdateItem;
+      var items = [];
+      var names = [];
+      items = ExtManager.getItemList(nsIUpdateItem.TYPE_EXTENSION,{});
+      for (var i = 0; i < items.length; ++i) {
+	names.push(items[i].name);
+      }
+      return names.join(", ");
+  }
+
+};
+
 
 let TestPilotSetup = {
   isNewlyInstalledOrUpgraded: false,
@@ -259,6 +277,8 @@ let TestPilotSetup = {
        // TODO This is just temporary; ultimately the TabsExperiment needs to be wrapped in a
        // Task with a start date and an end date.
        TabsExperimentObserver.install(window.getBrowser());
+
+       dump("Installed extensions are: " + MetadataCollector.collectExtensions() + "\n");
       } catch (e) {
 	dump("Error in TP startup: " + e + "\n");
       }

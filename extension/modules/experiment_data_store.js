@@ -59,6 +59,9 @@ const TabsExperimentConstants = {
   NEWTAB_MENU: 2,
   NEWTAB_KEYBOARD: 3,
   NEWTAB_LINK: 4,
+
+  SWITCH_BY_CLICK: 1,
+  SWITCH_BY_KEY: 2
 };
 
 const TABS_EXPERIMENT_FILE = "testpilot_tabs_experiment_results.sqlite";

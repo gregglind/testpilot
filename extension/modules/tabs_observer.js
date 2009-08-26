@@ -44,13 +44,21 @@ Cu.import("resource://testpilot/modules/experiment_data_store.js");
 
 // TODO make sure this can be correctly installed on multiple windows!!!
 var TabsExperimentObserver = {
+  _lastEventWasClick: null,
+
   install: function TabsExperimentObserver_install(browser) {
     let container = browser.tabContainer;
+    // Can we catch the click event during the capturing phase??
+    // last argument of addEventListener is true to catch during capture, false to catch during bubbling.
     container.addEventListener("TabOpen", this.onTabOpened, false);
     container.addEventListener("TabClose", this.onTabClosed, false);
     container.addEventListener("TabSelect", this.onTabSelected, false);
 
     // TODO what other events can we listen for here?
+
+    container.addEventListener("mousedown", this.onClick, true);
+    container.addEventListener("mouseup", this.onMouseUp, true);
+    container.addEventListener("keydown", this.onKey, true);
   },
 
   uninstall: function TabsExperimentObserver_uninstall(browser) {
@@ -58,26 +66,47 @@ var TabsExperimentObserver = {
     container.removeEventListener("TabOpen", this.onTabOpened, false);
     container.removeEventListener("TabClose", this.onTabClosed, false);
     container.removeEventListener("TabSelect", this.onTabSelected, false);
+    container.removeEventListener("mousedown", this.onClick, true);
+    container.removeEventListener("mouseup", this.onMouseUp, true);
+    container.removeEventListener("keydown", this.onKey, true);
+
+  },
+
+  onClick: function TabsExperimentObserver_onClick(event) {
+    dump("You clicked on tabs bar.\n");
+    TabsExperimentObserver._lastEventWasClick = true;
+  },
+  
+  onMouseUp: function TabsExperimentObserver_onMouseUp(event) {
+    TabsExperimentObserver._lastEventWasClick = false;
+  },
+
+  onKey: function TabsExperimentObserver_onKey(event) {
+    dump("You pressed a key that went to the tab bar.\n");
   },
 
   onTabOpened: function TabsExperimentObserver_onTabOpened(event) {
     // What else can I grab out of this event?
     // have we got event.button?  event.charCode or keyCode?
 
-    // And the tab URL, which I would then chop/hash/compare to figure out what's up
-    /* */
+
     let index = event.target.parentNode.getIndexOfItem(event.target);  
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.OPEN_EVENT,
 	  timestamp: Date.now(),
 	  tab_position: index,
-          num_tabs: event.target.parentNode.itemCount
+          num_tabs: event.target.parentNode.itemCount,
+          ui_method: TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.NEWTAB_BUTTON:
+	      TabsExperimentConstants.NEWTAB_KEYBOARD
+		//TODO Not correct.  Need to distinguish open by click on link, open by menu item.
     });
     // TODO add tab_position, tab_parent_position, tab_window, tab_parent_window,
     // ui_method, tab_site_hash, and num_tabs.
     // event has properties:
     // target, originalTarget, currentTarget, type.
     // Target is the tab.  currentTarget is the tabset (xul:tabs).
+
+    // We can tell if it was a click on a link because it doesn't have
   },
 
   onTabClosed: function TabsExperimentObserver_onTabClosed(event) {
@@ -92,13 +121,14 @@ var TabsExperimentObserver = {
 
   onTabSelected: function TabsExperimentObserver_onTabSelected(event) {
     let index = event.target.parentNode.getIndexOfItem(event.target);
-    dump("Tab was selected...\n");
 
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.SWITCH_EVENT,
 	  timestamp: Date.now(),
 	  tab_position: index,
-          num_tabs: event.target.parentNode.itemCount
+          num_tabs: event.target.parentNode.itemCount,
+          ui_method: TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.SWITCH_BY_CLICK:
+	      TabsExperimentConstants.SWITCH_BY_KEY
     });
   }
 };

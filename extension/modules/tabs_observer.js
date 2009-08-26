@@ -65,21 +65,19 @@ var TabsExperimentObserver = {
     // have we got event.button?  event.charCode or keyCode?
 
     // And the tab URL, which I would then chop/hash/compare to figure out what's up
-    /* let i;
-    for (i in event) {
-      dump("  Event." + i + " = " + event[i] + "\n");
-      }*/
+    /* */
     let index = event.target.parentNode.getIndexOfItem(event.target);  
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.OPEN_EVENT,
 	  timestamp: Date.now(),
-	  tab_position: index
+	  tab_position: index,
+          num_tabs: event.target.parentNode.itemCount
     });
     // TODO add tab_position, tab_parent_position, tab_window, tab_parent_window,
     // ui_method, tab_site_hash, and num_tabs.
     // event has properties:
     // target, originalTarget, currentTarget, type.
-    // Maybe target is the tab XUL element?
+    // Target is the tab.  currentTarget is the tabset (xul:tabs).
   },
 
   onTabClosed: function TabsExperimentObserver_onTabClosed(event) {
@@ -87,16 +85,20 @@ var TabsExperimentObserver = {
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.CLOSE_EVENT,
 	  timestamp: Date.now(),
-	  tab_position: index
+	  tab_position: index,
+          num_tabs: event.target.parentNode.itemCount
     });
   },
 
   onTabSelected: function TabsExperimentObserver_onTabSelected(event) {
-    let index = event.target.parentNode.getIndexOfItem(event.target);  
+    let index = event.target.parentNode.getIndexOfItem(event.target);
+    dump("Tab was selected...\n");
+
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.SWITCH_EVENT,
 	  timestamp: Date.now(),
-	  tab_position: index
+	  tab_position: index,
+          num_tabs: event.target.parentNode.itemCount
     });
   }
 };

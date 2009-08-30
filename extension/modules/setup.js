@@ -152,7 +152,7 @@ TestPilotExperiment.prototype = {
   },
 
   _upload: function TestPilotExperiment_upload() {
-    let uploadData = {};
+    let uploadData = MetadataCollector.getMetadata();
     uploadData.contents = this._dataStore.barfAllData();
     let dataString = encodeURI(JSON.stringify(uploadData));
 
@@ -294,6 +294,46 @@ TestPilotSurvey.prototype = {
     if (url == this._surveyUrl && this._status == TASK_STATUS_NEW) {
       this.changeStatus( TASK_STATUS_PENDING );
     }
+  }
+
+};
+
+let MetadataCollector = {
+  // Collects metadata such as what country you're in, what extensions you have installed, etc.
+  getExtensions: function MetadataCollector_getExtensions() {
+    //http://lxr.mozilla.org/aviarybranch/source/toolkit/mozapps/extensions/public/nsIExtensionManager.idl
+    //http://lxr.mozilla.org/aviarybranch/source/toolkit/mozapps/update/public/nsIUpdateService.idl#45
+    var ExtManager = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);
+    var nsIUpdateItem = Ci.nsIUpdateItem;
+    var items = [];
+    var names = [];
+    items = ExtManager.getItemList(nsIUpdateItem.TYPE_EXTENSION,{});
+    for (var i = 0; i < items.length; ++i) {
+      names.push(items[i].name);
+    }
+    return names;
+  },
+
+  getLocation: function MetadataCollector_getLocation() {
+    //navitagor.geolocation; // or nsIDOMGeoGeolocation
+    // we don't want the lat/long, we just want the country
+    return "us"; // TODO
+  },
+
+  getVersion: function MetadataCollector_getVersion() {
+    // Detects firefox version.
+    return "3.5"; // TODO
+  },
+
+  // TODO: OS version
+  // Locale (not the same as geolocation neccessarily)
+  // Number of bookmarks?
+  // TODO if we make a GUID for the user, we keep it here.
+
+  getMetadata: function MetadataCollector_getMetadata() {
+    return { extensions: MetadataCollector.getExtensions(),
+	     location: MetadataCollector.getLocation(),
+	     version: MetadataCollector.getVersion() };
   }
 
 };

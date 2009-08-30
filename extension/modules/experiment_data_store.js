@@ -61,8 +61,16 @@ const TabsExperimentConstants = {
   NEWTAB_LINK: 4,
 
   SWITCH_BY_CLICK: 1,
-  SWITCH_BY_KEY: 2
+  SWITCH_BY_KEY: 2,
+
+  LOAD_BY_TYPING: 1,
+  LOAD_BY_SEARCH: 2,
+  LOAD_BY_BOOKMARK: 3,
+  LOAD_BY_HISTORY: 4
 };
+
+// TODO: Firefox blurs/focuses, i.e. user switches application?
+// Tabs that are 'permanenly open'
 
 const TABS_EXPERIMENT_FILE = "testpilot_tabs_experiment_results.sqlite";
 /* In this schema, each row represents a single UI event. */
@@ -145,10 +153,7 @@ ExperimentDataStore.prototype = {
       records.push(newRecord);
     }
     selStmt.finalize();
-    // convert object to JSON string
-    let nativeJSON = Cc["@mozilla.org/dom/json;1"]
-                 .createInstance(Ci.nsIJSON);
-    return nativeJSON.encode(records);
+    return records;
   },
 
   wipeAllData: function EDS_wipeAllData() {

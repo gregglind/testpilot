@@ -42,6 +42,7 @@ const Ci = Components.interfaces;
 
 Components.utils.import("resource://testpilot/modules/Observers.js");
 Components.utils.import("resource://testpilot/modules/tabs_observer.js");
+Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
 
 /* These constants represent the status of a user task.  User tasks can either
  * be surveys or tests.  A task is either NEW (the user has never seen it before
@@ -61,16 +62,124 @@ const TASK_STATUS_IN_PROGRESS = 2;
 const TASK_STATUS_FINISHED = 3;
 const TASK_STATUS_CANCELLED = 4;
 const TASK_STATUS_SUBMITTED = 5;
+const TASK_STATUS_RESULTS = 6; // Test finished AND final results visible somewhere
 
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
 const VERSION_PREF ="extensions.testpilot.lastversion";
 const FIRST_RUN_PREF ="extensions.testpilot.firstRunUrl";
 const STATUS_PREF_PREFIX = "extensions.testpilot.taskstatus.";
 const TEST_PILOT_HOME_PAGE = "http://testpilot.mozillalabs.com";
+
+const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload";
+
 const SURVEY_URL = "http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d";
+const START_DATE = "";
+const END_DATE = "";
 
 let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
+
+
+function TestPilotExperiment(id, title, dataStore, observer, startDate, endDate, window, menu) {
+  this._init(id, title, dataStore, observer, startDate, endDate, window, menu);
+}
+TestPilotExperiment.prototype = {
+  _init: function TestPilotExperiment__init(id,
+					    title,
+					    dataStore,
+					    observer,
+					    startDate,
+					    endDate,
+					    window,
+					    menu) {
+    this._id = id;
+    this._title = title;
+    this._dataStore = dataStore;
+    this._observer = observer;
+    
+    // Install the observer.  TODO: Install this only if it date is between startDate and endDate.
+    // TODO This is just temporary; ultimately the TabsExperiment needs to be wrapped in a
+    // Task with a start date and an end date.
+    this._observer.install( window.getBrowser() );
+
+    // TODO implement state-changing for TestPilotExperiments
+    this._status = Application.prefs.getValue(STATUS_PREF_PREFIX + this._id,
+                                              TASK_STATUS_NEW);
+    this._menuItem = null;
+    this.addMenuItem(window, menu);
+  },
+
+  // Duplicated from survey
+  get title() {
+    return this._title;
+  },
+
+  // duplicated from survey
+  get isNew() {
+    return (this._status == TASK_STATUS_NEW);
+  },
+
+  onUrlLoad: function TestPilotExperiment_onUrlLoad() {
+    // TODO leave blank?
+  },
+
+  // Largely duplicated from survey... TODO this code could be factored out
+  // (belongs in window-management code, not task code...)
+  addMenuItem: function TestPilotExperiment_addMenuItem(window, menu) {
+    let newMenuItem = window.document.createElement("menuitem");
+    newMenuItem.setAttribute("label", "  " + this._title);
+
+    if (this._status == TASK_STATUS_NEW) {
+      newMenuItem.setAttribute("class", "menuitem-iconic");
+      newMenuItem.setAttribute("image", "chrome://testpilot/skin/new.png");
+    }
+    if (this._status == TASK_STATUS_SUBMITTED) {
+      newMenuItem.setAttribute("disabled", true);
+      newMenuItem.setAttribute("label", "  (Completed)" + this._Title);
+    }
+    newMenuItem.taskObject = this;
+    let refElement = window.document.getElementById("test-menu-separator");
+    let insertedElement = menu.insertBefore(newMenuItem, refElement);
+    
+    this._menuItem = newMenuItem;
+
+    // Hide the 'no-tests-yet' menu item, because there is a test:
+    window.document.getElementById("no-tests-yet").hidden = true;
+  },
+
+  executeTask: function TestPilotExperiment_execute() {
+    this._upload();
+  },
+
+  _upload: function TestPilotExperiment_upload() {
+    let uploadData = {};
+    uploadData.contents = this._dataStore.barfAllData();
+    let dataString = encodeURI(JSON.stringify(uploadData));
+
+    let params = "testid=" + this._id + "&data=" + dataString;
+
+    var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
+    req.open('POST', DATA_UPLOAD_URL, true);
+    req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    req.setRequestHeader("Content-length", params.length);
+    req.setRequestHeader("Connection", "close");
+    req.onreadystatechange = function(aEvt) {
+      if (req.readyState == 4) {
+	if (req.status == 200) {
+	  // do success
+	  dump("DATA WAS POSTED SUCCESSFULLY " + req.responseText + "\n");
+	} else {
+	  dump("ERROR POSTING DATA: " + req.responseText + "\n");
+	}
+      }
+    }
+    req.send( params );
+  },
+
+  delete: function TestPilotExperiment_delete() {
+    this._dataStore.wipeAllData();
+  }
+};
 
 
 function TestPilotSurvey(surveyUrl, surveyTitle, surveyId, window, menu) {
@@ -169,6 +278,10 @@ TestPilotSurvey.prototype = {
     this._menuItem = newMenuItem;
   },
 
+  executeTask: function TestPilotExperiment_upload() {
+    this._takeSurvey();
+  },
+
   takeSurvey: function TPS_takeSurvy(event) {
     let tab = this._browser.addTab(this._surveyUrl);
     this._browser.selectedTab = tab;
@@ -185,28 +298,6 @@ TestPilotSurvey.prototype = {
 
 };
 
-let MetadataCollector = {
-  // Collects metadata such as what country you're in, what extensions you have installed, etc.
-  getExtensions: function MetadataCollector_getExtensions() {
-    //http://lxr.mozilla.org/aviarybranch/source/toolkit/mozapps/extensions/public/nsIExtensionManager.idl
-    //http://lxr.mozilla.org/aviarybranch/source/toolkit/mozapps/update/public/nsIUpdateService.idl#45
-    var ExtManager = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);
-    var nsIUpdateItem = Ci.nsIUpdateItem;
-    var items = [];
-    var names = [];
-    items = ExtManager.getItemList(nsIUpdateItem.TYPE_EXTENSION,{});
-    for (var i = 0; i < items.length; ++i) {
-      names.push(items[i].name);
-    }
-    return names.join(", ");
-  },
-
-  getLocation: function MetadataCollector_getLocation() {
-    navitagor.geolocation; // or nsIDOMGeoGeolocation
-    // we don't want the lat/long, we just want the country
-  }
-
-};
 
 /* TODO observe for private browsing start and stop:  this is done with the observer notifications
  * topic = "private-browsing" data = "enter"
@@ -272,22 +363,8 @@ let TestPilotSetup = {
       }
       dump("event listner added.\n");
 
-      // TODO take this out of here and put it somewhere else... or hit a
-      // Test Pilot Central site and download a list of tasks.
-      TestPilotSetup.addTask(new TestPilotSurvey(SURVEY_URL,
-                                                 "Survey For New Test Pilots",
-                                                 "survey_for_new_pilots",
-                                                 this.window,
-                                                 this.notificationsMenu));
-
-      this.checkForTasks();
-      this.isSetupComplete = true;
-
-       // TODO This is just temporary; ultimately the TabsExperiment needs to be wrapped in a
-       // Task with a start date and an end date.
-       TabsExperimentObserver.install(window.getBrowser());
-
-       dump("Installed extensions are: " + MetadataCollector.getExtensions() + "\n");
+       this.checkForTasks();
+       this.isSetupComplete = true;
       } catch (e) {
 	dump("Error in TP startup: " + e + "\n");
       }
@@ -337,8 +414,10 @@ let TestPilotSetup = {
     let label = event.target.getAttribute("label");
     dump("You selected menu item with label " + label + "\n");
     if (event.target.taskObject) {
-      event.target.taskObject.takeSurvey();
-    }
+      dump("Calling executeTask\n");
+      event.target.taskObject.executeTask();
+    } else
+      dump("No taskObject.\n");
   },
 
   get iconLeftPos() {
@@ -354,7 +433,21 @@ let TestPilotSetup = {
   },
 
   checkForTasks: function TPS_checkForTasks() {
-    // TODO look at RSS feed for new tasks.
+    // TODO look at RSS feed for new tasks and their start and end dates.
+    TestPilotSetup.addTask(new TestPilotSurvey(SURVEY_URL,
+                                               "Survey For New Test Pilots",
+                                               "survey_for_new_pilots",
+                                               this.window,
+                                               this.notificationsMenu));
+
+    TestPilotSetup.addTask(new TestPilotExperiment(1,
+						   "Tab Open/Close Experiment",
+					           TabsExperimentDataStore,
+					           TabsExperimentObserver,
+					           START_DATE,
+                                                   END_DATE,
+                                                   this.window,
+						   this.notificationsMenu));
   }
 };
 

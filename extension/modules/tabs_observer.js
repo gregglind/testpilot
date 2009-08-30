@@ -89,14 +89,19 @@ var TabsExperimentObserver = {
     // What else can I grab out of this event?
     // have we got event.button?  event.charCode or keyCode?
 
+    // How about let's see whether that tab has a URL in it...
+    //var tabbrowser = browserWin.getBrowser();  // how do i get the win here?
+    // Or can I get the browser out of the tab object (event.target) instead?
+    //var currentBrowser = tabbrowser.getBrowserAtIndex(index);
+    //  if (url == currentBrowser.currentURI.spec) {
 
     let index = event.target.parentNode.getIndexOfItem(event.target);  
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.OPEN_EVENT,
-	  timestamp: Date.now(),
-	  tab_position: index,
-          num_tabs: event.target.parentNode.itemCount,
-          ui_method: TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.NEWTAB_BUTTON:
+      timestamp: Date.now(),
+      tab_position: index,
+      num_tabs: event.target.parentNode.itemCount,
+      ui_method: TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.NEWTAB_BUTTON:
 	      TabsExperimentConstants.NEWTAB_KEYBOARD
 		//TODO Not correct.  Need to distinguish open by click on link, open by menu item.
     });
@@ -113,9 +118,9 @@ var TabsExperimentObserver = {
     let index = event.target.parentNode.getIndexOfItem(event.target);  
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.CLOSE_EVENT,
-	  timestamp: Date.now(),
-	  tab_position: index,
-          num_tabs: event.target.parentNode.itemCount
+      timestamp: Date.now(),
+      tab_position: index,
+      num_tabs: event.target.parentNode.itemCount
     });
   },
 
@@ -124,10 +129,10 @@ var TabsExperimentObserver = {
 
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.SWITCH_EVENT,
-	  timestamp: Date.now(),
-	  tab_position: index,
-          num_tabs: event.target.parentNode.itemCount,
-          ui_method: TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.SWITCH_BY_CLICK:
+      timestamp: Date.now(),
+      tab_position: index,
+      num_tabs: event.target.parentNode.itemCount,
+      ui_method: TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.SWITCH_BY_CLICK:
 	      TabsExperimentConstants.SWITCH_BY_KEY
     });
   }

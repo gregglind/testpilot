@@ -5,7 +5,7 @@
   function showdbcontents() {
     Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
     var debug = document.getElementById("debug");
-    debug.innerHTML = TabsExperimentDataStore.barfAllData();
+    debug.innerHTML = JSON.stringify( TabsExperimentDataStore.barfAllData() );
   }
 
   function wipeDb() {

@@ -48,6 +48,22 @@ function drawTabsOverTimeGraph(canvas, rawData, originX, originY, width, height)
   lineToDataPoint( data[data.length-1][0], 0);
   ctx.closePath();
   ctx.fill(); 
+
+  // Add legend to graph...
+  let label = 0;
+  ctx.mozTextStyle = "12pt sans serif";
+  ctx.fillStyle = "black";
+  while (label < maxTabs) {
+    ctx.beginPath();
+    ctx.moveTo(originX, originY - label * yScale);
+    ctx.lineTo(originX - 5, originY - label * yScale);
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(originX - 25, originY - label * yScale);
+    ctx.mozDrawText(label);
+    ctx.restore();
+    label += 5;
+  }
 }
 
 

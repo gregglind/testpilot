@@ -45,8 +45,11 @@ Cu.import("resource://testpilot/modules/experiment_data_store.js");
 // TODO make sure this can be correctly installed on multiple windows!!!
 var TabsExperimentObserver = {
   _lastEventWasClick: null,
+  _window: null,
 
-  install: function TabsExperimentObserver_install(browser) {
+  install: function TabsExperimentObserver_install(window) {
+    TabsExperimentObserver._window = window;
+    let browser = window.getBrowser() 
     let container = browser.tabContainer;
     // Can we catch the click event during the capturing phase??
     // last argument of addEventListener is true to catch during capture, false to catch during bubbling.
@@ -78,6 +81,7 @@ var TabsExperimentObserver = {
   },
   
   onMouseUp: function TabsExperimentObserver_onMouseUp(event) {
+    dump("You released your click on the tabs bar.\n");
     TabsExperimentObserver._lastEventWasClick = false;
   },
 
@@ -85,39 +89,49 @@ var TabsExperimentObserver = {
     dump("You pressed a key that went to the tab bar.\n");
   },
 
+  getUrlInTab: function TabsExperimentObserver_getUrlInTab(index) {
+    var tabbrowser = TabsExperimentObserver._window.getBrowser();
+    var currentBrowser = tabbrowser.getBrowserAtIndex(index);
+    if (!currentBrowser.currentURI) {
+      return null;
+    }
+    return currentBrowser.currentURI.spec;
+  },
+
   onTabOpened: function TabsExperimentObserver_onTabOpened(event) {
-    // What else can I grab out of this event?
-    // have we got event.button?  event.charCode or keyCode?
-
-    // How about let's see whether that tab has a URL in it...
-    //var tabbrowser = browserWin.getBrowser();  // how do i get the win here?
-    // Or can I get the browser out of the tab object (event.target) instead?
-    //var currentBrowser = tabbrowser.getBrowserAtIndex(index);
-    //  if (url == currentBrowser.currentURI.spec) {
-
     dump("Tab opened. Last event was click? " + TabsExperimentObserver._lastEventWasClick + "\n");
+    // TODO Not registering click here on open events -- because mouse up and
+    // mousedown both happen before the tab open event.
     let uiMethod = TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.UI_CLICK:TabsExperimentConstants.UI_KEYBOARD;
     dump("Recording uiMethod of " + uiMethod + "\n");
-    let index = event.target.parentNode.getIndexOfItem(event.target);  
+    let index = event.target.parentNode.getIndexOfItem(event.target);
+
+    let url = TabsExperimentObserver.getUrlInTab(index);
+    if (url == "about:blank") {
+      // Url will be undefined if you open a new blank tab, but it will be
+      // "about:blank" if you opened the tab through a link (or by opening a
+      // recently-closed tab from the history menu).  Go figure.
+      uiMethod = TabsExperimentConstants.UI_LINK;
+    }
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.OPEN_EVENT,
       timestamp: Date.now(),
       tab_position: index,
       num_tabs: event.target.parentNode.itemCount,
       ui_method: uiMethod
-		//TODO Not correct.  Need to distinguish open by click on link, open by menu item.
+
     });
     // TODO add tab_position, tab_parent_position, tab_window, tab_parent_window,
     // ui_method, tab_site_hash, and num_tabs.
     // event has properties:
     // target, originalTarget, currentTarget, type.
     // Target is the tab.  currentTarget is the tabset (xul:tabs).
-
-    // We can tell if it was a click on a link because it doesn't have
   },
 
   onTabClosed: function TabsExperimentObserver_onTabClosed(event) {
     let index = event.target.parentNode.getIndexOfItem(event.target);
+    // TODO not registering click here on close events.
+    // cuz mouseup and mousedown both happen before the tab open event.
     let uiMethod = TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.UI_CLICK:TabsExperimentConstants.UI_KEYBOARD;
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.CLOSE_EVENT,
@@ -129,6 +143,10 @@ var TabsExperimentObserver = {
   },
 
   onTabSelected: function TabsExperimentObserver_onTabSelected(event) {
+    // TODO there is an automatic tab-selection event after each open and
+    // after each close.  Right now these get listed as 'keyboard', which is
+    // not accurate.  Should we try to figure them out and mark them as auto-
+    // matic?
     let index = event.target.parentNode.getIndexOfItem(event.target);
 
     dump("Tab selected.  Last event was click? " + TabsExperimentObserver._lastEventWasClick + "\n");

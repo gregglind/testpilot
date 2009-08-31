@@ -95,14 +95,16 @@ var TabsExperimentObserver = {
     //var currentBrowser = tabbrowser.getBrowserAtIndex(index);
     //  if (url == currentBrowser.currentURI.spec) {
 
+    dump("Tab opened. Last event was click? " + TabsExperimentObserver._lastEventWasClick + "\n");
+    let uiMethod = TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.UI_CLICK:TabsExperimentConstants.UI_KEYBOARD;
+    dump("Recording uiMethod of " + uiMethod + "\n");
     let index = event.target.parentNode.getIndexOfItem(event.target);  
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.OPEN_EVENT,
       timestamp: Date.now(),
       tab_position: index,
       num_tabs: event.target.parentNode.itemCount,
-      ui_method: TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.NEWTAB_BUTTON:
-	      TabsExperimentConstants.NEWTAB_KEYBOARD
+      ui_method: uiMethod
 		//TODO Not correct.  Need to distinguish open by click on link, open by menu item.
     });
     // TODO add tab_position, tab_parent_position, tab_window, tab_parent_window,
@@ -115,25 +117,30 @@ var TabsExperimentObserver = {
   },
 
   onTabClosed: function TabsExperimentObserver_onTabClosed(event) {
-    let index = event.target.parentNode.getIndexOfItem(event.target);  
+    let index = event.target.parentNode.getIndexOfItem(event.target);
+    let uiMethod = TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.UI_CLICK:TabsExperimentConstants.UI_KEYBOARD;
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.CLOSE_EVENT,
       timestamp: Date.now(),
       tab_position: index,
-      num_tabs: event.target.parentNode.itemCount
+      num_tabs: event.target.parentNode.itemCount,
+      ui_method: uiMethod
     });
   },
 
   onTabSelected: function TabsExperimentObserver_onTabSelected(event) {
     let index = event.target.parentNode.getIndexOfItem(event.target);
 
+    dump("Tab selected.  Last event was click? " + TabsExperimentObserver._lastEventWasClick + "\n");
+    let uiMethod = TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.UI_CLICK:TabsExperimentConstants.UI_KEYBOARD;
+
+    dump("Recording uiMethod of " + uiMethod + "\n");
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.SWITCH_EVENT,
       timestamp: Date.now(),
       tab_position: index,
       num_tabs: event.target.parentNode.itemCount,
-      ui_method: TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.SWITCH_BY_CLICK:
-	      TabsExperimentConstants.SWITCH_BY_KEY
+      ui_method: uiMethod
     });
   }
 };

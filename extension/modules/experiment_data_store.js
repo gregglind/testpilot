@@ -47,6 +47,7 @@ var _storSvc = Cc["@mozilla.org/storage/service;1"]
                  .getService(Ci.mozIStorageService);
 
 const TabsExperimentConstants = {
+  // constants for event_code
   OPEN_EVENT: 1,
   CLOSE_EVENT: 2,
   DRAG_EVENT: 3,
@@ -55,18 +56,15 @@ const TabsExperimentConstants = {
   QUIT_EVENT: 6,
   RESTORE_EVENT: 7,
 
-  NEWTAB_BUTTON: 1,
-  NEWTAB_MENU: 2,
-  NEWTAB_KEYBOARD: 3,
-  NEWTAB_LINK: 4,
-
-  SWITCH_BY_CLICK: 1,
-  SWITCH_BY_KEY: 2,
-
-  LOAD_BY_TYPING: 1,
-  LOAD_BY_SEARCH: 2,
-  LOAD_BY_BOOKMARK: 3,
-  LOAD_BY_HISTORY: 4
+  // constants for ui_method
+  UI_CLICK: 1,
+  UI_KEYBOARD: 2,
+  UI_MENU: 3,
+  UI_LINK: 4,
+  UI_URLENTRY: 5,
+  UI_SEARCH: 6,
+  UI_BOOKMARK: 7,
+  UI_HISTORY: 8
 };
 
 // TODO: Firefox blurs/focuses, i.e. user switches application?

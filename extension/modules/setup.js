@@ -70,7 +70,7 @@ const FIRST_RUN_PREF ="extensions.testpilot.firstRunUrl";
 const STATUS_PREF_PREFIX = "extensions.testpilot.taskstatus.";
 const TEST_PILOT_HOME_PAGE = "http://testpilot.mozillalabs.com";
 
-const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload";
+const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
 
 const SURVEY_URL = "http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d";
 const START_DATE = "";
@@ -157,6 +157,8 @@ TestPilotExperiment.prototype = {
     let dataString = encodeURI(JSON.stringify(uploadData));
 
     let params = "testid=" + this._id + "&data=" + dataString;
+    // TODO note there is an 8MB max on POST data in PHP, so if we have a REALLY big
+    // pile we may need to do multiple posts.
 
     var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
     req.open('POST', DATA_UPLOAD_URL, true);
@@ -166,9 +168,10 @@ TestPilotExperiment.prototype = {
     req.onreadystatechange = function(aEvt) {
       if (req.readyState == 4) {
 	if (req.status == 200) {
-	  // do success
+	  // TODO handle success by changing task state
 	  dump("DATA WAS POSTED SUCCESSFULLY " + req.responseText + "\n");
 	} else {
+	  // TODO handle failure by notifying user or scheduling a retry
 	  dump("ERROR POSTING DATA: " + req.responseText + "\n");
 	}
       }

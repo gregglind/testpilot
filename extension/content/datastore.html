@@ -1,11 +1,37 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html> <head>
 <title></title>
+<script src="graphs.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript">
-  function showdbcontents() {
+
+  function getDbContents() {
     Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
-    var debug = document.getElementById("debug");
-    debug.innerHTML = JSON.stringify( TabsExperimentDataStore.barfAllData() );
+    return TabsExperimentDataStore.barfAllData();
+  }
+
+  function drawSomeGraphs() {
+    var rawData = getDbContents();
+    var canvas1 = document.getElementById("tabs-over-time-canvas");
+    drawTabsOverTimeGraph(canvas1, rawData, 10, 210, 400, 200);
+    var canvas2 = document.getElementById("tab-close-pie-chart-canvas");
+    drawCloseTabPieChart(canvas2, rawData, 125, 125, 100);
+  }
+
+  function showdbcontents() {
+    document.getElementById("raw-data").style.display="block";
+    var table = document.getElementById("rawdata-table");
+    var rawData = getDbContents();
+    var columnNames = ["timestamp", "tab_position", "event_code", "ui_method", "num_tabs", "tab_site_hash", "tab_parent_position", "tab_window", "tab_parent_window"];
+    var i,j;
+    for (i = 0; i < rawData.length; i++) {
+      var row = document.createElement("tr");
+      for (j = 0; j < columnNames.length; j++) {
+        var cell = document.createElement("td");
+        cell.innerHTML = rawData[i][columnNames[j]];
+        row.appendChild(cell);
+      }
+      table.appendChild(row);
+    }
   }
 
   function wipeDb() {
@@ -15,11 +41,39 @@
     debug.innerHTML = "Wiped!";
   }
 </script>
+<style type="text/css">
+      canvas { border: 1px solid black; }
+    </style>
+
 </head>
 
-<body onload="showdbcontents();">
+<body onload="drawSomeGraphs();">
 <h1>Test Pilot Tabs Experiment Contents</h1>
-<p><button onclick="wipeDb();">Wipe</button>
+<p><button onclick="showdbcontents();">Show Raw Data</button>
+<button onclick="wipeDb();">Wipe My Data</button>
+<button onclick="">Upload My Data</button></p>
 <p><span id="debug"></span></p>
+
+
+<p>How many tabs did you have open and how did that change over time?</p>
+<canvas id="tabs-over-time-canvas" width="420" height="220"></canvas>
+
+<p>When you closed a tab, did you stay on the default tab or did you switch to another one immediately?</p>
+<canvas id="tab-close-pie-chart-canvas" width="250" height="250"></canvas>
+
+<div id="raw-data" style="display:none">
+<h3>Raw Data</h3>
+<table id="rawdata-table" border="true">
+  <tr><td>Time</td>
+      <td>Tab Pos.</td>
+      <td>Event</td>
+      <td>UI Method</td>
+      <td>Num. Tabs</td>
+      <td>Tab Group ID</td>
+      <td>Parent Pos.</td>
+      <td>Window ID</td>
+      <td>Parent Win.</td></tr>
+</table>
+</div>
 
 </body> </html>

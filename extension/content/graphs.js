@@ -77,24 +77,45 @@ function drawCloseTabPieChart(canvas, rawData, originX, originY, radius) {
     }
   }
 
-  let redAngle = 2*Math.PI * numClosedAndSwitched / numCloseEvents;
+  let angle = 2*Math.PI * numClosedAndSwitched / numCloseEvents;
 
-  ctx.fillStyle = "rgb(200, 0, 0)";
+  let closedAndSwitchedColor = "rgb(200, 0, 0)";
+  let justClosedColor = "rgb(0, 0, 200)";
+  ctx.fillStyle = closedAndSwitchedColor
   ctx.beginPath();
   ctx.moveTo( originX, originY );
   ctx.lineTo( originX + radius * Math.cos( 0 ),
 	      originY - radius * Math.sin( 0 ) );
-  ctx.arc( originX, originY, radius, 0, redAngle, true);
+  ctx.arc( originX, originY, radius, 0, angle, false);
   ctx.lineTo( originX, originY );
   ctx.fill();
+  ctx.stroke();
 
-  ctx.fillStyle = "rgb(0, 0, 200)";
+  ctx.fillStyle = justClosedColor;
   ctx.beginPath();
   ctx.moveTo( originX, originY );
-  ctx.lineTo( originX + radius * Math.cos( redAngle ),
-	      originY + radius * Math.sin( redAngle ) );
-  ctx.arc( originX, originY, radius, redAngle, 2 * Math.PI, true);
+  ctx.lineTo( originX + radius * Math.cos( angle ),
+	      originY + radius * Math.sin( angle ) );
+  ctx.arc( originX, originY, radius, angle, 2 * Math.PI, false);
   ctx.lineTo( originX, originY) ;
   ctx.fill();
+  ctx.stroke();
+
+  // Add legend to graph...
+  ctx.fillStyle = closedAndSwitchedColor;
+  ctx.fillRect( originX + radius + 10, 10, 20, 20 );
+  ctx.strokeRect( originX + radius + 10, 10, 20, 20 );
+  ctx.fillStyle = justClosedColor;
+  ctx.fillRect( originX + radius + 10, 50, 20, 20 );
+  ctx.strokeRect( originX + radius + 10, 50, 20, 20 );
+  ctx.mozTextStyle = "12pt sans serif";
+  ctx.fillStyle = "black";
+  ctx.save();
+  ctx.translate( originX + radius + 35, 30);
+  ctx.mozDrawText("Switched");
+  ctx.restore();
+  ctx.translate( originX + radius + 35, 70);
+  ctx.mozDrawText("Stayed");
+  ctx.restore();
 
 }

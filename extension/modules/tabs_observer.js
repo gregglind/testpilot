@@ -42,29 +42,53 @@ const Cu = Components.utils;
 
 Cu.import("resource://testpilot/modules/experiment_data_store.js");
 
-// TODO make sure this can be correctly installed on multiple windows!!!
-var TabsExperimentObserver = {
-  _lastEventWasClick: null,
-  _window: null,
+var g_nextWindowId = 1;
 
-  install: function TabsExperimentObserver_install(window) {
-    TabsExperimentObserver._window = window;
-    let browser = window.getBrowser() 
+// TODO make sure this can be correctly installed on multiple windows!!!
+function TabsExperimentObserver(window) {
+  this._init(window);
+}
+TabsExperimentObserver.prototype = {
+  _init: function TabsExperimentObserver__init(window) {
+    this._lastEventWasClick = null;
+    this._window = window;
+    this._windowId = g_nextWindowId;
+    g_nextWindowId ++;
+    this.install();
+  },
+
+  install: function TabsExperimentObserver_install() {
+    let browser = this._window.getBrowser() 
     let container = browser.tabContainer;
     // Can we catch the click event during the capturing phase??
     // last argument of addEventListener is true to catch during capture, false to catch during bubbling.
-    container.addEventListener("TabOpen", this.onTabOpened, false);
-    container.addEventListener("TabClose", this.onTabClosed, false);
-    container.addEventListener("TabSelect", this.onTabSelected, false);
+    var self = this;
+    container.addEventListener("TabOpen",
+                               function(event) {self.onTabOpened(event);},
+                               false);
+    container.addEventListener("TabClose",
+                               function(event) {self.onTabClosed(event);},
+                               false);
+    container.addEventListener("TabSelect",
+                               function(event) {self.onTabSelected(event);},
+                               false);
 
-    // TODO what other events can we listen for here?
+    // TODO what other events can we listen for here?  What if we put the
+    // listener on the browser or the window?
 
-    container.addEventListener("mousedown", this.onClick, true);
-    container.addEventListener("mouseup", this.onMouseUp, true);
-    container.addEventListener("keydown", this.onKey, true);
+    container.addEventListener("mousedown",
+                               function(event) {self.onClick(event);},
+                               true);
+    container.addEventListener("mouseup",
+                               function(event) {self.onMouseUp(event);},
+                               true);
+    container.addEventListener("keydown",
+                               function(event) {self.onKey(event);},
+                               true);
   },
 
   uninstall: function TabsExperimentObserver_uninstall(browser) {
+    // TODO this is Never actually called...
     let container = browser.tabContainer;
     container.removeEventListener("TabOpen", this.onTabOpened, false);
     container.removeEventListener("TabClose", this.onTabClosed, false);
@@ -77,20 +101,16 @@ var TabsExperimentObserver = {
 
   onClick: function TabsExperimentObserver_onClick(event) {
     dump("You clicked on tabs bar.\n");
-    TabsExperimentObserver._lastEventWasClick = true;
+    this._lastEventWasClick = true;
   },
   
   onMouseUp: function TabsExperimentObserver_onMouseUp(event) {
     dump("You released your click on the tabs bar.\n");
-    TabsExperimentObserver._lastEventWasClick = false;
-  },
-
-  onKey: function TabsExperimentObserver_onKey(event) {
-    dump("You pressed a key that went to the tab bar.\n");
+    this._lastEventWasClick = false;
   },
 
   getUrlInTab: function TabsExperimentObserver_getUrlInTab(index) {
-    var tabbrowser = TabsExperimentObserver._window.getBrowser();
+    var tabbrowser = this._window.getBrowser();
     var currentBrowser = tabbrowser.getBrowserAtIndex(index);
     if (!currentBrowser.currentURI) {
       return null;
@@ -99,14 +119,14 @@ var TabsExperimentObserver = {
   },
 
   onTabOpened: function TabsExperimentObserver_onTabOpened(event) {
-    dump("Tab opened. Last event was click? " + TabsExperimentObserver._lastEventWasClick + "\n");
+    dump("Tab opened. Last event was click? " + this._lastEventWasClick + "\n");
     // TODO Not registering click here on open events -- because mouse up and
     // mousedown both happen before the tab open event.
-    let uiMethod = TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.UI_CLICK:TabsExperimentConstants.UI_KEYBOARD;
+    let uiMethod = this._lastEventWasClick ? TabsExperimentConstants.UI_CLICK:TabsExperimentConstants.UI_KEYBOARD;
     dump("Recording uiMethod of " + uiMethod + "\n");
     let index = event.target.parentNode.getIndexOfItem(event.target);
-
-    let url = TabsExperimentObserver.getUrlInTab(index);
+    let windowId = this._windowId;
+    let url = this.getUrlInTab(index);
     if (url == "about:blank") {
       // Url will be undefined if you open a new blank tab, but it will be
       // "about:blank" if you opened the tab through a link (or by opening a
@@ -118,8 +138,8 @@ var TabsExperimentObserver = {
       timestamp: Date.now(),
       tab_position: index,
       num_tabs: event.target.parentNode.itemCount,
-      ui_method: uiMethod
-
+      ui_method: uiMethod,
+      tab_window: windowId
     });
     // TODO add tab_position, tab_parent_position, tab_window, tab_parent_window,
     // ui_method, tab_site_hash, and num_tabs.
@@ -129,16 +149,19 @@ var TabsExperimentObserver = {
   },
 
   onTabClosed: function TabsExperimentObserver_onTabClosed(event) {
+    dump("Tab closed.\n");
     let index = event.target.parentNode.getIndexOfItem(event.target);
+    let windowId = this._windowId;
     // TODO not registering click here on close events.
     // cuz mouseup and mousedown both happen before the tab open event.
-    let uiMethod = TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.UI_CLICK:TabsExperimentConstants.UI_KEYBOARD;
+    let uiMethod = this._lastEventWasClick ? TabsExperimentConstants.UI_CLICK:TabsExperimentConstants.UI_KEYBOARD;
     TabsExperimentDataStore.storeEvent({
       event_code: TabsExperimentConstants.CLOSE_EVENT,
       timestamp: Date.now(),
       tab_position: index,
       num_tabs: event.target.parentNode.itemCount,
-      ui_method: uiMethod
+      ui_method: uiMethod,
+      tab_window: windowId
     });
   },
 
@@ -148,9 +171,9 @@ var TabsExperimentObserver = {
     // not accurate.  Should we try to figure them out and mark them as auto-
     // matic?
     let index = event.target.parentNode.getIndexOfItem(event.target);
-
-    dump("Tab selected.  Last event was click? " + TabsExperimentObserver._lastEventWasClick + "\n");
-    let uiMethod = TabsExperimentObserver._lastEventWasClick ? TabsExperimentConstants.UI_CLICK:TabsExperimentConstants.UI_KEYBOARD;
+    let windowId = this._windowId;
+    dump("Tab selected.  Last event was click? " + this._lastEventWasClick + "\n");
+    let uiMethod = this._lastEventWasClick ? TabsExperimentConstants.UI_CLICK:TabsExperimentConstants.UI_KEYBOARD;
 
     dump("Recording uiMethod of " + uiMethod + "\n");
     TabsExperimentDataStore.storeEvent({
@@ -158,7 +181,8 @@ var TabsExperimentObserver = {
       timestamp: Date.now(),
       tab_position: index,
       num_tabs: event.target.parentNode.itemCount,
-      ui_method: uiMethod
+      ui_method: uiMethod,
+      tab_window: windowId
     });
   }
 };

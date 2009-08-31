@@ -95,12 +95,12 @@ TestPilotExperiment.prototype = {
     this._id = id;
     this._title = title;
     this._dataStore = dataStore;
-    this._observer = observer;
-    
-    // Install the observer.  TODO: Install this only if it date is between startDate and endDate.
+    // Observer is a constructor.  Constructing one will install it in the
+    // window too.
+    this._observer = new observer(window);
+    // TODO: Install this only if it date is between startDate and endDate.
     // TODO This is just temporary; ultimately the TabsExperiment needs to be wrapped in a
     // Task with a start date and an end date.
-    this._observer.install( window);
 
     // TODO implement state-changing for TestPilotExperiments
     this._status = Application.prefs.getValue(STATUS_PREF_PREFIX + this._id,

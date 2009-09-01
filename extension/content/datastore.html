@@ -67,6 +67,12 @@
     var debug = document.getElementById("debug");
     debug.innerHTML = "Wiped!";
   }
+
+  function makeThereBeAPopup() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    var task = TestPilotSetup.getTaskById(1);
+    TestPilotSetup._showNotification("This is a test notification.", task);
+  }
 </script>
 <style type="text/css">
       canvas { border: 1px solid black; }
@@ -78,7 +84,9 @@
 <h1>Test Pilot Tabs Experiment Contents</h1>
 <p><button onclick="showdbcontents();">Show Raw Data</button>
 <button onclick="wipeDb();">Wipe My Data</button>
-<button onclick="">Upload My Data</button></p>
+<button onclick="">Upload My Data</button>
+<button onclick="makeThereBeAPopup();">Popup</button>
+</p>
 <p><span id="debug"></span></p>
 
 

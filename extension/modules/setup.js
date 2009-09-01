@@ -35,7 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-EXPORTED_SYMBOLS = ["TestPilotSetup", "TestPilotSurvey"];
+EXPORTED_SYMBOLS = ["TestPilotSetup"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -205,10 +205,23 @@ let TestPilotSetup = {
     }
   },
 
-  _showNotification: function TPS__showNotification(text) {
+  _hideNotification: function TPS__hideNotification(text) {
+    this.popup.hidden = true;
+    this.popup.setAttribute("open", "false");
+    this.popup.hidePopup();
+  },
+
+  _showNotification: function TPS__showNotification(text, task) {
+    var self = this;
     this.popup.hidden = false;
     this.popup.setAttribute("open", "true");
     this.popup.getElementsByTagName("label")[0].setAttribute("value", text);
+    this.popup.onclick = function() {
+      self._hideNotification();
+      if (task) {
+        task.loadPage();
+      }
+    };
     this.popup.openPopup( this.notificationsButton, "after_end"); // ??
   },
 
@@ -222,7 +235,7 @@ let TestPilotSetup = {
       if (task.status == TaskConstants.STATUS_FINISHED) {
         let text = "An experiment is complete: " 
                    + task.title + " needs your attention.";
-	this._showNotification(text);
+	this._showNotification(text, task);
 	return;
       }
     }
@@ -234,17 +247,17 @@ let TestPilotSetup = {
 
     // If there's no finished test, next highest priority is tests that
     // have started since last time...
-    for (let i = 0; i < this.taskList.length; i++) {
+    for (i = 0; i < this.taskList.length; i++) {
       task = this.taskList[i];
       if (task.status == TaskConstants.STATUS_STARTING) {
 	text = "An experiment is now in progress: " + task.title;
-	this._showNotification(text);
+	this._showNotification(text, task);
 	return;
       }
     }
 
     // Then new tests and surveys...
-    for (let i = 0; i < this.taskList.length; i++) {
+    for (i = 0; i < this.taskList.length; i++) {
       task = this.taskList[i];
       if (task.status == TaskConstants.STATUS_NEW) {
 	if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
@@ -252,22 +265,22 @@ let TestPilotSetup = {
 	} else {
 	  text = "There is a new survey for you: " + task.title;
 	}
-	this._showNotification(text);
+	this._showNotification(text, task);
 	return;
       }
     }
     
     // And finally, new experiment results:
-    for (let i = 0; i < this.taskList.length; i++) {
+    for (i = 0; i < this.taskList.length; i++) {
       task = this.taskList[i];
       if (task.status == TaskConstants.STATUS_RESULTS) {
 	text = "Results are now available for " + task.title;
-	this._showNotification(text);
+	this._showNotification(text, task);
       }
     }
   },
 
-  _doHousekeeping: function TPS_showReminder() {
+  _doHousekeeping: function TPS__doHousekeeping() {
     // check date on all tasks:
     for (let i = 0; i < this.taskList.length; i++) {
       task = this.taskList[i];
@@ -280,14 +293,16 @@ let TestPilotSetup = {
       this._notifyUserOfTasks(HIGH_AND_MEDIUM_PRIORITY);
     }
     // Pester user about submitting data, at most once per day:
-    let lastCheck = Application.prefs.getValue( POPUP_LAST_CHECK_TIME);
-    let reminderInterval = Application.prefs.getValue( POPUP_REMINDER_INTERVAL);
+    let lastCheck = Application.prefs.getValue( POPUP_LAST_CHECK_TIME, 0);
+    let reminderInterval = Application.prefs.getValue( POPUP_REMINDER_INTERVAL,
+                                                       86400000);
     if (Date.now() - lastCheck > reminderInterval) {
+      Application.prefs.setValue( POPUP_LAST_CHECK_TIME, Date.now());
       this._notifyUserOfTasks(HIGH_PRIORITY_ONLY);
     }
   },
 
-  onTaskStatusChanged: function TPS_onTaskRemoved() {
+  onTaskStatusChanged: function TPS_onTaskStatusChanged() {
     dump("Task status changed!\n");
     this._notifyUserOfTasks(ANY_PRIORITY);
     // TODO notify of lower-priority state changes using observer message
@@ -325,6 +340,16 @@ let TestPilotSetup = {
 					           TabsExperimentObserver,
 					           startDate,
                                                    endDate));
+  },
+
+  getTaskById: function TPS_getTaskById(id) {
+    for (let i = 0; i < this.taskList.length; i++) {
+      let task = this.taskList[i];
+      if (task.id == id) {
+	return task;
+      }
+    }
+    return null;
   }
 };
 

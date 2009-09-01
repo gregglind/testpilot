@@ -86,6 +86,10 @@ var TestPilotTask = {
   get title() {
     return this._title;
   },
+  
+  get id() {
+    return this._id;
+  },
 
   get taskType() {
     return null;
@@ -174,11 +178,8 @@ TestPilotExperiment.prototype = {
 
   checkDate: function TestPilotExperiment_checkDate() {
     // TODO checkDate needs to be called periodically... 
-    dump("Checking date on experiment.\n");
     // Now seems to be really weirdly low compared to the UTC dates...
     let currentDate = Date.now();
-    dump("Now is " + currentDate + " vs startDate is " + this._startDate + "\n");
-    dump("End date is " + this._endDate + "\n");
     if (this._status < TaskConstants.STATUS_STARTING &&
 	currentDate >= this._startDate ) {
       dump("Switched to Starting.\n");

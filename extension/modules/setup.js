@@ -393,12 +393,14 @@ let TestPilotSetup = {
       dump("Adding event listner.\n");
       try {
       this.notificationsMenu.addEventListener("command", this.onMenuSelection, false);
+      // add listener for "DOMContentLoaded", gets passed event,
+      // look at event.originalTarget.URL
       var appcontent = window.document.getElementById("appcontent");
       if (appcontent) {
 	appcontent.addEventListener("DOMContentLoaded", function(event) {
           var newUrl =  event.originalTarget.URL;
           for (i = 0; i < self.taskList.length; i++) {
-            self.taskList[i].onUrlLoad(newUrl);
+            self.taskList[i].onUrlLoad(newUrl, event);
           }
 	}, true);
       } } catch ( e ) {
@@ -412,8 +414,6 @@ let TestPilotSetup = {
 	dump("Error in TP startup: " + e + "\n");
       }
     }
-
-    // add listener for "DOMContentLoaded", gets passed event, look at event.originalTarget.URL
   },
 
   // TODO need an uninstall method that calls TabsExperimentObserver.uninstall();.

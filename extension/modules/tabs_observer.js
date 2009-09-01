@@ -44,6 +44,23 @@ Cu.import("resource://testpilot/modules/experiment_data_store.js");
 
 var g_nextWindowId = 1;
 
+
+// TODO make this persistent across sessions and windows... may need to have an
+// experiment_data_store for it.
+var g_tempHostHash = {};
+var g_nextTabGroupId = 0;
+function getTabGroupIdFromUrl(url) {
+  var ioService = Cc["@mozilla.org/network/io-service;1"]  
+                    .getService(Ci.nsIIOService);  
+  let host = ioService.newURI(url, null, null).host;
+
+  if (g_tempHostHash[host] == undefined) {
+    g_tempHostHash[host] = g_nextTabGroupId;
+    g_nextTabGroupId ++;
+  }
+  return g_tempHostHash[host];
+}
+
 // TODO make sure this can be correctly installed on multiple windows!!!
 function TabsExperimentObserver(window) {
   this._init(window);
@@ -95,6 +112,15 @@ TabsExperimentObserver.prototype = {
 
     // apparently there are events called ondragover, ondragleave, ondragstart,
     // ondragend, and ondrop.
+
+    // For URL loads, we register a DOMContentLoaded on the appcontent:
+    let appcontent = this._window.document.getElementById("appcontent");
+    if (appcontent) {
+      appcontent.addEventListener("DOMContentLoaded",
+				  function(event) { self.onUrlLoad(event); },
+                                  true);
+    }	  
+
   },
 
   uninstall: function TabsExperimentObserver_uninstall(browser) {
@@ -131,7 +157,6 @@ TabsExperimentObserver.prototype = {
       ui_method: TabsExperimentConstants.UI_CLICK,
       tab_window: windowId
     });
-
   },
 
   onDrop: function TabsExperimentObserver_onDrop(event) {
@@ -150,12 +175,42 @@ TabsExperimentObserver.prototype = {
   },
 
   getUrlInTab: function TabsExperimentObserver_getUrlInTab(index) {
-    var tabbrowser = this._window.getBrowser();
-    var currentBrowser = tabbrowser.getBrowserAtIndex(index);
+    let tabbrowser = this._window.getBrowser();
+    let currentBrowser = tabbrowser.getBrowserAtIndex(index);
     if (!currentBrowser.currentURI) {
       return null;
     }
     return currentBrowser.currentURI.spec;
+  },
+
+  onUrlLoad: function TabsExperimentObserver_onUrlLoaded(event) {
+    let url = event.originalTarget.URL;
+    let tabBrowserSet = this._window.getBrowser();
+    let browser = tabBrowserSet.getBrowserForDocument(event.target);
+    if (!browser) {
+      dump("You loaded url " + url + ", but tab is null.\n");
+      return;
+    }
+
+    let index = null;
+    for (let i = 0; i < tabBrowserSet.browsers.length; i ++) {
+      if (tabBrowserSet.getBrowserAtIndex(i) == browser) {
+	index = i;
+	break;
+      }
+    }
+    dump("You loaded url " + url + " in tab " + index + "\n");
+    let groupId = getTabGroupIdFromUrl(url);
+    let windowId = this._windowId;
+    // TODO ui_method for this load event.
+    TabsExperimentDataStore.storeEvent({
+      event_code: TabsExperimentConstants.LOAD_EVENT,
+      timestamp: Date.now(),
+      tab_position: index,
+      num_tabs: tabBrowserSet.browsers.length,
+      tab_site_hash: groupId,
+      tab_window: windowId
+    });
   },
 
   onTabOpened: function TabsExperimentObserver_onTabOpened(event) {

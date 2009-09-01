@@ -99,6 +99,7 @@ TestPilotExperiment.prototype = {
     this._id = id;
     this._title = title;
     this._dataStore = dataStore;
+    this._browser = window.getBrowser();
     // Observer is a constructor.  Constructing one will install it in the
     // window too.
     this._observer = new observer(window);
@@ -137,8 +138,13 @@ TestPilotExperiment.prototype = {
     // TODO leave blank?
   },
 
-  executeTask: function TestPilotExperiment_execute() {
-    this._upload();
+  // TODO this is duplicated from survey.
+  executeTask: function TestPilotExperiment_upload() {
+    let tab = this._browser.addTab(this.infoPageUrl);
+    this._browser.selectedTab = tab;
+    if (this._status == TASK_STATUS_NEW) {
+      this.changeStatus(TASK_STATUS_PENDING);
+    }
   },
 
   _upload: function TestPilotExperiment_upload() {
@@ -246,11 +252,7 @@ TestPilotSurvey.prototype = {
   },
 
   executeTask: function TestPilotExperiment_upload() {
-    this._takeSurvey();
-  },
-
-  takeSurvey: function TPS_takeSurvy(event) {
-    let tab = this._browser.addTab(this._surveyUrl);
+    let tab = this._browser.addTab(this.infoPageUrl);
     this._browser.selectedTab = tab;
     if (this._status == TASK_STATUS_NEW) {
       this.changeStatus(TASK_STATUS_PENDING);
@@ -376,6 +378,7 @@ let TestPilotSetup = {
       dump("event listner added.\n");
 
        this.checkForTasks();
+       this.populateMenu();
        this.isSetupComplete = true;
       } catch (e) {
 	dump("Error in TP startup: " + e + "\n");
@@ -405,9 +408,9 @@ let TestPilotSetup = {
       if (task.taskType == TASK_TYPE_EXPERIMENT) {
         // Hide the 'no-tests-yet' menu item, because there is a test:
         this.window.document.getElementById("no-tests-yet").hidden = true;
-        refElement = window.document.getElementById("test-menu-separator");
+        refElement = this.window.document.getElementById("test-menu-separator");
       } else if (task.taskType == TASK_TYPE_SURVEY) {
-        refElement = window.document.getElementById("survey-menu-separator");
+        refElement = this.window.document.getElementById("survey-menu-separator");
       }
       this.notificationsMenu.insertBefore(newMenuItem, refElement);
     }

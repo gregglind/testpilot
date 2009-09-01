@@ -433,22 +433,11 @@ let TestPilotSetup = {
     if (this.thereAreNewTasks()) {
       dump("There are new tasks.  I will blink.\n");
       if (!this._blinker) {
-        var theButton = this.notificationsButton;
-        var rotation = false;
-        this._blinker = this.window.setInterval(
-          function() {
-            rotation = !(rotation);
-            if (rotation)
-              theButton.image = "chrome://testpilot/skin/new.png";
-            else
-              theButton.image = "chrome://testpilot/skin/testpilot_16x16.png";
-          }, 1000 );
+	// TODO make door-hanger appear
       }
     } else {
       if (this._blinker) {
-        this.window.clearInterval(this._blinker);
-        this.notificationsButton.image = "chrome://testpilot/skin/testpilot_16x16.png";
-        this._blinker = null;
+	// TODO make door-hanger disappear
       }
     }
   },

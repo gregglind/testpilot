@@ -52,6 +52,7 @@ var g_nextTabGroupId = 0;
 function getTabGroupIdFromUrl(url) {
   var ioService = Cc["@mozilla.org/network/io-service;1"]  
                     .getService(Ci.nsIIOService);  
+  // TODO this next line can sometimes throw a data:no exception.
   let host = ioService.newURI(url, null, null).host;
 
   if (g_tempHostHash[host] == undefined) {

@@ -23,7 +23,7 @@
   <panel id="pilot-notification-popup" hidden="true" noautofocus="true" level="top"
          position="after_start">
     <hbox id="pilot-notification-popup-container" align="top">
-      <label value="Test Pilot wants your attention."/>
+      <label id="pilot-notification-text" value="Test Pilot wants your attention."/>
     </hbox>
   </panel>
 

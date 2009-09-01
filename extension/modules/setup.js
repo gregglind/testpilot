@@ -425,7 +425,7 @@ let TestPilotSetup = {
     dump("taskList.length is " + this.taskList.length + "\n");
     for (i = 0; i < this.taskList.length; i++) {
       if (this.taskList[i].isNew) {
-	return true;
+	return this.taskList[i].title;
       }
     }
     return false;
@@ -433,22 +433,19 @@ let TestPilotSetup = {
 
   onTaskStatusChanged: function TPS_onTaskRemoved() {
     // Show door-hanger thingy if there are new tasks.
-    if (this.thereAreNewTasks()) {
-      dump("There are new tasks.  I will make a door hanger.\n");
-      // make door-hanger appear...
-      try {
-	// TODO the little triangle points the wrong way!  How to fix that?
-	// what is even drawing that triangle??
-        this.popup.hidden = false;
-        this.popup.setAttribute("open", "true");
-        this.popup.openPopup( this.notificationsButton, "after_end"); // ??
-      } catch(e) {
-        dump("Error when making door hanger: " + e + "\n");
-      }
-    } else {
-      if (this._blinker) {
-	// TODO make door-hanger disappear
-      }
+    let taskTitle = this.thereAreNewTasks();
+    if (taskTitle) {
+      /* TODO this is not the right logic anymore.  Something might need attention not
+       * just if it's NEW, but also if it's got a state change it thinks you need to
+       * know about, like going from pending to in progress, or in progress to finished.
+       * Especially FINISHED.
+       * TODO make door-hanger appear x minutes after browser start if there's an older
+       * state change that you still haven't seen... */
+      this.popup.hidden = false;
+      this.popup.setAttribute("open", "true");
+      let text = "Test Pilot: \"" + taskTitle + "\" wants your attention.";
+      this.popup.getElementsByTagName("label")[0].setAttribute("value", text);
+      this.popup.openPopup( this.notificationsButton, "after_end"); // ??
     }
   },
 

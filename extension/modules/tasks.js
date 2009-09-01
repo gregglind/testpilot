@@ -45,30 +45,24 @@ Components.utils.import("resource://testpilot/modules/metadata.js");
 const STATUS_PREF_PREFIX = "extensions.testpilot.taskstatus.";
 const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
 
-/* These constants represent the status of a user task.  User tasks can either
- * be surveys or tests.  A task is either NEW (the user has never seen it before
- * and needs to be somehow notified that it exists), PENDING (user has seen it but
- * has neither chosen to participate nor to opt out), IN_PROGRESS (data is currently
- * being collected), CANCELED (user has opted out), SUBMITTED (user has submitted data).
- * FINISHED is a test which has ended but which the user has neither canceled nor submitted
- * yet; we'll keep prompting for a certain period of time, but if it's an opt-out test then
- * it will automatically submit at the end of that time.
- * A task can never go backwards in this sequence, so we can do > and < comparisons on them.
- * Status of a task will be stored in a preference called extensions.testpilot.taskstatus.(taskname).
- */
 
 const TaskConstants = {
- STATUS_NEW: 0,
- STATUS_PENDING : 1,
- STATUS_IN_PROGRESS : 2,
- STATUS_FINISHED : 3,
- STATUS_CANCELLED : 4,
- STATUS_SUBMITTED : 5,
- STATUS_RESULTS : 6, // Test finished AND final results visible somewhere
+ STATUS_NEW: 0, // It's new and you haven't seen it yet.
+ STATUS_PENDING : 1,  // You've seen it but it hasn't started.
+ STATUS_STARTING: 2,  // Data collection started but notification not shown.
+ STATUS_IN_PROGRESS : 3, // Started and notification shown.
+ STATUS_FINISHED : 4, // Finished and awaiting your choice.
+ STATUS_CANCELLED : 5, // You've opted out and not submitted anything.
+ STATUS_SUBMITTED : 6, // You've submitted your data.
+ STATUS_RESULTS : 7, // Test finished AND final results visible somewhere
+ STATUS_ARCHIVED: 8, // You've seen the results; there's nothing more to do.
 
  TYPE_EXPERIMENT : 1,
  TYPE_SURVEY : 2
 };
+/* Note that experiments use all 9 status codes, but surveys don't have a
+ * data collection period so they are never STARTING or IN_PROGRESS or
+ * FINISHED, they go straight from PENDING to SUBMITTED or CANCELED. */
 
 let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
@@ -93,10 +87,6 @@ var TestPilotTask = {
     return this._title;
   },
 
-  get isNew() {
-    return (this._status == TaskConstants.STATUS_NEW);
-  },
-
   get taskType() {
     return null;
   },
@@ -116,15 +106,19 @@ var TestPilotTask = {
   onUrlLoad: function TestPilotTask_onUrlLoad(url) {
   },
 
-  changeStatus: function TPS_changeStatus(newStatus) {
+  changeStatus: function TPS_changeStatus(newStatus, suppressNotification) {
     this._status = newStatus;
     // Set the pref:
     Application.prefs.setValue(STATUS_PREF_PREFIX + this._id, newStatus);
     // Stop the blinking/ regenerate the menu items
-    Observers.notify("testpilot:task:changed", "", null);
+    if (!suppressNotification) {
+      Observers.notify("testpilot:task:changed", "", null);
+    }
   },
 
-  executeTask: function TestPilotTask_upload() {
+  loadPage: function TestPilotTask_loadPage() {
+    // TODO this should use frontmost window instead of last registered
+    // window.
     let tab = this._browser.addTab(this.infoPageUrl);
     this._browser.selectedTab = tab;
     if (this._status == TaskConstants.STATUS_NEW) {
@@ -204,7 +198,7 @@ function TestPilotSurvey(id, title, url) {
 TestPilotSurvey.prototype = {
  _init: function TestPilotSurvey__init(id, title, url) {
     this._taskInit(id, title, url);
-    if (this._status < TaskConstants.STATUS_SUBMITTED) {
+    if (this._status < TaskConstants.STATUS_FINISHED) {
       this.checkForCompletion();
     }
   },
@@ -220,13 +214,13 @@ TestPilotSurvey.prototype = {
     // SurveyMonkey changes their 'survey complete' page.
     let surveyCompletedText = "Thank you for completing our survey!";
     var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
-    req.open('GET', self._surveyUrl, true);
+    req.open('GET', self._url, true);
     req.onreadystatechange = function (aEvt) {
       if (req.readyState == 4) {
         if (req.status == 200) {
           if (req.responseText.indexOf(surveyCompletedText) > -1) {
             dump("Survey is completed.\n");
-	    self.changeStatus( TaskConstants.STATUS_SUBMITTED );
+	    self.changeStatus( TaskConstants.STATUS_SUBMITTED, true );
 	  }
         } else {
           dump("Error loading page\n");

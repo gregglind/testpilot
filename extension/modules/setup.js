@@ -52,6 +52,10 @@ const POPUP_CHECK_INTERVAL = "extensions.testpilot.popup.delayAfterStartup";
 const POPUP_REMINDER_INTERVAL = "extensions.testpilot.popup.timeBetweenChecks";
 const POPUP_LAST_CHECK_TIME = "extensions.testpilot.popup.lastCheck";
 
+const HIGH_PRIORITY_ONLY = 1;
+const HIGH_AND_MEDIUM_PRIORITY = 2;
+const ANY_PRIORITY = 3;
+
 // TODO move homepage to a pref?
 const TEST_PILOT_HOME_PAGE = "http://testpilot.mozillalabs.com";
 
@@ -178,6 +182,8 @@ let TestPilotSetup = {
         newMenuItem.setAttribute("disabled", true);
         newMenuItem.setAttribute("label", "  (Completed)" + task.title);
       }
+      // TODO other variations of icon and label for other statuses?
+
       newMenuItem.taskObject = task;
       let refElement = null;
       if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
@@ -200,57 +206,95 @@ let TestPilotSetup = {
     }
   },
 
-  notifyUserOfPendingTasks: function TPS_notifyUser() {
+  _showNotification: function TPS__showNotification(text) {
+    this.popup.hidden = false;
+    this.popup.setAttribute("open", "true");
+    this.popup.getElementsByTagName("label")[0].setAttribute("value", text);
+    this.popup.openPopup( this.notificationsButton, "after_end"); // ??
+  },
+
+  _notifyUserOfTasks: function TPS__notifyUser(priority) {
     // Show door-hanger thingy if there are new tasks.
-    let taskTitle = this.thereAreNewTasks();
-    if (taskTitle) {
-      /* TODO this is not the right logic anymore.  Something might need attention not
-       * just if it's NEW, but also if it's got a state change it thinks you need to
-       * know about, like going from pending to in progress, or in progress to finished.
-       * Especially FINISHED.
-       * TODO make door-hanger appear x minutes after browser start if there's an older
-       * state change that you still haven't seen... */
-      this.popup.hidden = false;
-      this.popup.setAttribute("open", "true");
-      let text = "Test Pilot: \"" + taskTitle + "\" wants your attention.";
-      this.popup.getElementsByTagName("label")[0].setAttribute("value", text);
-      this.popup.openPopup( this.notificationsButton, "after_end"); // ??
+    let i, task, text;
+
+    // Highest priority is if there is a finished test (needs a decision)
+    for (i = 0; i < this.taskList.length; i++) {
+      task = this.taskList[i];
+      if (task.status == TaskConstants.STATUS_FINISHED) {
+        let text = "An experiment is complete: " 
+                   + task.title + " needs your attention.";
+	this._showNotification(text);
+	return;
+      }
+    }
+
+    // If we only want to show highest priority stuff, end here.
+    if (priority == HIGH_PRIORITY_ONLY) {
+      return;
+    }
+
+    // If there's no finished test, next highest priority is tests that
+    // have started since last time...
+    for (let i = 0; i < this.taskList.length; i++) {
+      task = this.taskList[i];
+      if (task.status == TaskConstants.STATUS_STARTING) {
+	text = "An experiment is now in progress: " + task.title;
+	this._showNotification(text);
+	return;
+      }
+    }
+
+    // Then new tests and surveys...
+    for (let i = 0; i < this.taskList.length; i++) {
+      task = this.taskList[i];
+      if (task.status == TaskConstants.STATUS_NEW) {
+	if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
+	  text = "A new experiment has been scheduled: " + task.title;
+	} else {
+	  text = "There is a new survey for you: " + task.title;
+	}
+	this._showNotification(text);
+	return;
+      }
+    }
+    
+    // And finally, new experiment results:
+    for (let i = 0; i < this.taskList.length; i++) {
+      task = this.taskList[i];
+      if (task.status == TaskConstants.STATUS_RESULTS) {
+	text = "Results are now available for " + task.title;
+	this._showNotification(text);
+      }
     }
   },
 
   showReminderIfNeeded: function TPS_showReminder() {
     if (!this.didReminderAfterStartup) {
-      //TODO Do the reminder -- but at most once per browser session
+      // Do the reminder -- but at most once per browser session
       this.didReminderAfterStartup = true;
       Application.prefs.setValue( POPUP_LAST_CHECK_TIME, Date.now());
-      this.notifyUserOfPendingTasks();
+      this._notifyUserOfTasks(HIGH_AND_MEDIUM_PRIORITY);
     }
     let lastCheck = Application.prefs.getValue( POPUP_LAST_CHECK_TIME);
     let reminderInterval = Application.prefs.getValue( POPUP_REMINDER_INTERVAL);
     if (Date.now() - lastCheck > reminderInterval) {
-      this.notifyUserOfPendingTasks();
+      this._notifyUserOfTasks(HIGH_PRIORITY_ONLY);
     }
-  },
-
-  thereAreNewTasks: function TPS_thereAreNewTasks() {
-    for (let i = 0; i < this.taskList.length; i++) {
-      if (this.taskList[i].isNew) {
-	return this.taskList[i].title;
-      }
-    }
-    return false;
   },
 
   onTaskStatusChanged: function TPS_onTaskRemoved() {
     dump("Task status changed!\n");
-    notifyUserOfPendingTasks();
+    this._notifyUserOfTasks(ANY_PRIORITY);
+    // TODO notify of lower-priority state changes using observer message
+    // FINISHED -> SUBMITTED: "Your data has been submitted successfully."
+    // FINISHED -> CANCELED: "You have opted out of an experiment."
     this.populateMenu();
   },
 
   onMenuSelection: function TPS_onMenuSelection(event) {
     let label = event.target.getAttribute("label");
     if (event.target.taskObject) {
-      event.target.taskObject.executeTask();
+      event.target.taskObject.loadPage();
     }
   },
 

@@ -1,0 +1,16 @@
+/* Popup Bounding Box */
+#pilot-notification-popup {
+  -moz-appearance: none;
+  -moz-window-shadow: none;
+  background-color: transparent;
+  margin-top: -4px;
+  margin-left: -13px;
+  min-width: 280px;
+  -moz-border-image: url(chrome://testpilot/skin/hud-panel.png) 26 50 22 18 / 26px 50px 22px 18px repeat; 
+}
+
+#pilot-notification-popup-container {
+  -moz-appearance: none;
+  margin: 4px;
+  color:  #ffffff;
+}

@@ -69,7 +69,7 @@ function drawTabsOverTimeGraph(canvas, rawData, originX, originY, width, height)
 
 function drawCloseTabPieChart(canvas, rawData, originX, originY, radius) {
   let ctx = canvas.getContext("2d");
-  let minTimeDiff = 2000; // 5 seconds
+  let minTimeDiff = 5000; // 5 seconds
   // TODO split into smaller chunks -- 1 second 2 seconds 5 seconds 10 seconds?
 
   let numCloseEvents = 0;
@@ -81,12 +81,12 @@ function drawCloseTabPieChart(canvas, rawData, originX, originY, radius) {
   // TODO should we interpret it differently if you close a tab that
   // is not the one you're looking at?
   for (let row=0; row < rawData.length; row++) {
-    if ( rawData[row].event_code == 2 ) {  // close event
+    if ( rawData[row].event_code == TabsExperimentConstants.CLOSE_EVENT ) { 
       numCloseEvents ++;
       numSwitchEvents = 0;
       lastCloseEventTime = rawData[row].timestamp;
     }
-    if (rawData[row].event_code == 4 ) { // switch event
+    if (rawData[row].event_code == TabsExperimentConstants.SWITCH_EVENT ) {
       numSwitchEvents ++;
       if (numSwitchEvents == 2 && 
 	  (rawData[row].timestamp - lastCloseEventTime) <= minTimeDiff) {

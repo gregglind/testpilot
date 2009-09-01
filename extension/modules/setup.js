@@ -385,6 +385,9 @@ let TestPilotSetup = {
           .getElementById("pilot-notifications-button");
       this.notificationsMenu = window.document
           .getElementById("pilot-menu");
+      this.popup = window.document
+          .getElementById("pilot-notification-popup");
+
 
       var self = this;
       Observers.add("testpilot:task:changed", this.onTaskStatusChanged,
@@ -429,11 +432,18 @@ let TestPilotSetup = {
   },
 
   onTaskStatusChanged: function TPS_onTaskRemoved() {
-    // Blink menu if there are new tasks; stop blinking if there are not.
+    // Show door-hanger thingy if there are new tasks.
     if (this.thereAreNewTasks()) {
-      dump("There are new tasks.  I will blink.\n");
-      if (!this._blinker) {
-	// TODO make door-hanger appear
+      dump("There are new tasks.  I will make a door hanger.\n");
+      // make door-hanger appear...
+      try {
+	// TODO the little triangle points the wrong way!  How to fix that?
+	// what is even drawing that triangle??
+        this.popup.hidden = false;
+        this.popup.setAttribute("open", "true");
+        this.popup.openPopup( this.notificationsButton, "after_end"); // ??
+      } catch(e) {
+        dump("Error when making door hanger: " + e + "\n");
       }
     } else {
       if (this._blinker) {

@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<?xml-stylesheet href="chrome://testpilot/content/browser.css" type="text/css"?>
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <script src="browser.js"></script>
 <statusbar id="status-bar">
@@ -18,6 +19,13 @@
       <menuitem label="About Test Pilot" oncommand="openAboutTestPilotPage();"/>
     </menupopup>
   </popupset>
+
+  <panel id="pilot-notification-popup" hidden="true" noautofocus="true" level="top"
+         position="after_start">
+    <hbox id="pilot-notification-popup-container" align="top">
+      <label value="Test Pilot wants your attention."/>
+    </hbox>
+  </panel>
 
 </statusbar>
 </overlay>

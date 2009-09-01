@@ -391,6 +391,17 @@ let TestPilotSetup = {
     // Create a menu entry for each task:
     for (let i=0; i<this.taskList.length; i++) {
       let task = this.taskList[i];
+
+      // First remove any existing menu item for this task.
+      // TODO is there a less inefficient way of doing this?
+      for (let j = 0; j < this.notificationsMenu.childNodes.length; j++) {
+	let childNode = this.notificationsMenu.childNodes[j];
+	if (childNode.taskObject == task) {
+	  this.notificationsMenu.removeChild(childNode);
+	  break;
+	}
+      }
+
       let newMenuItem = this.window.document.createElement("menuitem");
       newMenuItem.setAttribute("label", "  " + task.title);
       if (task.status == TASK_STATUS_NEW) {
@@ -445,7 +456,6 @@ let TestPilotSetup = {
     }
 
     // Regenerate that menu
-    // TODO clear the menu here...
     this.populateMenu();
   },
 

@@ -106,6 +106,9 @@ var TestPilotTask = {
   onUrlLoad: function TestPilotTask_onUrlLoad(url) {
   },
 
+  checkDate: function TestPilotTask_checkDate() {
+  },
+
   changeStatus: function TPS_changeStatus(newStatus, suppressNotification) {
     this._status = newStatus;
     // Set the pref:
@@ -123,6 +126,8 @@ var TestPilotTask = {
     this._browser.selectedTab = tab;
     if (this._status == TaskConstants.STATUS_NEW) {
       this.changeStatus(TaskConstants.STATUS_PENDING);
+    } else if (this._status == TaskConstants.STATUS_STARTING) {
+      this.changeStatus(TaskConstants.STATUS_IN_PROGRESS);
     }
   }
 };
@@ -140,10 +145,20 @@ TestPilotExperiment.prototype = {
 					    endDate) {
     this._taskInit(id, title, url);
     this._dataStore = dataStore;
+    this._startDate = startDate;
+    this._endDate = endDate;
+    this.checkDate();
+
     // Observer is a constructor.  Constructing one will install it in the
     // window too.
     this._observerConstructor = observer;
-    // TODO: Install this only if it date is between startDate and endDate.
+    // TODO: Observers should only observe if the status is IN_PROGRESS; but
+    // remember that status can change during a browser session, possibly
+    // with multiple windows.  So either we register observers in every open
+    // window when we cross the start threshold (and take them out when we cross
+    // the finish line) , or else we put code in the
+    // observer itself to let it know not to record anything unless the
+    // task status is IN_PROGRESS.
   },
 
   get taskType() {
@@ -155,6 +170,26 @@ TestPilotExperiment.prototype = {
     this._browser = window.getBrowser();
     let Observer = this._observerConstructor;
     this._observer = new Observer(window);
+  },
+
+  checkDate: function TestPilotExperiment_checkDate() {
+    // TODO checkDate needs to be called periodically... 
+    dump("Checking date on experiment.\n");
+    // Now seems to be really weirdly low compared to the UTC dates...
+    let currentDate = Date.now();
+    dump("Now is " + currentDate + " vs startDate is " + this._startDate + "\n");
+    dump("End date is " + this._endDate + "\n");
+    if (this._status < TaskConstants.STATUS_STARTING &&
+	currentDate >= this._startDate ) {
+      dump("Switched to Starting.\n");
+      this.changeStaus( TaskConstants.STATUS_STARTING );
+    }
+
+    if (this._status < TaskConstants.STATUS_FINISHED &&
+	currentDate >= this._endDate ) {
+      dump("Switched to Finishing.\n");
+      this.changeStatus( TaskConstants.STATUS_FINISHED );
+    }
   },
 
   upload: function TestPilotExperiment_upload() {
@@ -174,10 +209,11 @@ TestPilotExperiment.prototype = {
     req.onreadystatechange = function(aEvt) {
       if (req.readyState == 4) {
 	if (req.status == 200) {
-	  // TODO handle success by changing task state
+	  // TODO notify user of submission.
 	  dump("DATA WAS POSTED SUCCESSFULLY " + req.responseText + "\n");
+	  this.changeStatus( TaskConstants.STATUS_SUBMITTED );
 	} else {
-	  // TODO handle failure by notifying user or scheduling a retry
+	  // TODO notify user of failure or schedule a retry.
 	  dump("ERROR POSTING DATA: " + req.responseText + "\n");
 	}
       }
@@ -185,7 +221,8 @@ TestPilotExperiment.prototype = {
     req.send( params );
   },
 
-  delete: function TestPilotExperiment_delete() {
+  optOut: function TestPilotExperiment_optOut() {
+    this.changeStatus( TaskConstants.STATUS_CANCELLED);
     this._dataStore.wipeAllData();
   }
 };

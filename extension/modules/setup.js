@@ -63,8 +63,7 @@ const TEST_PILOT_HOME_PAGE = "http://testpilot.mozillalabs.com";
 // TODO this stuff shouldn't be hard-coded here:
 const SURVEY_URL = "http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d";
 const EXPERIMENT_URL = "chrome://testpilot/content/datastore.html";
-const START_DATE = "";
-const END_DATE = "";
+
 
 let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
@@ -138,7 +137,7 @@ let TestPilotSetup = {
        dump("Setting interval for showing reminders...\n");
        let interval = Application.prefs.getValue(POPUP_CHECK_INTERVAL, 180000);
        this.window.setInterval(function() {
-                                 self.showReminderIfNeeded();
+                                 self._doHousekeeping();
                                }, interval);
        dump("Checking for tasks...\n");
        this.checkForTasks();
@@ -268,13 +267,19 @@ let TestPilotSetup = {
     }
   },
 
-  showReminderIfNeeded: function TPS_showReminder() {
+  _doHousekeeping: function TPS_showReminder() {
+    // check date on all tasks:
+    for (let i = 0; i < this.taskList.length; i++) {
+      task = this.taskList[i];
+      task.checkDate();
+    }
+    // Do a full reminder -- but at most once per browser session
     if (!this.didReminderAfterStartup) {
-      // Do the reminder -- but at most once per browser session
       this.didReminderAfterStartup = true;
       Application.prefs.setValue( POPUP_LAST_CHECK_TIME, Date.now());
       this._notifyUserOfTasks(HIGH_AND_MEDIUM_PRIORITY);
     }
+    // Pester user about submitting data, at most once per day:
     let lastCheck = Application.prefs.getValue( POPUP_LAST_CHECK_TIME);
     let reminderInterval = Application.prefs.getValue( POPUP_REMINDER_INTERVAL);
     if (Date.now() - lastCheck > reminderInterval) {
@@ -304,6 +309,10 @@ let TestPilotSetup = {
 
   checkForTasks: function TPS_checkForTasks() {
     // TODO look at RSS feed for new tasks and their start and end dates.
+    var startDate = Date.UTC(2009, 9, 1);
+    var endDate = Date.UTC(2009, 9, 2);
+
+
     TestPilotSetup.addTask(new TestPilotSurvey("survey_for_new_pilots",                          
                                                "Survey For New Test Pilots",
                                                SURVEY_URL));
@@ -313,8 +322,8 @@ let TestPilotSetup = {
 						   EXPERIMENT_URL,
 					           TabsExperimentDataStore,
 					           TabsExperimentObserver,
-					           START_DATE,
-                                                   END_DATE));
+					           startDate,
+                                                   endDate));
   }
 };
 

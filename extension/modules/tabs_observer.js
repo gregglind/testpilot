@@ -189,7 +189,6 @@ TabsExperimentObserver.prototype = {
     let tabBrowserSet = this._window.getBrowser();
     let browser = tabBrowserSet.getBrowserForDocument(event.target);
     if (!browser) {
-      dump("You loaded url " + url + ", but tab is null.\n");
       return;
     }
 
@@ -200,7 +199,6 @@ TabsExperimentObserver.prototype = {
 	break;
       }
     }
-    dump("You loaded url " + url + " in tab " + index + "\n");
     let groupId = getTabGroupIdFromUrl(url);
     let windowId = this._windowId;
     // TODO ui_method for this load event.

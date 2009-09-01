@@ -36,6 +36,14 @@
 
 EXPORTED_SYMBOLS = ["MetadataCollector"];
 
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+const LOCALE_PREF = "general.useragent.locale";
+
+let Application = Cc["@mozilla.org/fuel/application;1"]
+                  .getService(Ci.fuelIApplication);
+
 let MetadataCollector = {
   // Collects metadata such as what country you're in, what extensions you have installed, etc.
   getExtensions: function MetadataCollector_getExtensions() {
@@ -55,23 +63,28 @@ let MetadataCollector = {
   getLocation: function MetadataCollector_getLocation() {
     //navitagor.geolocation; // or nsIDOMGeoGeolocation
     // we don't want the lat/long, we just want the country
-    return "us"; // TODO
+
+    return Application.prefs.getValue(LOCALE_PREF, "");
   },
 
   getVersion: function MetadataCollector_getVersion() {
-    // Detects firefox version.
-    return "3.5"; // TODO
+    return Application.version;
   },
 
-  // TODO: OS version
-  // Locale (not the same as geolocation neccessarily)
+  getOperatingSystem: function MetadataCollector_getOSVersion() {
+    let oscpu = Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).oscpu;
+    let os = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
+    return os + " " + oscpu;
+  },
+
   // Number of bookmarks?
   // TODO if we make a GUID for the user, we keep it here.
 
   getMetadata: function MetadataCollector_getMetadata() {
     return { extensions: MetadataCollector.getExtensions(),
 	     location: MetadataCollector.getLocation(),
-	     version: MetadataCollector.getVersion() };
+	     version: MetadataCollector.getVersion(),
+             operatingSystem: MetadataCollector.getOperatingSystem() };
   }
 
 };

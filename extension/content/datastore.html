@@ -10,6 +10,12 @@
     return TabsExperimentDataStore.barfAllData();
   }
 
+  function debugMetadata() {
+    Components.utils.import("resource://testpilot/modules/metadata.js");
+    var md = MetadataCollector.getMetadata();
+    document.getElementById("debug").innerHTML = JSON.stringify( md );
+  }
+
   function drawSomeGraphs() {
     var rawData = getDbContents();
     var canvas1 = document.getElementById("tabs-over-time-canvas");
@@ -68,7 +74,7 @@
 
 </head>
 
-<body onload="drawSomeGraphs();">
+<body onload="drawSomeGraphs(); debugMetadata();">
 <h1>Test Pilot Tabs Experiment Contents</h1>
 <p><button onclick="showdbcontents();">Show Raw Data</button>
 <button onclick="wipeDb();">Wipe My Data</button>

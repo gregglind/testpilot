@@ -48,6 +48,11 @@ Components.utils.import("resource://testpilot/modules/tasks.js");
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
 const VERSION_PREF ="extensions.testpilot.lastversion";
 const FIRST_RUN_PREF ="extensions.testpilot.firstRunUrl";
+const POPUP_DELAY_PREF = "extensions.testpilot.popup.delayAfterStartup";
+const POPUP_REMINDER_PREF = "extensions.testpilot.popup.timeBetweenChecks";
+const POPUP_LAST_CHECK_PREF = "extensions.testpilot.popup.lastCheck";
+
+// TODO move homepage to a pref?
 const TEST_PILOT_HOME_PAGE = "http://testpilot.mozillalabs.com";
 
 
@@ -74,7 +79,6 @@ let TestPilotSetup = {
 
   addTask: function TPS_addTask(testPilotTask) {
     this.taskList.push(testPilotTask);
-    this.onTaskStatusChanged();
   },
 
   onBrowserWindowLoaded: function TPS_onBrowserWindowLoaded() {
@@ -86,7 +90,6 @@ let TestPilotSetup = {
        var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                            .getService(Ci.nsIWindowMediator);
        var window = wm.getMostRecentWindow("navigator:browser");
-       dump("Window is " + window + "\n");
 
       let currVersion = Application.prefs.getValue(VERSION_PREF, "firstrun");
       if (currVersion != this.version) {
@@ -111,8 +114,6 @@ let TestPilotSetup = {
       Observers.add("testpilot:task:changed", this.onTaskStatusChanged,
                     self);
 
-      dump("Adding event listner.\n");
-      try {
       this.notificationsMenu.addEventListener("command", this.onMenuSelection, false);
       // add listener for "DOMContentLoaded", gets passed event,
       // look at event.originalTarget.URL
@@ -124,10 +125,7 @@ let TestPilotSetup = {
             self.taskList[i].onUrlLoad(newUrl, event);
           }
 	}, true);
-      } } catch ( e ) {
-        dump("Error: " + e + "\n");
       }
-      dump("event listner added.\n");
 
        this.checkForTasks();
        this.onNewWindow(this.window);
@@ -190,7 +188,6 @@ let TestPilotSetup = {
   },
 
   thereAreNewTasks: function TPS_thereAreNewTasks() {
-    dump("taskList.length is " + this.taskList.length + "\n");
     for (let i = 0; i < this.taskList.length; i++) {
       if (this.taskList[i].isNew) {
 	return this.taskList[i].title;
@@ -222,12 +219,9 @@ let TestPilotSetup = {
 
   onMenuSelection: function TPS_onMenuSelection(event) {
     let label = event.target.getAttribute("label");
-    dump("You selected menu item with label " + label + "\n");
     if (event.target.taskObject) {
-      dump("Calling executeTask\n");
       event.target.taskObject.executeTask();
-    } else
-      dump("No taskObject.\n");
+    }
   },
 
   get version() {

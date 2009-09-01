@@ -64,6 +64,9 @@ const TASK_STATUS_CANCELLED = 4;
 const TASK_STATUS_SUBMITTED = 5;
 const TASK_STATUS_RESULTS = 6; // Test finished AND final results visible somewhere
 
+const TASK_TYPE_EXPERIMENT = 1;
+const TASK_TYPE_SURVEY = 2;
+
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
 const VERSION_PREF ="extensions.testpilot.lastversion";
 const FIRST_RUN_PREF ="extensions.testpilot.firstRunUrl";
@@ -72,6 +75,7 @@ const TEST_PILOT_HOME_PAGE = "http://testpilot.mozillalabs.com";
 
 const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
 
+// TODO this stuff shouldn't be hard-coded here:
 const SURVEY_URL = "http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d";
 const START_DATE = "";
 const END_DATE = "";
@@ -105,8 +109,6 @@ TestPilotExperiment.prototype = {
     // TODO implement state-changing for TestPilotExperiments
     this._status = Application.prefs.getValue(STATUS_PREF_PREFIX + this._id,
                                               TASK_STATUS_NEW);
-    this._menuItem = null;
-    this.addMenuItem(window, menu);
   },
 
   // Duplicated from survey
@@ -119,32 +121,20 @@ TestPilotExperiment.prototype = {
     return (this._status == TASK_STATUS_NEW);
   },
 
-  onUrlLoad: function TestPilotExperiment_onUrlLoad() {
-    // TODO leave blank?
+  get taskType() {
+    return TASK_TYPE_EXPERIMENT;
   },
 
-  // Largely duplicated from survey... TODO this code could be factored out
-  // (belongs in window-management code, not task code...)
-  addMenuItem: function TestPilotExperiment_addMenuItem(window, menu) {
-    let newMenuItem = window.document.createElement("menuitem");
-    newMenuItem.setAttribute("label", "  " + this._title);
+  get status() {
+    return this._status;
+  },
 
-    if (this._status == TASK_STATUS_NEW) {
-      newMenuItem.setAttribute("class", "menuitem-iconic");
-      newMenuItem.setAttribute("image", "chrome://testpilot/skin/new.png");
-    }
-    if (this._status == TASK_STATUS_SUBMITTED) {
-      newMenuItem.setAttribute("disabled", true);
-      newMenuItem.setAttribute("label", "  (Completed)" + this._Title);
-    }
-    newMenuItem.taskObject = this;
-    let refElement = window.document.getElementById("test-menu-separator");
-    let insertedElement = menu.insertBefore(newMenuItem, refElement);
-    
-    this._menuItem = newMenuItem;
+  get infoPageUrl() {
+    return "chrome://testpilot/content/datastore.html";
+  },
 
-    // Hide the 'no-tests-yet' menu item, because there is a test:
-    window.document.getElementById("no-tests-yet").hidden = true;
+  onUrlLoad: function TestPilotExperiment_onUrlLoad() {
+    // TODO leave blank?
   },
 
   executeTask: function TestPilotExperiment_execute() {
@@ -193,13 +183,10 @@ TestPilotSurvey.prototype = {
     this._surveyUrl = surveyUrl;
     this._surveyTitle = surveyTitle;
     this._id = surveyId;
-    this._menuItem = null;
     this._browser = window.getBrowser();
 
     // Check prefs for status, default to NEW
     this._status = Application.prefs.getValue(STATUS_PREF_PREFIX + this._id, TASK_STATUS_NEW);
-    // Add menu item for myself:
-    this.addMenuItem(window, menu);
 
     if (this._status < TASK_STATUS_SUBMITTED) {
       this.checkForCompletion();
@@ -213,6 +200,18 @@ TestPilotSurvey.prototype = {
   get isNew() {
     dump("Called isNew() for a task.  This task status is " + this._status + "\n");
     return (this._status == TASK_STATUS_NEW);
+  },
+
+  get taskType() {
+    return TASK_TYPE_SURVEY;
+  },
+
+  get status() {
+    return this._status;
+  },
+
+  get infoPageUrl() {
+    return this._surveyUrl;
   },
 
   checkForCompletion: function TestPilotSurvey_checkForCompletion(window, menu) {
@@ -242,43 +241,8 @@ TestPilotSurvey.prototype = {
     this._status = newStatus;
     // Set the pref:
     Application.prefs.setValue(STATUS_PREF_PREFIX + this._id, newStatus);
-
-    // Change menu item if there is one:
-    if (this._menuItem) {
-      if (newStatus > TASK_STATUS_NEW) {
-	// Take off "new" icon if we're not new anymore:
-        this._menuItem.removeAttribute("class");
-        this._menuItem.removeAttribute("icon");
-      }
-      if (newStatus == TASK_STATUS_SUBMITTED) {
-	// Disable menu item, change name to show it is completed:
-	this._menuItem.setAttribute("disabled", true);
-	this._menuItem.setAttribute("label", "  (Completed)" + this._surveyTitle);
-      }
-    }
-
-    // Stop the blinking!
+    // Stop the blinking/ regenerate the menu items
     Observers.notify("testpilot:task:changed", "", null);
-  },
-
-  addMenuItem: function TPS_addMenuItem(window, menu) {
-
-    let newMenuItem = window.document.createElement("menuitem");
-    newMenuItem.setAttribute("label", "  " + this._surveyTitle);
-
-    if (this._status == TASK_STATUS_NEW) {
-      newMenuItem.setAttribute("class", "menuitem-iconic");
-      newMenuItem.setAttribute("image", "chrome://testpilot/skin/new.png");
-    }
-    if (this._status == TASK_STATUS_SUBMITTED) {
-      newMenuItem.setAttribute("disabled", true);
-      newMenuItem.setAttribute("label", "  (Completed)" + this._surveyTitle);
-    }
-    newMenuItem.taskObject = this;
-    let refElement = window.document.getElementById("survey-menu-separator");
-    let insertedElement = menu.insertBefore(newMenuItem, refElement);
-    
-    this._menuItem = newMenuItem;
   },
 
   executeTask: function TestPilotExperiment_upload() {
@@ -418,12 +382,41 @@ let TestPilotSetup = {
       }
     }
   },
-
   // TODO need an uninstall method that calls TabsExperimentObserver.uninstall();.
+
+  populateMenu: function TPS_populateMenu() {
+    // Create a menu entry for each task:
+    for (let i=0; i<this.taskList.length; i++) {
+      let task = this.taskList[i];
+      let newMenuItem = this.window.document.createElement("menuitem");
+      newMenuItem.setAttribute("label", "  " + task.title);
+      if (task.status == TASK_STATUS_NEW) {
+	// Give it a new icon
+        newMenuItem.setAttribute("class", "menuitem-iconic");
+        newMenuItem.setAttribute("image", "chrome://testpilot/skin/new.png");
+      }
+      if (task.status >= TASK_STATUS_CANCELLED) {
+	// Disable it if it's cancelled or submitted
+        newMenuItem.setAttribute("disabled", true);
+        newMenuItem.setAttribute("label", "  (Completed)" + task.title);
+      }
+      newMenuItem.taskObject = task;
+      let refElement = null;
+      if (task.taskType == TASK_TYPE_EXPERIMENT) {
+        // Hide the 'no-tests-yet' menu item, because there is a test:
+        this.window.document.getElementById("no-tests-yet").hidden = true;
+        refElement = window.document.getElementById("test-menu-separator");
+      } else if (task.taskType == TASK_TYPE_SURVEY) {
+        refElement = window.document.getElementById("survey-menu-separator");
+      }
+      this.notificationsMenu.insertBefore(newMenuItem, refElement);
+    }
+
+  },
 
   thereAreNewTasks: function TPS_thereAreNewTasks() {
     dump("taskList.length is " + this.taskList.length + "\n");
-    for (i = 0; i < this.taskList.length; i++) {
+    for (let i = 0; i < this.taskList.length; i++) {
       if (this.taskList[i].isNew) {
 	return this.taskList[i].title;
       }
@@ -447,6 +440,10 @@ let TestPilotSetup = {
       this.popup.getElementsByTagName("label")[0].setAttribute("value", text);
       this.popup.openPopup( this.notificationsButton, "after_end"); // ??
     }
+
+    // Regenerate that menu
+    // TODO clear the menu here...
+    this.populateMenu();
   },
 
   onMenuSelection: function TPS_onMenuSelection(event) {

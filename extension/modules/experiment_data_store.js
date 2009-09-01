@@ -51,10 +51,13 @@ const TabsExperimentConstants = {
   OPEN_EVENT: 1,
   CLOSE_EVENT: 2,
   DRAG_EVENT: 3,
-  SWITCH_EVENT: 4,
-  LOAD_EVENT: 5,
-  QUIT_EVENT: 6,
-  RESTORE_EVENT: 7,
+  DROP_EVENT: 4,
+  SWITCH_EVENT: 5,
+  LOAD_EVENT: 6,
+  QUIT_EVENT: 7,
+  RESTORE_EVENT: 8,
+  OPEN_WINDOW_EVENT: 9,
+  CLOSE_WINDOW_EVENT: 10,
 
   // constants for ui_method
   UI_CLICK: 1,
@@ -81,9 +84,7 @@ const TABS_EXPERIMENT_SCHEMA =
   "CREATE TABLE " + TABS_TABLE_NAME + "(" +
   " event_code INTEGER," +
   " tab_position INTEGER," +
-  " tab_parent_position INTEGER," +
   " tab_window INTEGER," +
-  " tab_parent_window INTEGER," +
   " ui_method INTEGER," +
   " tab_site_hash INTEGER," +
   " num_tabs INTEGER," +
@@ -119,18 +120,16 @@ ExperimentDataStore.prototype = {
     // uiEvent is assumed to have attribute names matching db columns
     // TODO rewrite this to be schema-independent.
     let insertSql = "INSERT INTO " + this._tableName +
-                    " VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)";
+                    " VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)";
     let insStmt = this._createStatement(insertSql);
     // If uiEvent is missing some of these fields, they end up as 0.
     insStmt.bindInt32Parameter(0, uiEvent.event_code);
     insStmt.bindInt32Parameter(1, uiEvent.tab_position);
-    insStmt.bindInt32Parameter(2, uiEvent.tab_parent_position);
-    insStmt.bindInt32Parameter(3, uiEvent.tab_window);
-    insStmt.bindInt32Parameter(4, uiEvent.tab_parent_window);
-    insStmt.bindInt32Parameter(5, uiEvent.ui_method);
-    insStmt.bindInt32Parameter(6, uiEvent.tab_site_hash);
-    insStmt.bindInt32Parameter(7, uiEvent.num_tabs);
-    insStmt.bindDoubleParameter(8, uiEvent.timestamp);
+    insStmt.bindInt32Parameter(2, uiEvent.tab_window);
+    insStmt.bindInt32Parameter(3, uiEvent.ui_method);
+    insStmt.bindInt32Parameter(4, uiEvent.tab_site_hash);
+    insStmt.bindInt32Parameter(5, uiEvent.num_tabs);
+    insStmt.bindDoubleParameter(6, uiEvent.timestamp);
     insStmt.execute();
     insStmt.finalize();
   },

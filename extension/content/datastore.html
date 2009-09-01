@@ -22,7 +22,7 @@
     document.getElementById("raw-data").style.display="block";
     var table = document.getElementById("rawdata-table");
     var rawData = getDbContents();
-    var columnNames = ["timestamp", "tab_position", "event_code", "ui_method", "num_tabs", "tab_site_hash", "tab_parent_position", "tab_window", "tab_parent_window"];
+    var columnNames = ["timestamp", "tab_position", "event_code", "ui_method", "num_tabs", "tab_site_hash", "tab_window"];
     var c = TabsExperimentConstants;
     var i,j;
     for (i = 0; i < rawData.length; i++) {
@@ -35,6 +35,7 @@
             case c.OPEN_EVENT: value = "Open"; break;
             case c.CLOSE_EVENT: value = "Close"; break;
             case c.DRAG_EVENT: value = "Drag"; break;
+            case c.DROP_EVENT: value = "Drop"; break;
             case c.SWITCH_EVENT: value = "Switch"; break;
           }
         } else if (columnNames[j] == "ui_method") {
@@ -89,9 +90,7 @@
       <td>UI Method</td>
       <td>Num. Tabs</td>
       <td>Tab Group ID</td>
-      <td>Parent Pos.</td>
-      <td>Window ID</td>
-      <td>Parent Win.</td></tr>
+      <td>Window ID</td></tr>
 </table>
 </div>
 

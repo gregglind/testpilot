@@ -73,6 +73,13 @@ TabsExperimentObserver.prototype = {
                                function(event) {self.onTabSelected(event);},
                                false);
 
+    container.addEventListener("dragstart",
+                               function(event) {self.onDragStart(event);},
+                               false);
+    container.addEventListener("drop",
+                               function(event) {self.onDrop(event);},
+                               false);
+
     // TODO what other events can we listen for here?  What if we put the
     // listener on the browser or the window?
 
@@ -85,6 +92,9 @@ TabsExperimentObserver.prototype = {
     container.addEventListener("keydown",
                                function(event) {self.onKey(event);},
                                true);
+
+    // apparently there are events called ondragover, ondragleave, ondragstart,
+    // ondragend, and ondrop.
   },
 
   uninstall: function TabsExperimentObserver_uninstall(browser) {
@@ -96,7 +106,6 @@ TabsExperimentObserver.prototype = {
     container.removeEventListener("mousedown", this.onClick, true);
     container.removeEventListener("mouseup", this.onMouseUp, true);
     container.removeEventListener("keydown", this.onKey, true);
-
   },
 
   onClick: function TabsExperimentObserver_onClick(event) {
@@ -107,6 +116,37 @@ TabsExperimentObserver.prototype = {
   onMouseUp: function TabsExperimentObserver_onMouseUp(event) {
     dump("You released your click on the tabs bar.\n");
     this._lastEventWasClick = false;
+  },
+
+  onDragStart: function TabsExperimentObserver_onDragStart(event) {
+    dump("You started dragging a tab.\n");
+    let index = event.target.parentNode.getIndexOfItem(event.target);
+    dump("Index is " + index + "\n");
+    let windowId = this._windowId;
+    TabsExperimentDataStore.storeEvent({
+      event_code: TabsExperimentConstants.DRAG_EVENT,
+      timestamp: Date.now(),
+      tab_position: index,
+      num_tabs: event.target.parentNode.itemCount,
+      ui_method: TabsExperimentConstants.UI_CLICK,
+      tab_window: windowId
+    });
+
+  },
+
+  onDrop: function TabsExperimentObserver_onDrop(event) {
+    dump("You dropped a dragged tab.\n");
+    let index = event.target.parentNode.getIndexOfItem(event.target);
+    dump("Index is " + index + "\n");
+    let windowId = this._windowId;
+    TabsExperimentDataStore.storeEvent({
+      event_code: TabsExperimentConstants.DROP_EVENT,
+      timestamp: Date.now(),
+      tab_position: index,
+      num_tabs: event.target.parentNode.itemCount,
+      ui_method: TabsExperimentConstants.UI_CLICK,
+      tab_window: windowId
+    });
   },
 
   getUrlInTab: function TabsExperimentObserver_getUrlInTab(index) {

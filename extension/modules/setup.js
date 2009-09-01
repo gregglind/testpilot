@@ -48,9 +48,9 @@ Components.utils.import("resource://testpilot/modules/tasks.js");
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
 const VERSION_PREF ="extensions.testpilot.lastversion";
 const FIRST_RUN_PREF ="extensions.testpilot.firstRunUrl";
-const POPUP_DELAY_PREF = "extensions.testpilot.popup.delayAfterStartup";
-const POPUP_REMINDER_PREF = "extensions.testpilot.popup.timeBetweenChecks";
-const POPUP_LAST_CHECK_PREF = "extensions.testpilot.popup.lastCheck";
+const POPUP_CHECK_INTERVAL = "extensions.testpilot.popup.delayAfterStartup";
+const POPUP_REMINDER_INTERVAL = "extensions.testpilot.popup.timeBetweenChecks";
+const POPUP_LAST_CHECK_TIME = "extensions.testpilot.popup.lastCheck";
 
 // TODO move homepage to a pref?
 const TEST_PILOT_HOME_PAGE = "http://testpilot.mozillalabs.com";
@@ -73,6 +73,7 @@ let Application = Cc["@mozilla.org/fuel/application;1"]
 let TestPilotSetup = {
   isNewlyInstalledOrUpgraded: false,
   isSetupComplete: false,
+  didReminderAfterStartup: false,
   notificationsButton: null,
   window: null,
   taskList: [],
@@ -87,6 +88,7 @@ let TestPilotSetup = {
       // Compare the version in our preferences from our version in the
       // install.rdf.
 
+	dump("Doing setup...\n");
        var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                            .getService(Ci.nsIWindowMediator);
        var window = wm.getMostRecentWindow("navigator:browser");
@@ -127,9 +129,20 @@ let TestPilotSetup = {
 	}, true);
       }
 
+       // Set up process that reminds user x minutes after startup
+       // and once per day thereafter...
+       dump("Setting interval for showing reminders...\n");
+       let interval = Application.prefs.getValue(POPUP_CHECK_INTERVAL, 180000);
+       this.window.setInterval(function() {
+                                 self.showReminderIfNeeded();
+                               }, interval);
+       dump("Checking for tasks...\n");
        this.checkForTasks();
+	dump("Notifying tasks of new window...\n");
        this.onNewWindow(this.window);
+       dump("Gonna populate menu now.\n");
        this.populateMenu();
+       dump("Populated menu.\n");
        this.isSetupComplete = true;
       } catch (e) {
 	dump("Error in TP startup: " + e + "\n");
@@ -187,16 +200,7 @@ let TestPilotSetup = {
     }
   },
 
-  thereAreNewTasks: function TPS_thereAreNewTasks() {
-    for (let i = 0; i < this.taskList.length; i++) {
-      if (this.taskList[i].isNew) {
-	return this.taskList[i].title;
-      }
-    }
-    return false;
-  },
-
-  onTaskStatusChanged: function TPS_onTaskRemoved() {
+  notifyUserOfPendingTasks: function TPS_notifyUser() {
     // Show door-hanger thingy if there are new tasks.
     let taskTitle = this.thereAreNewTasks();
     if (taskTitle) {
@@ -212,8 +216,34 @@ let TestPilotSetup = {
       this.popup.getElementsByTagName("label")[0].setAttribute("value", text);
       this.popup.openPopup( this.notificationsButton, "after_end"); // ??
     }
+  },
 
-    // Regenerate that menu to reflect new task status...
+  showReminderIfNeeded: function TPS_showReminder() {
+    if (!this.didReminderAfterStartup) {
+      //TODO Do the reminder -- but at most once per browser session
+      this.didReminderAfterStartup = true;
+      Application.prefs.setValue( POPUP_LAST_CHECK_TIME, Date.now());
+      this.notifyUserOfPendingTasks();
+    }
+    let lastCheck = Application.prefs.getValue( POPUP_LAST_CHECK_TIME);
+    let reminderInterval = Application.prefs.getValue( POPUP_REMINDER_INTERVAL);
+    if (Date.now() - lastCheck > reminderInterval) {
+      this.notifyUserOfPendingTasks();
+    }
+  },
+
+  thereAreNewTasks: function TPS_thereAreNewTasks() {
+    for (let i = 0; i < this.taskList.length; i++) {
+      if (this.taskList[i].isNew) {
+	return this.taskList[i].title;
+      }
+    }
+    return false;
+  },
+
+  onTaskStatusChanged: function TPS_onTaskRemoved() {
+    dump("Task status changed!\n");
+    notifyUserOfPendingTasks();
     this.populateMenu();
   },
 

@@ -182,7 +182,7 @@ TestPilotExperiment.prototype = {
     if (this._status < TaskConstants.STATUS_STARTING &&
 	currentDate >= this._startDate ) {
       dump("Switched to Starting.\n");
-      this.changeStaus( TaskConstants.STATUS_STARTING );
+      this.changeStatus( TaskConstants.STATUS_STARTING );
     }
 
     if (this._status < TaskConstants.STATUS_FINISHED &&

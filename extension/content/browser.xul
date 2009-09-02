@@ -2,23 +2,31 @@
 <?xml-stylesheet href="chrome://testpilot/content/browser.css" type="text/css"?>
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <script src="browser.js"></script>
+
+<menupopup id="menu_ToolsPopup">
+  <menu id="pilot-menu" insertafter="menu_openAddons"/>
+</menupopup>
+
+<menu id="pilot-menu" class="menu-iconic" label="Test Pilot" insertafter="addonsManager"
+      image="chrome://testpilot/skin/testpilot_16x16.png">
+  <menupopup id="pilot-menu-popup" onpopupshowing="if (event.target == this ) doPopup(event);"
+                             onpopuphiding="onMenuPopupHiding();">
+    <menuitem label="Tests" disabled="true" id="menu-item-tests"/>
+    <menuitem label="  No Tests Yet" disabled="true" id="no-tests-yet"/>
+    <menuitem label="  See Upcoming Tests" oncommand="openUpcomingTestsPage();"/>
+    <menuseparator id="test-menu-separator"/>
+    <menuitem label="Surveys" disabled="true" id="menu-item-surveys"/>
+    <menuseparator id="survey-menu-separator"/>
+    <menuitem label="About Test Pilot" oncommand="openAboutTestPilotPage();"/>
+  </menupopup>
+</menu>
+
 <statusbar id="status-bar">
   <statusbarpanel id="pilot-notifications-button"
                   class="statusbarpanel-iconic"
                   insertbefore="security-button"
-                  popup="pilot-menu"
+                  onmousedown="event.preventDefault(); onMenuButtonMouseDown();"
                   image="chrome://testpilot/skin/testpilot_16x16.png"/>
-  <popupset>
-    <menupopup id="pilot-menu">
-      <menuitem label="Tests" disabled="true" id="menu-item-tests"/>
-      <menuitem label="  No Tests Yet" disabled="true" id="no-tests-yet"/>
-      <menuitem label="  See Upcoming Tests" oncommand="openUpcomingTestsPage();"/>
-      <menuseparator id="test-menu-separator"/>
-      <menuitem label="Surveys" disabled="true" id="menu-item-surveys"/>
-      <menuseparator id="survey-menu-separator"/>
-      <menuitem label="About Test Pilot" oncommand="openAboutTestPilotPage();"/>
-    </menupopup>
-  </popupset>
 
   <panel id="pilot-notification-popup" hidden="true" noautofocus="true" level="top"
          position="after_start">

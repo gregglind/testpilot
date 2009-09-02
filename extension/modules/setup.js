@@ -86,6 +86,7 @@ let TestPilotSetup = {
   },
 
   onBrowserWindowLoaded: function TPS_onBrowserWindowLoaded() {
+    dump("->->-> onBrowserWindowLoaded was called. <-<-<-\n");
     if (!this.isSetupComplete) {
       try {
       // Compare the version in our preferences from our version in the
@@ -110,7 +111,7 @@ let TestPilotSetup = {
       this.notificationsButton = window.document
           .getElementById("pilot-notifications-button");
       this.notificationsMenu = window.document
-          .getElementById("pilot-menu");
+          .getElementById("pilot-menu-popup");
       this.popup = window.document
           .getElementById("pilot-notification-popup");
 

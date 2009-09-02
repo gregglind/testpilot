@@ -70,3 +70,24 @@ function openUpcomingTestsPage() {
   var tab = browser.addTab(url);
   browser.selectedTab = tab;
 }
+
+/* For support of taskbar-button menu: */
+function doPopup(event) {
+}
+
+function onMenuPopupHiding() {
+  var menuPopup = document.getElementById('pilot-menu-popup');
+  var menu = document.getElementById('pilot-menu');
+  if (menuPopup.parentNode != menu)
+    menu.appendChild(menuPopup);
+}
+
+function onMenuButtonMouseDown() {
+  var menuPopup = document.getElementById('pilot-menu-popup');
+  var menuButton = document.getElementById("pilot-notifications-button");
+
+  if (menuPopup.parentNode != menuButton)
+    menuButton.appendChild(menuPopup);
+
+  menuPopup.openPopup(menuButton, "before_start", 0, 0, true);
+}

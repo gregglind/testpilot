@@ -53,6 +53,7 @@ function openUpcomingTestsPage() {
 
 /* For support of taskbar-button menu: */
 function doPopup(event) {
+  TestPilotSetup.populateMenu(window);
 }
 
 function onMenuPopupHiding() {

@@ -136,6 +136,7 @@ let TestPilotSetup = {
 
   onWindowUnload: function TPS__onWindowRegistered(window) {
     dump("Called TestPilotSetup.onWindow unload!\n");
+    // TODO need an uninstall method that calls TabsExperimentObserver.uninstall();.
   },
 
   onWindowLoad: function TPS_onWindowLoad(window) {
@@ -159,10 +160,6 @@ let TestPilotSetup = {
       }, true);
     }
 
-    // TODO menu should be pouplated on display instead of here, otherwise
-    // they can get out of sync.
-    this.populateMenu(window);
-
     // Let each task know about the new window.
     for (let i = 0; i < this.taskList.length; i++) {
       this.taskList[i].onNewWindow(window);
@@ -172,17 +169,16 @@ let TestPilotSetup = {
   addTask: function TPS_addTask(testPilotTask) {
     this.taskList.push(testPilotTask);
   },
-  // TODO need an uninstall method that calls TabsExperimentObserver.uninstall();.
 
-  // TODO populating menu should happen right before menu pops up!!
   populateMenu: function TPS_populateMenu(window) {
-    let window = this._getFrontBrowserWindow();
+    // This is called from an onPopup handler, so it is called right before the menu
+    // is drawn.
     let menu = window.document.getElementById("pilot-menu-popup");
     // Create a menu entry for each task:
     for (let i=0; i<this.taskList.length; i++) {
       let task = this.taskList[i];
 
-      // First remove any existing menu item for this task.
+      // First remove any existing menu item for this task, to prevent duplicate entries.
       // TODO is there a less inefficient way of doing this?
       for (let j = 0; j < menu.childNodes.length; j++) {
 	let childNode = menu.childNodes[j];

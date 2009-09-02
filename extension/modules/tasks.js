@@ -125,7 +125,8 @@ var TestPilotTask = {
 
   loadPage: function TestPilotTask_loadPage() {
     // TODO this should use frontmost window instead of last registered
-    // window.
+    // window.  Also, if the URL is already open in a tab, it should switch
+    // to that tab instead of opening another copy.
     let tab = this._browser.addTab(this.infoPageUrl);
     this._browser.selectedTab = tab;
     if (this._status == TaskConstants.STATUS_NEW) {
@@ -177,23 +178,25 @@ TestPilotExperiment.prototype = {
   },
 
   checkDate: function TestPilotExperiment_checkDate() {
-    // TODO checkDate needs to be called periodically... 
-    // Now seems to be really weirdly low compared to the UTC dates...
     let currentDate = Date.now();
     if (this._status < TaskConstants.STATUS_STARTING &&
 	currentDate >= this._startDate ) {
       dump("Switched to Starting.\n");
+      // TODO register the observers here if not done already
       this.changeStatus( TaskConstants.STATUS_STARTING );
     }
 
     if (this._status < TaskConstants.STATUS_FINISHED &&
 	currentDate >= this._endDate ) {
       dump("Switched to Finishing.\n");
+      // TODO unregister or stop the observers here.
       this.changeStatus( TaskConstants.STATUS_FINISHED );
     }
   },
 
-  upload: function TestPilotExperiment_upload() {
+  upload: function TestPilotExperiment_upload(callback) {
+    // Callback is a function that will be called back with true or false
+    // on success or failure.
     let uploadData = MetadataCollector.getMetadata();
     uploadData.contents = this._dataStore.barfAllData();
     let dataString = encodeURI(JSON.stringify(uploadData));
@@ -210,12 +213,12 @@ TestPilotExperiment.prototype = {
     req.onreadystatechange = function(aEvt) {
       if (req.readyState == 4) {
 	if (req.status == 200) {
-	  // TODO notify user of submission.
 	  dump("DATA WAS POSTED SUCCESSFULLY " + req.responseText + "\n");
 	  this.changeStatus( TaskConstants.STATUS_SUBMITTED );
+	  callback(true);
 	} else {
-	  // TODO notify user of failure or schedule a retry.
 	  dump("ERROR POSTING DATA: " + req.responseText + "\n");
+	  callback(false);
 	}
       }
     }

@@ -61,6 +61,7 @@
     }
   }
 
+  // TODO replace this with an opt-out button.
   function wipeDb() {
     Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
     TabsExperimentDataStore.wipeAllData();
@@ -72,6 +73,19 @@
     Components.utils.import("resource://testpilot/modules/setup.js");
     var task = TestPilotSetup.getTaskById(1);
     TestPilotSetup._showNotification("This is a test notification.", task);
+  }
+
+  function uploadData() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    var task = TestPilotSetup.getTaskById(1);
+    task.upload( function(success) {
+      if (success) {
+        document.getElementById("debug").innerHTML = "Upload Successful!";
+        // TODO change whole page to reflect that this is a finished test now.
+      } else {
+        document.getElementById("debug").innerHTML = "Upload Failed; Please try again later.";
+      }
+    });
   }
 </script>
 <style type="text/css">

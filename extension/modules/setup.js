@@ -296,8 +296,11 @@ let TestPilotSetup = {
     let lastCheck = Application.prefs.getValue( POPUP_LAST_CHECK_TIME, 0);
     let reminderInterval = Application.prefs.getValue( POPUP_REMINDER_INTERVAL,
                                                        86400000);
+    dump("Last check was at " + lastCheck + "; it is now " + Date.now() + "\n");
     if (Date.now() - lastCheck > reminderInterval) {
+      dump("That's higher than the reminderInterval, so we'll notify.\n");
       Application.prefs.setValue( POPUP_LAST_CHECK_TIME, Date.now());
+      dump("Set last check time to " + Date.now() + "\n");
       this._notifyUserOfTasks(HIGH_PRIORITY_ONLY);
     }
   },

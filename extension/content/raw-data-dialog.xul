@@ -8,30 +8,28 @@
         onload="showdbcontents();"
 	ondialogaccept="return onAccept();">
 
-<script src="chrome://testpilot/content/raw-data-dialog.js"/>
+  <script src="chrome://testpilot/content/raw-data-dialog.js"/>
 
-  <label id="raw-data-debug-label"/>
-  <grid id="raw-data-grid">
-    <columns>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-      <column/>
-    </columns>
-    <rows id="raw-data-rowset">
-      <row id="header-row">
-        <label value="Time"/>
-        <label value="Tab Pos."/>
-        <label value="Event"/>
-        <label value="UI Method"/>
-        <label value="Num. Tabs"/>
-        <label value="Tab Group ID"/>
-        <label value="Window ID"/>
-      </row>
-    </rows>
-  </grid>
+  <listbox id="raw-data-listbox" rows="20">
+    <listcols>
+      <listcol/>
+      <listcol/>
+      <listcol/>
+      <listcol/>
+      <listcol/>
+      <listcol/>
+      <listcol/>
+    </listcols>
+    <listhead>
+      <listheader label="Time"/>
+      <listheader label="Tab Pos."/>
+      <listheader label="Event"/>
+      <listheader label="UI Method"/>
+      <listheader label="Num. Tabs"/>
+      <listheader label="Tab Group ID"/>
+      <listheader label="Window ID"/>
+    </listhead>
+  </listbox>
+
 
 </dialog>

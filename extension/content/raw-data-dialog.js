@@ -40,15 +40,14 @@ Cu.import("resource://testpilot/modules/experiment_data_store.js");
 
 function showdbcontents() {
   var rawData = TabsExperimentDataStore.barfAllData();
-  var rowSet = document.getElementById("raw-data-rowset");
-  rowSet
+  var listbox = document.getElementById("raw-data-listbox");
   var columnNames = ["timestamp", "tab_position", "event_code", "ui_method", "num_tabs", "tab_site_hash", "tab_window"];
   var c = TabsExperimentConstants;
   var i,j;
   for (i = 0; i < rawData.length; i++) {
-    var row = document.createElement("row");
+    var row = document.createElement("listitem");
     for (j = 0; j < columnNames.length; j++) {
-      var cell = document.createElement("label");
+      var cell = document.createElement("listcell");
       var value = rawData[i][columnNames[j]];
       if (columnNames[j] == "event_code") {
         switch (value) {
@@ -67,10 +66,10 @@ function showdbcontents() {
           case c.UI_LINK: value = "Link"; break;
         }
       }
-      cell.setAttribute("value", value);
+      cell.setAttribute("label", value);
       row.appendChild(cell);
     }
-    rowSet.appendChild(row);
+    listbox.appendChild(row);
   }
 }
 

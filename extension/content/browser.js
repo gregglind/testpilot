@@ -35,27 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-(function() {
-   var observerSvc = Components.classes["@mozilla.org/observer-service;1"]
-                               .getService(Ci.nsIObserverService);
-
-   function notifyTestPilot() {
-     var jsm = {};
-     Components.utils.import("resource://testpilot/modules/setup.js",
-                             jsm);
-     jsm.TestPilotSetup.onBrowserWindowLoaded();
-   }
-
-   // TODO what happens here if there are multiple windows?
-   var observer = {
-     observe: function(subject, topic, data) {
-       observerSvc.removeObserver(this, "sessionstore-windows-restored");
-       notifyTestPilot();
-     }
-   };
-
-   observerSvc.addObserver(observer, "sessionstore-windows-restored", false);
- })();
+Components.utils.import("resource://testpilot/modules/setup.js");
 
 function openAboutTestPilotPage() {
   var url = "http://testpilot.mozillalabs.com";
@@ -91,3 +71,28 @@ function onMenuButtonMouseDown() {
 
   menuPopup.openPopup(menuButton, "before_start", 0, 0, true);
 }
+
+function window_onLoad() {
+  if (TestPilotSetup.startupComplete) {
+    TestPilotSetup.onWindowLoad(window);
+  } else {
+    var observerSvc = Cc["@mozilla.org/observer-service;1"]
+                         .getService(Ci.nsIObserverService);
+    var observer = {
+      observe: function(subject, topic, data) {
+        dump("Oh hey, startup is done, now I can tell test pilot about my window.\n");
+        observerSvc.removeObserver(this, "testpilot:startup:complete");
+        TestPilotSetup.onWindowLoad(window);
+      }
+    };
+    dump("We're still starting up so I can't tell test pilot about my window yet.\n");
+    observerSvc.addObserver(observer, "testpilot:startup:complete", false);
+  }
+}
+
+function window_onUnload() {
+  TestPilotSetup.onWindowUnload(window);
+}
+
+window.addEventListener("load", window_onLoad, false);
+window.addEventListener("unload", window_onUnload, false);

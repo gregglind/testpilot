@@ -75,107 +75,124 @@ let Application = Cc["@mozilla.org/fuel/application;1"]
 
 let TestPilotSetup = {
   isNewlyInstalledOrUpgraded: false,
-  isSetupComplete: false,
   didReminderAfterStartup: false,
-  notificationsButton: null,
-  window: null,
+  startupComplete: false,
   taskList: [],
+
+  globalStartup: function TPS__doGlobalSetup() {
+    // Only ever run this stuff ONCE, on the first window restore.
+    // Should get called by the Test Pilot component.
+    dump("TestPilotSetup.globalStartup was called.\n");
+    
+    // Show first run page (in front window) if newly installed or upgraded.
+    let currVersion = Application.prefs.getValue(VERSION_PREF, "firstrun");
+    if (currVersion != this.version) {
+      Application.prefs.setValue(VERSION_PREF, this.version);
+      this.isNewlyInstalledOrUpgraded = true;
+      let browser = this._getFrontBrowserWindow.getBrowser();
+      let url = Application.prefs.getValue(FIRST_RUN_PREF, "");
+      let tab = browser.addTab(url);
+      browser.selectedTab = tab;
+    }
+    
+    // Set up observation for task state changes
+    var self = this;
+    Observers.add("testpilot:task:changed", this.onTaskStatusChanged,
+                  self);
+    
+    // Set up timers to remind user x minutes after startup
+    // and once per day thereafter.  Use nsITimer so it doesn't belong to
+    // any one window.
+    dump("Setting interval for showing reminders...\n");
+    let shortTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    shortTimer.initWithCallback(
+      { notify: function(timer) { self.doHousekeeping();} },
+      Application.prefs.getValue(POPUP_CHECK_INTERVAL, 180000),
+      Ci.nsITimer.TYPE_REPEATING_SLACK
+    );
+    let longTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    longTimer.initWithCallback(
+      { notify: function(timer) { 
+	  self._notifyUserOfTasks(HIGH_PRIORITY_ONLY); }},
+      Application.prefs.getValue(POPUP_REMINDER_INTERVAL, 86400000),
+      Ci.nsITimer.TYPE_REPEATING_SLACK
+    );
+
+    // Install tasks.
+    this.checkForTasks();
+    this.startupComplete = true;
+    Observers.notify("testpilot:startup:complete", "", null);
+    // onWindowLoad gets called once for each window, but only after we fire this
+    // notification.
+  },
+
+  _getFrontBrowserWindow: function TPS__getFrontWindow() {
+     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                         .getService(Ci.nsIWindowMediator);
+     // TODO Is "most recent" the same as "front"?
+     return wm.getMostRecentWindow("navigator:browser");
+  },
+
+
+  onWindowUnload: function TPS__onWindowRegistered(window) {
+    dump("Called TestPilotSetup.onWindow unload!\n");
+  },
+
+  onWindowLoad: function TPS_onWindowLoad(window) {
+    dump("Called TestPilotSetup.onWindowLoad!\n");
+    // Run this stuff once per window...
+    let self = this;
+
+    // TODO can this next line happen in the overlay instead of here?
+    let menu = window.document.getElementById("pilot-menu-popup");
+    menu.addEventListener("command", this.onMenuSelection, false);
+
+    // Register listener for URL loads, that will notify all tasks about
+    // new page:
+    let appcontent = window.document.getElementById("appcontent");
+    if (appcontent) {
+      appcontent.addEventListener("DOMContentLoaded", function(event) {
+        let newUrl =  event.originalTarget.URL;
+        for (i = 0; i < self.taskList.length; i++) {
+          self.taskList[i].onUrlLoad(newUrl, event);
+        }
+      }, true);
+    }
+
+    // TODO menu should be pouplated on display instead of here, otherwise
+    // they can get out of sync.
+    this.populateMenu(window);
+
+    // Let each task know about the new window.
+    for (let i = 0; i < this.taskList.length; i++) {
+      this.taskList[i].onNewWindow(window);
+    }
+  },
 
   addTask: function TPS_addTask(testPilotTask) {
     this.taskList.push(testPilotTask);
   },
-
-  onBrowserWindowLoaded: function TPS_onBrowserWindowLoaded() {
-    dump("->->-> onBrowserWindowLoaded was called. <-<-<-\n");
-    if (!this.isSetupComplete) {
-      try {
-      // Compare the version in our preferences from our version in the
-      // install.rdf.
-
-	dump("Doing setup...\n");
-       var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                           .getService(Ci.nsIWindowMediator);
-       var window = wm.getMostRecentWindow("navigator:browser");
-
-      let currVersion = Application.prefs.getValue(VERSION_PREF, "firstrun");
-      if (currVersion != this.version) {
-        Application.prefs.setValue(VERSION_PREF, this.version);
-        this.isNewlyInstalledOrUpgraded = true;
-
-        let browser = window.getBrowser();
-        let url = Application.prefs.getValue(FIRST_RUN_PREF, "");
-        let tab = browser.addTab(url);
-        browser.selectedTab = tab;
-      }
-      this.window = window;
-      this.notificationsButton = window.document
-          .getElementById("pilot-notifications-button");
-      this.notificationsMenu = window.document
-          .getElementById("pilot-menu-popup");
-      this.popup = window.document
-          .getElementById("pilot-notification-popup");
-
-
-      var self = this;
-      Observers.add("testpilot:task:changed", this.onTaskStatusChanged,
-                    self);
-
-      this.notificationsMenu.addEventListener("command", this.onMenuSelection, false);
-      // add listener for "DOMContentLoaded", gets passed event,
-      // look at event.originalTarget.URL
-      var appcontent = window.document.getElementById("appcontent");
-      if (appcontent) {
-	appcontent.addEventListener("DOMContentLoaded", function(event) {
-          var newUrl =  event.originalTarget.URL;
-          for (i = 0; i < self.taskList.length; i++) {
-            self.taskList[i].onUrlLoad(newUrl, event);
-          }
-	}, true);
-      }
-
-       // Set up timers to remind user x minutes after startup
-       // and once per day thereafter...
-       dump("Setting interval for showing reminders...\n");
-       let interval = Application.prefs.getValue(POPUP_CHECK_INTERVAL, 180000);
-       this.window.setInterval(function() {
-                                 self._doHousekeeping();
-                               }, interval);
-	let longInterval = Application.prefs.getValue(POPUP_REMINDER_INTERVAL,
-                                                       86400000);
-        this.window.setInterval( function() {
-                                   self._notifyUserOfTasks(HIGH_PRIORITY_ONLY);
-                                 }, longInterval);
-       dump("Checking for tasks...\n");
-       this.checkForTasks();
-	dump("Notifying tasks of new window...\n");
-       this.onNewWindow(this.window);
-       dump("Gonna populate menu now.\n");
-       this.populateMenu();
-       dump("Populated menu.\n");
-       this.isSetupComplete = true;
-      } catch (e) {
-	dump("Error in TP startup: " + e + "\n");
-      }
-    }
-  },
   // TODO need an uninstall method that calls TabsExperimentObserver.uninstall();.
 
-  populateMenu: function TPS_populateMenu() {
+  // TODO populating menu should happen right before menu pops up!!
+  populateMenu: function TPS_populateMenu(window) {
+    let window = this._getFrontBrowserWindow();
+    let menu = window.document.getElementById("pilot-menu-popup");
     // Create a menu entry for each task:
     for (let i=0; i<this.taskList.length; i++) {
       let task = this.taskList[i];
 
       // First remove any existing menu item for this task.
       // TODO is there a less inefficient way of doing this?
-      for (let j = 0; j < this.notificationsMenu.childNodes.length; j++) {
-	let childNode = this.notificationsMenu.childNodes[j];
+      for (let j = 0; j < menu.childNodes.length; j++) {
+	let childNode = menu.childNodes[j];
 	if (childNode.taskObject == task) {
-	  this.notificationsMenu.removeChild(childNode);
+	  menu.removeChild(childNode);
 	  break;
 	}
       }
 
-      let newMenuItem = this.window.document.createElement("menuitem");
+      let newMenuItem = window.document.createElement("menuitem");
       newMenuItem.setAttribute("label", "  " + task.title);
       if (task.status == TaskConstants.STATUS_NEW) {
 	// Give it a new icon
@@ -193,42 +210,40 @@ let TestPilotSetup = {
       let refElement = null;
       if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
         // Hide the 'no-tests-yet' menu item, because there is a test:
-        this.window.document.getElementById("no-tests-yet").hidden = true;
-        refElement = this.window.document.getElementById("test-menu-separator");
+        window.document.getElementById("no-tests-yet").hidden = true;
+        refElement = window.document.getElementById("test-menu-separator");
       } else if (task.taskType == TaskConstants.TYPE_SURVEY) {
-        refElement = this.window.document.getElementById("survey-menu-separator");
+        refElement = window.document.getElementById("survey-menu-separator");
       }
-      this.notificationsMenu.insertBefore(newMenuItem, refElement);
+      menu.insertBefore(newMenuItem, refElement);
     }
-  },
-
-  onNewWindow: function TPS_onNewWindow(window) {
-    // TODO call this on every window open
-    // TODO also handle whatever needs to be done to put the identical menu
-    // into every window.
-    for (let i = 0; i < this.taskList.length; i++) {
-      this.taskList[i].onNewWindow(window);
-    }
-  },
-
-  _hideNotification: function TPS__hideNotification(text) {
-    this.popup.hidden = true;
-    this.popup.setAttribute("open", "false");
-    this.popup.hidePopup();
   },
 
   _showNotification: function TPS__showNotification(text, task) {
+    // If there are multiple windows, show notifications in the frontmost
+    // window.
+    let window = this._getFrontBrowserWindow();
+    let popup = window.document.getElementById("pilot-notification-popup");
+    let button = window.document.getElementById("pilot-notifications-button");
     var self = this;
-    this.popup.hidden = false;
-    this.popup.setAttribute("open", "true");
-    this.popup.getElementsByTagName("label")[0].setAttribute("value", text);
-    this.popup.onclick = function() {
+    popup.hidden = false;
+    popup.setAttribute("open", "true");
+    popup.getElementsByTagName("label")[0].setAttribute("value", text);
+    popup.onclick = function() {
       self._hideNotification();
       if (task) {
         task.loadPage();
       }
     };
-    this.popup.openPopup( this.notificationsButton, "after_end"); // ??
+    popup.openPopup( button, "after_end");
+  },
+
+  _hideNotification: function TPS__hideNotification(text) {
+    let window = this._getFrontBrowserWindow();
+    let popup = window.document.getElementById("pilot-notification-popup");
+    popup.hidden = true;
+    popup.setAttribute("open", "false");
+    popup.hidePopup();
   },
 
   _notifyUserOfTasks: function TPS__notifyUser(priority) {

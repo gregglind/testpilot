@@ -132,13 +132,18 @@ let TestPilotSetup = {
 	}, true);
       }
 
-       // Set up process that reminds user x minutes after startup
+       // Set up timers to remind user x minutes after startup
        // and once per day thereafter...
        dump("Setting interval for showing reminders...\n");
        let interval = Application.prefs.getValue(POPUP_CHECK_INTERVAL, 180000);
        this.window.setInterval(function() {
                                  self._doHousekeeping();
                                }, interval);
+	let longInterval = Application.prefs.getValue(POPUP_REMINDER_INTERVAL,
+                                                       86400000);
+        this.window.setInterval( function() {
+                                   self._notifyUserOfTasks(HIGH_PRIORITY_ONLY);
+                                 }, longInterval);
        dump("Checking for tasks...\n");
        this.checkForTasks();
 	dump("Notifying tasks of new window...\n");
@@ -291,17 +296,6 @@ let TestPilotSetup = {
       this.didReminderAfterStartup = true;
       Application.prefs.setValue( POPUP_LAST_CHECK_TIME, Date.now());
       this._notifyUserOfTasks(HIGH_AND_MEDIUM_PRIORITY);
-    }
-    // Pester user about submitting data, at most once per day:
-    let lastCheck = Application.prefs.getValue( POPUP_LAST_CHECK_TIME, 0);
-    let reminderInterval = Application.prefs.getValue( POPUP_REMINDER_INTERVAL,
-                                                       86400000);
-    dump("Last check was at " + lastCheck + "; it is now " + Date.now() + "\n");
-    if (Date.now() - lastCheck > reminderInterval) {
-      dump("That's higher than the reminderInterval, so we'll notify.\n");
-      Application.prefs.setValue( POPUP_LAST_CHECK_TIME, Date.now());
-      dump("Set last check time to " + Date.now() + "\n");
-      this._notifyUserOfTasks(HIGH_PRIORITY_ONLY);
     }
   },
 

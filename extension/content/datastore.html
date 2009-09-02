@@ -4,6 +4,11 @@
 <script src="graphs.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript">
 
+  function showRawData() {
+    window.openDialog("chrome://testpilot/content/raw-data-dialog.xul",
+                      "Test Pilot: Raw Tab Usage Data", "chrome,centerscreen,resizable,scrollbars");
+  }
+
   // TODO handle the case where there's no data.
   function getDbContents() {
     Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
@@ -22,43 +27,6 @@
     drawTabsOverTimeGraph(canvas1, rawData, 40, 210, 400, 200);
     var canvas2 = document.getElementById("tab-close-pie-chart-canvas");
     drawCloseTabPieChart(canvas2, rawData, 125, 125, 100);
-  }
-
-  function showdbcontents() {
-    document.getElementById("raw-data").style.display="block";
-    var table = document.getElementById("rawdata-table");
-    var rawData = getDbContents();
-    var columnNames = ["timestamp", "tab_position", "event_code", "ui_method", "num_tabs", "tab_site_hash", "tab_window"];
-    var c = TabsExperimentConstants;
-    var i,j;
-    for (i = 0; i < rawData.length; i++) {
-      var row = document.createElement("tr");
-      for (j = 0; j < columnNames.length; j++) {
-        var cell = document.createElement("td");
-        var value = rawData[i][columnNames[j]];
-        if (columnNames[j] == "event_code") {
-          switch (value) {
-            case c.OPEN_EVENT: value = "Open"; break;
-            case c.CLOSE_EVENT: value = "Close"; break;
-            case c.DRAG_EVENT: value = "Drag"; break;
-            case c.DROP_EVENT: value = "Drop"; break;
-            case c.SWITCH_EVENT: value = "Switch"; break;
-            case c.LOAD_EVENT: value = "Load"; break;
-          }
-        } else if (columnNames[j] == "ui_method") {
-          switch(value) {
-            case c.UI_CLICK: value = "Click"; break;
-            case c.UI_KEYBOARD: value = "Keyboard"; break;
-            case c.UI_MENU: value = "Menu"; break;
-            case c.UI_LINK: value = "Link"; break;
-          }
-        }
-        cell.innerHTML = value;
-
-        row.appendChild(cell);
-      }
-      table.appendChild(row);
-    }
   }
 
   // TODO replace this with an opt-out button.
@@ -99,7 +67,7 @@
 
 <body onload="drawSomeGraphs(); debugMetadata();">
 <h1>Test Pilot Tabs Experiment Contents</h1>
-<p><button onclick="showdbcontents();">Show Raw Data</button>
+<p><button onclick="showRawData();">Show Raw Data</button>
 <button onclick="wipeDb();">Wipe My Data</button>
 <button onclick="uploadData();">Upload My Data</button>
 <button onclick="makeThereBeAPopup();">Popup</button>
@@ -113,17 +81,6 @@
 <p>When you closed a tab, did you stay on the default tab or did you switch to another one immediately?</p>
 <canvas id="tab-close-pie-chart-canvas" width="350" height="250"></canvas>
 
-<div id="raw-data" style="display:none">
-<h3>Raw Data</h3>
-<table id="rawdata-table" border="true">
-  <tr><td>Time</td>
-      <td>Tab Pos.</td>
-      <td>Event</td>
-      <td>UI Method</td>
-      <td>Num. Tabs</td>
-      <td>Tab Group ID</td>
-      <td>Window ID</td></tr>
-</table>
-</div>
+
 
 </body> </html>

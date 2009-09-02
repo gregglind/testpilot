@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml" 
+	id="raw-data-dialog" title="Test Pilot: Raw Tab Usage Data"
+	buttons="accept"
+        onload="showdbcontents();"
+	ondialogaccept="return onAccept();">
+
+<script src="chrome://testpilot/content/raw-data-dialog.js"/>
+
+  <label id="raw-data-debug-label"/>
+  <grid id="raw-data-grid">
+    <columns>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+      <column/>
+    </columns>
+    <rows id="raw-data-rowset">
+      <row id="header-row">
+        <label value="Time"/>
+        <label value="Tab Pos."/>
+        <label value="Event"/>
+        <label value="UI Method"/>
+        <label value="Num. Tabs"/>
+        <label value="Tab Group ID"/>
+        <label value="Window ID"/>
+      </row>
+    </rows>
+  </grid>
+
+</dialog>

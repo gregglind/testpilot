@@ -78,10 +78,13 @@
   function uploadData() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     var task = TestPilotSetup.getTaskById(1);
+    var debugElem = document.getElementById("debug");
     task.upload( function(success) {
+      debugElem.innerHTML = "Callback called.";
       if (success) {
         document.getElementById("debug").innerHTML = "Upload Successful!";
         // TODO change whole page to reflect that this is a finished test now.
+        // And don't let them submit the same data multiple times!!
       } else {
         document.getElementById("debug").innerHTML = "Upload Failed; Please try again later.";
       }
@@ -98,7 +101,7 @@
 <h1>Test Pilot Tabs Experiment Contents</h1>
 <p><button onclick="showdbcontents();">Show Raw Data</button>
 <button onclick="wipeDb();">Wipe My Data</button>
-<button onclick="">Upload My Data</button>
+<button onclick="uploadData();">Upload My Data</button>
 <button onclick="makeThereBeAPopup();">Popup</button>
 </p>
 <p><span id="debug"></span></p>

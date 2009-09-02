@@ -204,6 +204,7 @@ TestPilotExperiment.prototype = {
     let params = "testid=" + this._id + "&data=" + dataString;
     // TODO note there is an 8MB max on POST data in PHP, so if we have a REALLY big
     // pile we may need to do multiple posts.
+    var self = this;
 
     var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
     req.open('POST', DATA_UPLOAD_URL, true);
@@ -214,8 +215,8 @@ TestPilotExperiment.prototype = {
       if (req.readyState == 4) {
 	if (req.status == 200) {
 	  dump("DATA WAS POSTED SUCCESSFULLY " + req.responseText + "\n");
-	  this.changeStatus( TaskConstants.STATUS_SUBMITTED );
-	  callback(true);
+          self.changeStatus( TaskConstants.STATUS_SUBMITTED );
+          callback(true);
 	} else {
 	  dump("ERROR POSTING DATA: " + req.responseText + "\n");
 	  callback(false);

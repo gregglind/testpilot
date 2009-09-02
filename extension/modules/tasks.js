@@ -73,7 +73,6 @@ var TestPilotTask = {
   _title: null,
   _status: null,
   _url: null,
-  _browser: null,
 
   _taskInit: function TestPilotTask__taskInit(id, title, infoPageUrl) {
     this._id = id;
@@ -104,7 +103,6 @@ var TestPilotTask = {
   },
 
   onNewWindow: function TestPilotTask_setWindow(window) {
-    this._browser = window.getBrowser();
   },
 
   onUrlLoad: function TestPilotTask_onUrlLoad(url) {
@@ -124,11 +122,15 @@ var TestPilotTask = {
   },
 
   loadPage: function TestPilotTask_loadPage() {
-    // TODO this should use frontmost window instead of last registered
-    // window.  Also, if the URL is already open in a tab, it should switch
+    // TODO if the URL is already open in a tab, it should switch
     // to that tab instead of opening another copy.
-    let tab = this._browser.addTab(this.infoPageUrl);
-    this._browser.selectedTab = tab;
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Ci.nsIWindowMediator);
+    // TODO Is "most recent" the same as "front"?
+    let window = wm.getMostRecentWindow("navigator:browser");
+    let browser = window.getBrowser();
+    let tab = browser.addTab(this.infoPageUrl);
+    browser.selectedTab = tab;
     if (this._status == TaskConstants.STATUS_NEW) {
       this.changeStatus(TaskConstants.STATUS_PENDING);
     } else if (this._status == TaskConstants.STATUS_STARTING) {
@@ -172,7 +174,6 @@ TestPilotExperiment.prototype = {
 
   onNewWindow: function TestPilotExperiment_setWindow(window) {
     // TODO make it so this can be called multiple times, once per window...
-    this._browser = window.getBrowser();
     let Observer = this._observerConstructor;
     this._observer = new Observer(window);
   },

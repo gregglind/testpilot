@@ -69,6 +69,8 @@ function showdbcontents() {
           case c.UI_MENU: value = "Menu"; break;
           case c.UI_LINK: value = "Link"; break;
         }
+      } else if (columnNames[j] == "timestamp") {
+	value = new Date(value).toLocaleString();
       }
       cell.setAttribute("label", value);
       row.appendChild(cell);

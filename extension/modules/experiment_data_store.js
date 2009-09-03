@@ -129,7 +129,7 @@ ExperimentDataStore.prototype = {
     insStmt.bindInt32Parameter(3, uiEvent.ui_method);
     insStmt.bindInt32Parameter(4, uiEvent.tab_site_hash);
     insStmt.bindInt32Parameter(5, uiEvent.num_tabs);
-    insStmt.bindDoubleParameter(6, uiEvent.timestamp);
+    insStmt.bindIntDoubleParameter(6, uiEvent.timestamp);
     insStmt.execute();
     insStmt.finalize();
   },
@@ -145,7 +145,11 @@ ExperimentDataStore.prototype = {
       let numCols = selStmt.columnCount;
       for (i = 0; i < numCols; i++) {
 	let colName = selStmt.getColumnName(i);
-	newRecord[colName] = selStmt.getInt32(i);
+	if (colName == "timestamp") {
+	  newRecord[colName] = selStmt.getDouble(i);
+	} else {
+          newRecord[colName] = selStmt.getInt32(i);
+	}
       }
       records.push(newRecord);
     }

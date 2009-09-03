@@ -269,6 +269,26 @@ TestPilotExperiment.prototype = {
     //this.changeStatus( TaskConstants.STATUS_CANCELLED);
     //this._dataStore.wipeAllData();
     dump("Opting out of test with reason " + reason + "\n");
+    if (reason) {
+      // Send us the reason...
+      let params = "testid=" + this._id + "&data=" + encodeURI(reason);
+      var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
+      req.open('POST', DATA_UPLOAD_URL, true);
+      req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+      req.setRequestHeader("Content-length", params.length);
+      req.setRequestHeader("Connection", "close");
+      req.onreadystatechange = function(aEvt) {
+        if (req.readyState == 4) {
+          if (req.status == 200) {
+	    dump("Quit reason posted successfully " + req.responseText + "\n");
+	  } else {
+	    dump(req.status + " posting error " + req.responseText +"\n");
+	  }
+	}
+      }
+      dump("Sending quit reason.\n");
+      req.send( params );
+    }
   }
 };
 TestPilotExperiment.prototype.__proto__ = TestPilotTask;

@@ -100,6 +100,7 @@
     var task = TestPilotSetup.getTaskById(experimentId);
     task.optOut(reason);
     // load the you-are-canceleed page.
+    window.location = "chrome://testpilot/content/status-cancelled.html";
   }
 
   function loadExperimentPage(experimentId) {

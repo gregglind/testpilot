@@ -9,14 +9,6 @@
     return TabsExperimentDataStore.barfAllData();
   }
 
-  function debugMetadata() {
-    Components.utils.import("resource://testpilot/modules/metadata.js");
-    var md = MetadataCollector.getMetadata();
-    var string = JSON.stringify( md );
-    var string2 = JSON.stringify( getDbContents() );
-    document.getElementById("debug").innerHTML = string + string2;
-  }
-
   function drawSomeGraphs() {
     var rawData = getDbContents();
     var canvas1 = document.getElementById("tabs-over-time-canvas");
@@ -59,7 +51,32 @@
   function getTestEndingDate(experimentId) {
             
   }
+
+  function showMetaData() {
+    Components.utils.import("resource://testpilot/modules/metadata.js");
+    var md = MetadataCollector.getMetadata();
+    var mdLocale = document.getElementById("md-locale");
+    if (mdLocale)
+      mdLocale.innerHTML = md.location;
+    var mdVersion = document.getElementById("md-version");
+    if (mdVersion)
+      mdVersion.innerHTML = md.version;
+    var mdOs = document.getElementById("md-os");
+    if (mdOs)
+      mdOs.innerHTML = md.operatingSystem;
+    var mdNumExt = document.getElementById("md-num-ext");
+    if (mdNumExt) {
+      var numExt = md.extensions.length;
+      if (numExt == 1) {
+	mdNumExt.innerHTML = numExt + " extension";
+      } else {
+	mdNumExt.innerHTML = numExt + " extensions";
+      }
+    }
+  }
+
   function loadExperimentPage(experimentId) {
     drawSomeGraphs();
+    showMetaData();
     getTestEndingDate(experimentId);
   }

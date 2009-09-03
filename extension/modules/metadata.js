@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Jono X <jono@mozilla.com>
+ *   Dan Mills <thunder@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,6 +45,30 @@ const LOCALE_PREF = "general.useragent.locale";
 let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
 
+// This function copied over from Weave:
+function Weave_sha1(string) {
+  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
+                  createInstance(Ci.nsIScriptableUnicodeConverter);
+  converter.charset = "UTF-8";
+
+  let hasher = Cc["@mozilla.org/security/hash;1"]
+               .createInstance(Ci.nsICryptoHash);
+  hasher.init(hasher.SHA1);
+
+  let data = converter.convertToByteArray(string, {});
+  hasher.update(data, data.length);
+  let rawHash = hasher.finish(false);
+
+  // return the two-digit hexadecimal code for a byte
+  function toHexString(charCode) {
+    return ("0" + charCode.toString(16)).slice(-2);
+  }
+  let hash = [toHexString(rawHash.charCodeAt(i)) for (i in rawHash)].join("");
+  return hash;
+}
+
+// TODO sha1 hash all the extension names
+
 let MetadataCollector = {
   // Collects metadata such as what country you're in, what extensions you have installed, etc.
   getExtensions: function MetadataCollector_getExtensions() {
@@ -55,7 +80,7 @@ let MetadataCollector = {
     var names = [];
     items = ExtManager.getItemList(nsIUpdateItem.TYPE_EXTENSION,{});
     for (var i = 0; i < items.length; ++i) {
-      names.push(items[i].name);
+      names.push(Weave_sha1( items[i].id ));
     }
     return names;
   },

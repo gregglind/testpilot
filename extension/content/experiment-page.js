@@ -49,7 +49,26 @@
   }
 
   function getTestEndingDate(experimentId) {
-            
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    var task = TestPilotSetup.getTaskById(experimentId);
+    var endDate = new Date(task.endDate);
+    var diff = endDate - Date.now();
+    var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
+                  "Sep", "Oct", "Nov", "Dec"];
+    var span = document.getElementById("test-end-time");
+    if (diff < 0) {
+      span.innerHTML = "(It has already ended and you should not be seeing this page.)";
+      return;
+    }
+    var hours = diff / (60 * 60 * 1000);
+    if (hours < 24) {
+      span.innerHTML = " today, at " + endDate.toLocaleTimeString();
+    } else {
+      span.innerHTML = " on " + days[endDate.getDay()] + ", "
+	+ months[endDate.getMonth()] + " " + endDate.getDate() + ", "
+        + endDate.getFullYear();
+    }
   }
 
   function showMetaData() {

@@ -338,7 +338,7 @@ let TestPilotSetup = {
     // TODO look at RSS feed for new tasks and their start and end dates.
     // 8 = september (it's 0-indexed)
     var startDate = Date.UTC(2009, 8, 1);
-    var endDate = Date.UTC(2009, 8, 2);
+    var endDate = Date.UTC(2009, 8, 7);
 
 
     TestPilotSetup.addTask(new TestPilotSurvey("survey_for_new_pilots",                          

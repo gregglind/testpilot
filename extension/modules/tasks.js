@@ -176,6 +176,10 @@ TestPilotExperiment.prototype = {
     return TaskConstants.TYPE_EXPERIMENT;
   },
 
+  get endDate() {
+    return this._endDate;
+  },
+
   onNewWindow: function TestPilotExperiment_onNewWindow(window) {
     let Observer = this._observerConstructor;
     this._observersList.push( new Observer(window) );

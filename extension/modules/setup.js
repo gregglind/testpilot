@@ -346,7 +346,7 @@ let TestPilotSetup = {
                                                SURVEY_URL));
 
     TestPilotSetup.addTask(new TestPilotExperiment(1,
-						   "Tab Open/Close Experiment",
+						   "Tab Open/Close Study",
 						   EXPERIMENT_URL,
 					           TabsExperimentDataStore,
 					           TabsExperimentObserver,

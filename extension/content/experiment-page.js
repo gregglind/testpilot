@@ -12,7 +12,9 @@
   function debugMetadata() {
     Components.utils.import("resource://testpilot/modules/metadata.js");
     var md = MetadataCollector.getMetadata();
-    document.getElementById("debug").innerHTML = JSON.stringify( md );
+    var string = JSON.stringify( md );
+    var string2 = JSON.stringify( getDbContents() );
+    document.getElementById("debug").innerHTML = string + string2;
   }
 
   function drawSomeGraphs() {
@@ -44,15 +46,15 @@
     task.upload( function(success) {
       debugElem.innerHTML = "Callback called.";
       if (success) {
+        // TODO load chrome://testpilot/content/status-thanks.html
+	// change test status to submitted?
+	// Delete data?
         document.getElementById("debug").innerHTML = "Upload Successful!";
-        // TODO change whole page to reflect that this is a finished test now.
-        // And don't let them submit the same data multiple times!!
       } else {
         document.getElementById("debug").innerHTML = "Upload Failed; Please try again later.";
       }
     });
   }
-
 
   function getTestEndingDate(experimentId) {
             

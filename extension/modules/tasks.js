@@ -255,6 +255,7 @@ TestPilotExperiment.prototype = {
 	if (req.status == 200) {
 	  dump("DATA WAS POSTED SUCCESSFULLY " + req.responseText + "\n");
           self.changeStatus( TaskConstants.STATUS_SUBMITTED );
+	  this._dataStore.wipeAllData();
           callback(true);
 	} else {
 	  dump("ERROR POSTING DATA: " + req.responseText + "\n");
@@ -266,8 +267,8 @@ TestPilotExperiment.prototype = {
   },
 
   optOut: function TestPilotExperiment_optOut(reason) {
-    //this.changeStatus( TaskConstants.STATUS_CANCELLED);
-    //this._dataStore.wipeAllData();
+    this.changeStatus(TaskConstants.STATUS_CANCELLED);
+    this._dataStore.wipeAllData();
     dump("Opting out of test with reason " + reason + "\n");
     if (reason) {
       // Send us the reason...

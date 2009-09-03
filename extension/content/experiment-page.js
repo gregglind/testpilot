@@ -38,11 +38,9 @@
     task.upload( function(success) {
       debugElem.innerHTML = "Callback called.";
       if (success) {
-        // TODO load chrome://testpilot/content/status-thanks.html
-	// change test status to submitted?
-	// Delete data?
-        document.getElementById("debug").innerHTML = "Upload Successful!";
+        window.location = "chrome://testpilot/content/status-thanks.html";
       } else {
+	// TODO display some kind of failure
         document.getElementById("debug").innerHTML = "Upload Failed; Please try again later.";
       }
     });

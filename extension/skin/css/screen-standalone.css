@@ -305,3 +305,11 @@ src: url('chrome://testpilot/skin//DroidSans-Bold.ttf') format('truetype');
 canvas {
     border: 1px solid black;
 }
+
+a {
+    color: #9f423b; text-decoration: underline;
+}
+
+a:hover {
+    color: #9f423b; text-decoration: underline; cursor: pointer;
+}

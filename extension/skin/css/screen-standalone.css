@@ -301,3 +301,7 @@ src: url('chrome://testpilot/skin//DroidSans-Bold.ttf') format('truetype');
     width: 45%;
     margin: 20px 0px;
 }
+
+canvas {
+    border: 1px solid black;
+}

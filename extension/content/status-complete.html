@@ -3,73 +3,53 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
-	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-	<title>Mozilla Labs Test Pilot</title>
-	<link rel="stylesheet" type="text/css" media="all" href="chrome://testpilot/skin/css/screen-standalone.css" />
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <title>Mozilla Labs Test Pilot</title>
+  <link rel="stylesheet" type="text/css" media="all" href="chrome://testpilot/skin/css/screen-standalone.css" />
+  <link rel="stylesheet" type="text/css" media="all"  
+         href="chrome://testpilot/skin/css/screen-standalone.css" />
+  <script src="graphs.js" type="application/javascript;version=1.8"></script>
+  <script src="experiment-page.js" type="application/javascript;version=1.8">
+  </script>
 
 </head>
-<body>
-
-		<div id="container">
-		
-				<div id="content-standalone">
-					
-				<div id="intro">
-				
-					<h1>Greetings!</h1>
-					
-					<h2>You just completed the test for <a href=""> Closing and Opening Tabs! </a> </h2>
-					
-					<p class="spacer">
-				
-					<div class="home_callout_continue"><img class="homeIcon" src="chrome://testpilot/skin/images/home_computer.png"> <a href="">Submit your data &raquo;</a></div>
-					
-					<p class="spacer">
-						
-					<p class="center">( if you don't want to submit the data, <a href="">click here to remove them from your local drive</a>. )</p>
-
-					<p class="spacer">
-				
-					<!--<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum fringilla sem at ipsum porttitor pharetra. Vestibulum et odio vitae tellus posuere molestie. Sed ut purus tellus, nec vulputate lacus. Morbi ultrices, libero quis euismod lobortis, quam est scelerisque neque, consectetur convallis turpis magna ut elit. Curabitur adipiscing dui ac ligula egestas sed vulputate mi molestie. Maecenas justo neque, rhoncus quis fermentum ac, ullamcorper a augue. Morbi pharetra ultrices venenatis. Phasellus vulputate vehicula condimentum. Curabitur purus nunc, pulvinar eget suscipit vel, eleifend sed libero. Nunc tincidunt tincidunt arcu nec interdum. Etiam ornare sapien molestie tortor facilisis viverra.
-
-					<p class="spacer"></p>-->
-					
-					<div class="dataBox">
-					
-					<h3>View Your Data:</h3>
-					
-					<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum fringilla sem at ipsum porttitor pharetra?
-					<p><img class="data" src="chrome://testpilot/skin/images/data1.jpg">
-					
-					<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum fringilla sem at ipsum porttitor pharetra?
-					<p><img class="data" src="chrome://testpilot/skin/images/data2.jpg">
-					
-					<p><a href="">all raw data &raquo;</a>
-					
-					</div>
-
-				</div>
-				
-				<div id="links">
-				
-					<!--<div class="home_callout"><img class="homeIcon" src="images/home_quit.png"> <a href="">Quit your test &raquo;</a></div> <br></p>-->
+<body onload="loadExperimentPage(1);">
+  <div id="container">
+    <div id="content-standalone">
+      <div id="intro">
+	<h1>Greetings!</h1>
+	<h2>You just completed the test for <a href=""> Closing and Opening Tabs! </a> </h2>
+	<p class="spacer">
+	<div class="home_callout_continue"><img class="homeIcon" src="chrome://testpilot/skin/images/home_computer.png"> <a href="">Submit your data &raquo;</a></div>
+	<p class="spacer">
+	<p class="center">( if you don't want to submit the data, <a href="">click here to remove them from your local drive</a>. )</p>
+	<p class="spacer">
+        <!--<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum fringilla sem at ipsum porttitor pharetra. Vestibulum et odio vitae tellus posuere molestie. Sed ut purus tellus, nec vulputate lacus. Morbi ultrices, libero quis euismod lobortis, quam est scelerisque neque, consectetur convallis turpis magna ut elit. Curabitur adipiscing dui ac ligula egestas sed vulputate mi molestie. Maecenas justo neque, rhoncus quis fermentum ac, ullamcorper a augue. Morbi pharetra ultrices venenatis. Phasellus vulputate vehicula condimentum. Curabitur purus nunc, pulvinar eget suscipit vel, eleifend sed libero. Nunc tincidunt tincidunt arcu nec interdum. Etiam ornare sapien molestie tortor facilisis viverra.
+	<p class="spacer"></p>-->
+	<div class="dataBox">
+          <h3>View Your Data:</h3>
+	  <p>How many tabs did you have open at a time?</p>
+          <canvas id="tabs-over-time-canvas" width="450" height="220"></canvas>
+	  <p>When you closed a tab, did you stay on the default tab or did you switch to another one immediately?</p>
+<canvas id="tab-close-pie-chart-canvas" width="350" height="250"></canvas>
+          <p><a onclick="showRawData();">all raw data &raquo;</a>
+	</div>
+      </div>
+    <div id="links">
+    <!--<div class="home_callout"><img class="homeIcon" src="images/home_quit.png"> <a href="">Quit your test &raquo;</a></div> <br></p>-->
 													
-					<div class="home_callout"><img class="homeIcon" src="chrome://testpilot/skin/images/home_comments.png"> <a href="">Comments & Discussions &raquo;</a></div> <br>
+    <div class="home_callout"><img class="homeIcon" src="chrome://testpilot/skin/images/home_comments.png"> <a href="">Comments & Discussions &raquo;</a></div> <br>
 					
-					<div class="home_callout"><img class="homeIcon" src="chrome://testpilot/skin/images/home_results.png"><a href="">Propose a Test &raquo;</a></div> <br>
+    <div class="home_callout"><img class="homeIcon" src="chrome://testpilot/skin/images/home_results.png"><a href="">Propose a Test &raquo;</a></div> <br>
 					
-					<div class="home_callout"><img class="homeIcon" src="chrome://testpilot/skin/images/home_twitter.png"><a href="">@MozTestPilot on Twitter &raquo;</a></div>
+    <div class="home_callout"><img class="homeIcon" src="chrome://testpilot/skin/images/home_twitter.png"><a href="">@MozTestPilot on Twitter &raquo;</a></div>
 				
-				</div>
+    </div>
 			
-			</div>
-			
-			
-		</div>
+   </div>
 			
 			
-		
-
+  </div>
 </body>
 </html>
 

@@ -255,7 +255,9 @@ TestPilotExperiment.prototype = {
 	if (req.status == 200) {
 	  dump("DATA WAS POSTED SUCCESSFULLY " + req.responseText + "\n");
           self.changeStatus( TaskConstants.STATUS_SUBMITTED );
-	  this._dataStore.wipeAllData();
+	  dump("I did changeStatus, now wiping...\n");
+	  self._dataStore.wipeAllData();
+	  dump("I wiped, now doing callback...\n");
           callback(true);
 	} else {
 	  dump("ERROR POSTING DATA: " + req.responseText + "\n");

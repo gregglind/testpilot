@@ -34,14 +34,13 @@
   function uploadData() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     var task = TestPilotSetup.getTaskById(1);
-    var debugElem = document.getElementById("debug");
+    var uploadStatus = document.getElementById("upload-status");
+    uploadStatus.innerHTML = "Now uploading data...";
     task.upload( function(success) {
-      debugElem.innerHTML = "Callback called.";
       if (success) {
         window.location = "chrome://testpilot/content/status-thanks.html";
       } else {
-	// TODO display some kind of failure
-        document.getElementById("debug").innerHTML = "Upload Failed; Please try again later.";
+        uploadStatus.innerHTML = "Error!";
       }
     });
   }
@@ -55,6 +54,9 @@
     var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
                   "Sep", "Oct", "Nov", "Dec"];
     var span = document.getElementById("test-end-time");
+    if (!span) {
+      return;
+    }
     if (diff < 0) {
       span.innerHTML = "(It has already ended and you should not be seeing this page.)";
       return;

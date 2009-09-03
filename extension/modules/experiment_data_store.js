@@ -129,7 +129,7 @@ ExperimentDataStore.prototype = {
     insStmt.bindInt32Parameter(3, uiEvent.ui_method);
     insStmt.bindInt32Parameter(4, uiEvent.tab_site_hash);
     insStmt.bindInt32Parameter(5, uiEvent.num_tabs);
-    insStmt.bindIntDoubleParameter(6, uiEvent.timestamp);
+    insStmt.bindDoubleParameter(6, uiEvent.timestamp);
     insStmt.execute();
     insStmt.finalize();
   },
@@ -158,10 +158,12 @@ ExperimentDataStore.prototype = {
   },
 
   wipeAllData: function EDS_wipeAllData() {
+    dump("ExperimentDataStore.wipeAllData called.\n");
     let wipeSql = "DELETE FROM " + this._tableName;
     let wipeStmt = this._createStatement(wipeSql);
     wipeStmt.execute();
     wipeStmt.finalize();
+    dump("ExperimentDataStore.wipeAllData complete.\n");
   }
 };
 

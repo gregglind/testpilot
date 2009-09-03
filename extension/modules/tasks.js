@@ -276,6 +276,7 @@ TestPilotExperiment.prototype = {
       // Send us the reason...
       let params = "testid=" + this._id + "&data=" + encodeURI(reason);
       var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
+      dump("Posting " + params + " to " + DATA_UPLOAD_URL + "\n");
       req.open('POST', DATA_UPLOAD_URL, true);
       req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
       req.setRequestHeader("Content-length", params.length);

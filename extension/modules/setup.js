@@ -198,10 +198,15 @@ let TestPilotSetup = {
         newMenuItem.setAttribute("class", "menuitem-iconic");
         newMenuItem.setAttribute("image", "chrome://testpilot/skin/new.png");
       }
-      if (task.status >= TaskConstants.STATUS_CANCELLED) {
+      if (task.status >= TaskConstants.STATUS_SUBMITTED) {
 	// Disable it if it's cancelled or submitted
         newMenuItem.setAttribute("disabled", true);
-        newMenuItem.setAttribute("label", "  (Completed)" + task.title);
+        newMenuItem.setAttribute("label", "  (Completed) " + task.title);
+      }
+      if (task.status == TaskConstants.STATUS_CANCELLED) {
+	// Disable it if it's cancelled or submitted
+        newMenuItem.setAttribute("disabled", true);
+        newMenuItem.setAttribute("label", "  (Quit) " + task.title);
       }
       // TODO other variations of icon and label for other statuses?
 

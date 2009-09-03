@@ -180,6 +180,29 @@ TestPilotExperiment.prototype = {
     return this._endDate;
   },
 
+  get infoPageUrl() {
+    switch (this._status) {
+      case TaskConstants.STATUS_NEW:
+      case TaskConstants.STATUS_PENDING:
+      case TaskConstants.STATUS_STARTING:
+      case TaskConstants.STATUS_IN_PROGRESS:
+        return "chrome://testpilot/content/status.html";
+      break;
+      case TaskConstants.STATUS_FINISHED:
+        return "chrome://testpilot/content/status-complete.html";
+      break;
+      case TaskConstants.STATUS_CANCELLED:
+        return "chrome://testpilot/content/status-cancelled.html";
+      break;
+      case TaskConstants.STATUS_SUBMITTED:
+      case TaskConstants.STATUS_RESULTS:
+      case TaskConstants.STATUS_ARCHIVED:
+        return "chrome://testpilot/content/status-thanks.html";
+      break;
+    }
+    return this._url;
+  },
+
   onNewWindow: function TestPilotExperiment_onNewWindow(window) {
     let Observer = this._observerConstructor;
     this._observersList.push( new Observer(window) );
@@ -242,9 +265,10 @@ TestPilotExperiment.prototype = {
     req.send( params );
   },
 
-  optOut: function TestPilotExperiment_optOut() {
-    this.changeStatus( TaskConstants.STATUS_CANCELLED);
-    this._dataStore.wipeAllData();
+  optOut: function TestPilotExperiment_optOut(reason) {
+    //this.changeStatus( TaskConstants.STATUS_CANCELLED);
+    //this._dataStore.wipeAllData();
+    dump("Opting out of test with reason " + reason + "\n");
   }
 };
 TestPilotExperiment.prototype.__proto__ = TestPilotTask;

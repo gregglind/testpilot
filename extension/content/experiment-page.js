@@ -94,6 +94,14 @@
     }
   }
 
+  function quitExperiment(experimentId) {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    var reason = document.getElementById("reason-for-quit").value;
+    var task = TestPilotSetup.getTaskById(experimentId);
+    task.optOut(reason);
+    // load the you-are-canceleed page.
+  }
+
   function loadExperimentPage(experimentId) {
     drawSomeGraphs();
     showMetaData();

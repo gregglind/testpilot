@@ -253,7 +253,7 @@ let TestPilotSetup = {
     for (i = 0; i < this.taskList.length; i++) {
       task = this.taskList[i];
       if (task.status == TaskConstants.STATUS_FINISHED) {
-        let text = "An experiment is complete: " 
+        let text = "A Test Pilot study has completed: " 
                    + task.title + " needs your attention.";
 	this._showNotification(text, task);
 	return;

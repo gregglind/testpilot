@@ -8,7 +8,7 @@ html {
 body { 
 	font-family: 'Lucida Grande', 'Lucida Sans Unicode', Lucida, Arial, Helvetica, sans-serif;
 	font-family: 'DroidSans';
-	background: #fff url('bg.jpg') repeat-x top center;
+	background: #fff url('chrome://testpilot/skin/bg.jpg') repeat-x top center;
 	padding: 0px; 
 	color:#787878;
 	font-size:12px;
@@ -145,7 +145,7 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 	color: rgba(0, 0, 0, 0.8);
 	-moz-border-radius: 0.5em;
 	-webkit-border-radius: 0.5em;
-	background: rgba(220, 240, 247, 0.8) url('callout.png') no-repeat top center;
+	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/callout.png') no-repeat top center;
 	-moz-box-shadow: 
 		inset rgba(185, 221, 234, 0.2) 0 -10px 12px,
 		inset rgba(185, 221, 234, 1) 0 0px 1px,
@@ -163,7 +163,7 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 	color: rgba(0, 0, 0, 0.8);
 	-moz-border-radius: 0.5em;
 	-webkit-border-radius: 0.5em;
-	background: rgba(220, 240, 247, 0.8) url('callout.png') no-repeat top center;
+	background: rgba(220, 240, 247, 0.8) url('chrome://testpilot/skin/callout.png') no-repeat top center;
 	-moz-box-shadow: 
 		inset rgba(185, 221, 234, 0.2) 0 -10px 12px,
 		inset rgba(185, 221, 234, 1) 0 0px 1px,

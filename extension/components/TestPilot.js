@@ -54,19 +54,13 @@ TestPilotComponent.prototype = {
   observe: function TPC__observe(subject, topic, data) {
     switch (topic) {
     case "app-startup":
-      dump("TPC observes app startup.\n");
       let os = Cc["@mozilla.org/observer-service;1"].
         getService(Ci.nsIObserverService);
       os.addObserver(this, "sessionstore-windows-restored", true);
       break;
     case "sessionstore-windows-restored":
-      dump("TPC observes windows restored.\n");
-    try {
-        Cu.import("resource://testpilot/modules/setup.js");
-        TestPilotSetup.globalStartup();
-     } catch ( e) {
-        dump("Error in starting up: " + e + "\n");
-    }
+      Cu.import("resource://testpilot/modules/setup.js");
+      TestPilotSetup.globalStartup();
       break;
     }
   }

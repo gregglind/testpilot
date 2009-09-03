@@ -41,6 +41,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://testpilot/modules/experiment_data_store.js");
+Components.utils.import("resource://testpilot/modules/Observers.js");
 
 var g_nextWindowId = 1;
 
@@ -78,6 +79,7 @@ TabsExperimentObserver.prototype = {
   install: function TabsExperimentObserver_install() {
     let browser = this._window.getBrowser() 
     let container = browser.tabContainer;
+    dump("Installing tabsExperimentObserver on a window!\n");
     // Can we catch the click event during the capturing phase??
     // last argument of addEventListener is true to catch during capture, false to catch during bubbling.
     var self = this;
@@ -120,19 +122,35 @@ TabsExperimentObserver.prototype = {
       appcontent.addEventListener("DOMContentLoaded",
 				  function(event) { self.onUrlLoad(event); },
                                   true);
-    }	  
+    }
 
+    // Record the window-opening event:
+    TabsExperimentDataStore.storeEvent({
+      event_code: TabsExperimentConstants.OPEN_WINDOW_EVENT,
+      timestamp: Date.now(),
+      num_tabs: container.itemCount,
+      tab_window: self._windowId
+    });
   },
 
-  uninstall: function TabsExperimentObserver_uninstall(browser) {
-    // TODO this is Never actually called...
-    let container = browser.tabContainer;
+  uninstall: function TabsExperimentObserver_uninstall() {
+    // TODO this is never actually called yet...
+    /*let container = browser.tabContainer;
     container.removeEventListener("TabOpen", this.onTabOpened, false);
     container.removeEventListener("TabClose", this.onTabClosed, false);
     container.removeEventListener("TabSelect", this.onTabSelected, false);
     container.removeEventListener("mousedown", this.onClick, true);
     container.removeEventListener("mouseup", this.onMouseUp, true);
-    container.removeEventListener("keydown", this.onKey, true);
+    container.removeEventListener("keydown", this.onKey, true);*/
+
+    // Record the window-closing event:
+    dump("Uninstalling tabsExperimentObserver.\n");
+    let windowId = this._windowId;
+    TabsExperimentDataStore.storeEvent({
+      event_code: TabsExperimentConstants.CLOSE_WINDOW_EVENT,
+      timestamp: Date.now(),
+      tab_window: windowId
+    });
   },
 
   onClick: function TabsExperimentObserver_onClick(event) {

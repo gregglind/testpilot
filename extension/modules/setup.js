@@ -106,7 +106,7 @@ let TestPilotSetup = {
     dump("Setting interval for showing reminders...\n");
     let shortTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     shortTimer.initWithCallback(
-      { notify: function(timer) { self.doHousekeeping();} },
+      { notify: function(timer) { self._doHousekeeping();} },
       Application.prefs.getValue(POPUP_CHECK_INTERVAL, 180000),
       Ci.nsITimer.TYPE_REPEATING_SLACK
     );
@@ -137,6 +137,9 @@ let TestPilotSetup = {
   onWindowUnload: function TPS__onWindowRegistered(window) {
     dump("Called TestPilotSetup.onWindow unload!\n");
     // TODO need an uninstall method that calls TabsExperimentObserver.uninstall();.
+    for (let i = 0; i < this.taskList.length; i++) {
+      this.taskList[i].onWindowClosed(window);
+    }
   },
 
   onWindowLoad: function TPS_onWindowLoad(window) {

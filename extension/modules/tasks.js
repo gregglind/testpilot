@@ -102,7 +102,10 @@ var TestPilotTask = {
     return this._url;
   },
 
-  onNewWindow: function TestPilotTask_setWindow(window) {
+  onNewWindow: function TestPilotTask_onNewWindow(window) {
+  },
+
+  onWindowClosed: function TestPilotTask_onWindowClosed(window) {
   },
 
   onUrlLoad: function TestPilotTask_onUrlLoad(url) {
@@ -155,6 +158,7 @@ TestPilotExperiment.prototype = {
     this._startDate = startDate;
     this._endDate = endDate;
     this.checkDate();
+    this._observersList = [];
 
     // Observer is a constructor.  Constructing one will install it in the
     // window too.
@@ -172,10 +176,17 @@ TestPilotExperiment.prototype = {
     return TaskConstants.TYPE_EXPERIMENT;
   },
 
-  onNewWindow: function TestPilotExperiment_setWindow(window) {
-    // TODO make it so this can be called multiple times, once per window...
+  onNewWindow: function TestPilotExperiment_onNewWindow(window) {
     let Observer = this._observerConstructor;
-    this._observer = new Observer(window);
+    this._observersList.push( new Observer(window) );
+  },
+ 
+  onWindowClosed: function TestPilotExperiment_onWindowClosed(window) {
+    for (let i=0; i < this._observersList.length; i++) {
+      if (this._observersList[i]._window == window) {
+        this._observersList[i].uninstall();
+      }
+    }
   },
 
   checkDate: function TestPilotExperiment_checkDate() {

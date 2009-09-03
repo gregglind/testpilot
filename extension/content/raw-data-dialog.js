@@ -57,6 +57,10 @@ function showdbcontents() {
           case c.DROP_EVENT: value = "Drop"; break;
           case c.SWITCH_EVENT: value = "Switch"; break;
           case c.LOAD_EVENT: value = "Load"; break;
+          case c.STARTUP_EVENT: value = "Startup"; break;
+          case c.SHUTDOWN_EVENT: value = "Shutdown"; break;
+          case c.OPEN_WINDOW_EVENT: value = "Window Open"; break;
+          case c.CLOSE_WINDOW_EVENT: value = "Window Close"; break;
         }
       } else if (columnNames[j] == "ui_method") {
         switch(value) {

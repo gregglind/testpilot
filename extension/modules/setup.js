@@ -76,6 +76,8 @@ let TestPilotSetup = {
   isNewlyInstalledOrUpgraded: false,
   didReminderAfterStartup: false,
   startupComplete: false,
+  _shortTimer: null,
+  _longTimer: null, 
   taskList: [],
 
   globalStartup: function TPS__doGlobalSetup() {
@@ -98,22 +100,22 @@ let TestPilotSetup = {
     var self = this;
     Observers.add("testpilot:task:changed", this.onTaskStatusChanged,
                   self);
+    // Set up observation for application shutdown.
+    Observers.add("quit-application", this.globalShutdown, self);
     
     // Set up timers to remind user x minutes after startup
     // and once per day thereafter.  Use nsITimer so it doesn't belong to
     // any one window.
     dump("Setting interval for showing reminders...\n");
     
-    let shortTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    dump(" type is " + Ci.nsITimer.TYPE_REPEATING_SLACK +"\n");
-    dump(" interval is " + Application.prefs.getValue(POPUP_CHECK_INTERVAL, 180000) + "\n");
-    shortTimer.initWithCallback(
+    this._shortTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._shortTimer.initWithCallback(
       { notify: function(timer) { self._doHousekeeping();} },
       Application.prefs.getValue(POPUP_CHECK_INTERVAL, 180000),
       Ci.nsITimer.TYPE_REPEATING_SLACK
     );
-    let longTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    longTimer.initWithCallback(
+    this._longTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._longTimer.initWithCallback(
       { notify: function(timer) { 
 	  self._notifyUserOfTasks(HIGH_PRIORITY_ONLY); }},
       Application.prefs.getValue(POPUP_REMINDER_INTERVAL, 86400000),
@@ -127,6 +129,17 @@ let TestPilotSetup = {
     // onWindowLoad gets called once for each window, but only after we fire this
     // notification.
     dump("Testpilot startup complete.\n");
+  },
+
+  globalShutdown: function TPS_globalShutdown() {
+    dump("Global shutdown.  Unregistering everything.\n");
+    this._shortTimer.cancel();
+    this._longTimer.cancel();
+    let self = this;
+    Observers.remove("testpilot:task:changed", this.onTaskStatusChanged,
+                  self);
+    Observers.remove("quit-application", this.globalShutdown, self);
+    dump("Done unregistering everything.\n");
   },
 
   _getFrontBrowserWindow: function TPS__getFrontWindow() {

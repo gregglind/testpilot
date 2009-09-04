@@ -45,7 +45,7 @@ function TestPilotComponent() {}
 TestPilotComponent.prototype = {
   classDescription: "Test Pilot Component",
   contractID: "@mozilla.org/testpilot/service;1",
-  classID: Components.ID("{ca00de12-98e9-11de-ae91-96b556d89593}"),
+  classID: Components.ID("{e6e5e58f-7977-485a-b076-2f74bee2677b}"),
   _xpcom_categories: [{ category: "app-startup", service: true }],
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
@@ -54,11 +54,13 @@ TestPilotComponent.prototype = {
   observe: function TPC__observe(subject, topic, data) {
     switch (topic) {
     case "app-startup":
+    dump("Component observes app startup.\n");
       let os = Cc["@mozilla.org/observer-service;1"].
         getService(Ci.nsIObserverService);
       os.addObserver(this, "sessionstore-windows-restored", true);
       break;
     case "sessionstore-windows-restored":
+    dump("Component observes session restore.\n");
       Cu.import("resource://testpilot/modules/setup.js");
       TestPilotSetup.globalStartup();
       break;

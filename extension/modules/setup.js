@@ -50,7 +50,6 @@ const VERSION_PREF ="extensions.testpilot.lastversion";
 const FIRST_RUN_PREF ="extensions.testpilot.firstRunUrl";
 const POPUP_CHECK_INTERVAL = "extensions.testpilot.popup.delayAfterStartup";
 const POPUP_REMINDER_INTERVAL = "extensions.testpilot.popup.timeBetweenChecks";
-const POPUP_LAST_CHECK_TIME = "extensions.testpilot.popup.lastCheck";
 
 const HIGH_PRIORITY_ONLY = 1;
 const HIGH_AND_MEDIUM_PRIORITY = 2;
@@ -83,7 +82,7 @@ let TestPilotSetup = {
     // Only ever run this stuff ONCE, on the first window restore.
     // Should get called by the Test Pilot component.
     dump("TestPilotSetup.globalStartup was called.\n");
-    
+
     // Show first run page (in front window) if newly installed or upgraded.
     let currVersion = Application.prefs.getValue(VERSION_PREF, "firstrun");
     if (currVersion != this.version) {
@@ -124,6 +123,7 @@ let TestPilotSetup = {
     Observers.notify("testpilot:startup:complete", "", null);
     // onWindowLoad gets called once for each window, but only after we fire this
     // notification.
+    dump("Testpilot startup complete.\n");
   },
 
   _getFrontBrowserWindow: function TPS__getFrontWindow() {
@@ -275,7 +275,7 @@ let TestPilotSetup = {
     for (i = 0; i < this.taskList.length; i++) {
       task = this.taskList[i];
       if (task.status == TaskConstants.STATUS_STARTING) {
-	text = "An experiment is now in progress: " + task.title;
+	text = "A study is now in progress: " + task.title;
 	this._showNotification(text, task);
 	return;
       }
@@ -286,7 +286,7 @@ let TestPilotSetup = {
       task = this.taskList[i];
       if (task.status == TaskConstants.STATUS_NEW) {
 	if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
-	  text = "A new experiment has been scheduled: " + task.title;
+	  text = "A new study has been scheduled: " + task.title;
 	} else {
 	  text = "There is a new survey for you: " + task.title;
 	}
@@ -313,8 +313,8 @@ let TestPilotSetup = {
     }
     // Do a full reminder -- but at most once per browser session
     if (!this.didReminderAfterStartup) {
+      dump("Doing reminder after startup...\n");
       this.didReminderAfterStartup = true;
-      Application.prefs.setValue( POPUP_LAST_CHECK_TIME, Date.now());
       this._notifyUserOfTasks(HIGH_AND_MEDIUM_PRIORITY);
     }
   },

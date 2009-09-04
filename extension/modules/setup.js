@@ -103,7 +103,10 @@ let TestPilotSetup = {
     // and once per day thereafter.  Use nsITimer so it doesn't belong to
     // any one window.
     dump("Setting interval for showing reminders...\n");
+    
     let shortTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    dump(" type is " + Ci.nsITimer.TYPE_REPEATING_SLACK +"\n");
+    dump(" interval is " + Application.prefs.getValue(POPUP_CHECK_INTERVAL, 180000) + "\n");
     shortTimer.initWithCallback(
       { notify: function(timer) { self._doHousekeeping();} },
       Application.prefs.getValue(POPUP_CHECK_INTERVAL, 180000),

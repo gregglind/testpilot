@@ -5,6 +5,10 @@ function drawTabsOverTimeGraph(canvas, rawData, originX, originY, width, height)
   let firstTimestamp = null;
   let maxTabs = 0;
 
+  if (rawData.length == 0) {
+    // no data yet.
+    return;
+  }
   // Convert raw data to structured data
   for (let row = 0; row < rawData.length; row++) {
     if (row == 0) {
@@ -77,6 +81,10 @@ function drawCloseTabPieChart(canvas, rawData, originX, originY, radius) {
   let numClosedAndSwitched = 0;
   let lastCloseEventTime = 0;
 
+  if (rawData.length == 0) {
+    // No data yet.
+    return;
+  }
 
   // TODO should we interpret it differently if you close a tab that
   // is not the one you're looking at?
@@ -93,6 +101,11 @@ function drawCloseTabPieChart(canvas, rawData, originX, originY, radius) {
 	numClosedAndSwitched ++;
       }
     }
+  }
+
+  if (numCloseEvents == 0) {
+    // No data yet.
+    return;
   }
 
   let angle = 2*Math.PI * numClosedAndSwitched / numCloseEvents;

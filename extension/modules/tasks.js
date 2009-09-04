@@ -43,6 +43,8 @@ Components.utils.import("resource://testpilot/modules/Observers.js");
 Components.utils.import("resource://testpilot/modules/metadata.js");
 
 const STATUS_PREF_PREFIX = "extensions.testpilot.taskstatus.";
+const START_DATE_PREF = "extensions.testpilot.tabsExperiment.startDate";
+const TEST_LENGTH_PREF = "extensions.testpilot.tabsExperiment.numDays";
 const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
 
 
@@ -115,6 +117,7 @@ var TestPilotTask = {
   },
 
   changeStatus: function TPS_changeStatus(newStatus, suppressNotification) {
+    dump("Changing status to " + newStatus + "\n");
     this._status = newStatus;
     // Set the pref:
     Application.prefs.setValue(STATUS_PREF_PREFIX + this._id, newStatus);
@@ -142,34 +145,37 @@ var TestPilotTask = {
   }
 };
 
-function TestPilotExperiment(id, title, url, dataStore, observer, startDate, endDate) {
-  this._init(id, title, url, dataStore, observer, startDate, endDate);
+function TestPilotExperiment(id, title, url, dataStore, observer) {
+  this._init(id, title, url, dataStore, observer);
 }
 TestPilotExperiment.prototype = {
   _init: function TestPilotExperiment__init(id,
 					    title,
                                             url,
 					    dataStore,
-					    observer,
-					    startDate,
-					    endDate) {
+					    observer) {
     this._taskInit(id, title, url);
     this._dataStore = dataStore;
-    this._startDate = startDate;
-    this._endDate = endDate;
+
+    let startDateString = Application.prefs.getValue(START_DATE_PREF, false);
+    if (startDateString) {
+      this._startDate = Date.parse(startDateString);
+    } else { 
+      this._startDate = Date.now();
+      Application.prefs.setValue(START_DATE_PREF, (new Date()).toString());
+    }
+
+    let duration = Application.prefs.getValue(TEST_LENGTH_PREF, 7);
+    this._endDate = this._startDate + duration * (24 * 60 * 60 * 1000);
+
     this.checkDate();
     this._observersList = [];
 
+    dump("Start date is " + this._startDate.toString() + "\n");
+    dump("End date is " + this._endDate.toString() + "\n");
     // Observer is a constructor.  Constructing one will install it in the
     // window too.
     this._observerConstructor = observer;
-    // TODO: Observers should only observe if the status is IN_PROGRESS; but
-    // remember that status can change during a browser session, possibly
-    // with multiple windows.  So either we register observers in every open
-    // window when we cross the start threshold (and take them out when we cross
-    // the finish line) , or else we put code in the
-    // observer itself to let it know not to record anything unless the
-    // task status is IN_PROGRESS.
   },
 
   get taskType() {
@@ -205,9 +211,12 @@ TestPilotExperiment.prototype = {
 
   onNewWindow: function TestPilotExperiment_onNewWindow(window) {
     let Observer = this._observerConstructor;
-    this._observersList.push( new Observer(window) );
+    // Only register observers if the test is in progress:
+    if (this._status <= TaskConstants.STATUS_FINISHED) {
+      this._observersList.push( new Observer(window) );
+    }
   },
- 
+
   onWindowClosed: function TestPilotExperiment_onWindowClosed(window) {
     for (let i=0; i < this._observersList.length; i++) {
       if (this._observersList[i]._window == window) {
@@ -218,18 +227,14 @@ TestPilotExperiment.prototype = {
 
   checkDate: function TestPilotExperiment_checkDate() {
     let currentDate = Date.now();
-    if (this._status < TaskConstants.STATUS_STARTING &&
-	currentDate >= this._startDate ) {
-      dump("Switched to Starting.\n");
-      // TODO register the observers here if not done already
-      this.changeStatus( TaskConstants.STATUS_STARTING );
-    }
-
     if (this._status < TaskConstants.STATUS_FINISHED &&
 	currentDate >= this._endDate ) {
       dump("Switched to Finishing.\n");
-      // TODO unregister or stop the observers here.
       this.changeStatus( TaskConstants.STATUS_FINISHED );
+      // Unregister all observers now:
+      for (let i=0; i < this._observersList.length; i++) {
+        this._observersList[i].uninstall();
+      }
     }
   },
 

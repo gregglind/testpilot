@@ -45,7 +45,7 @@ function TestPilotComponent() {}
 TestPilotComponent.prototype = {
   classDescription: "Test Pilot Component",
   contractID: "@mozilla.org/testpilot/service;1",
-  classID: Components.ID("{74b89fb0-f200-4ae8-a3ec-dd164117f6de}"),
+  classID: Components.ID("{ca00de12-98e9-11de-ae91-96b556d89593}"),
   _xpcom_categories: [{ category: "app-startup", service: true }],
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,

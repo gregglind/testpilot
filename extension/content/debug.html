@@ -3,18 +3,30 @@
 <title></title>
 <script src="graphs.js" type="application/javascript;version=1.8"></script>
 <script src="experiment-page.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+  function setTaskStatus() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    var newStatus = document.getElementById("status-code").value;
+    newStatus = parseInt(newStatus);
+    var task = TestPilotSetup.getTaskById(1);
+    task.changeStatus(newStatus, false);
+  }
+
+</script>
+
 <style type="text/css">
       canvas { border: 1px solid black; }
     </style>
 
 </head>
 
-<body onload="drawSomeGraphs(); debugMetadata();">
+<body onload="drawSomeGraphs();">
 <h1>Test Pilot Tabs Experiment Contents</h1>
 <p><button onclick="showRawData();">Show Raw Data</button>
 <button onclick="wipeDb();">Wipe My Data</button>
 <button onclick="uploadData();">Upload My Data</button>
 <button onclick="makeThereBeAPopup();">Popup</button>
+<input type="text" id="status-code"/><button onclick="setTaskStatus();">Set</button>
 </p>
 <p><span id="debug"></span></p>
 

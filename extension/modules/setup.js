@@ -77,37 +77,37 @@ let TestPilotSetup = {
   didReminderAfterStartup: false,
   startupComplete: false,
   _shortTimer: null,
-  _longTimer: null, 
+  _longTimer: null,
   taskList: [],
 
   globalStartup: function TPS__doGlobalSetup() {
     // Only ever run this stuff ONCE, on the first window restore.
     // Should get called by the Test Pilot component.
     dump("TestPilotSetup.globalStartup was called.\n");
-
+    try {
     // Show first run page (in front window) if newly installed or upgraded.
     let currVersion = Application.prefs.getValue(VERSION_PREF, "firstrun");
     if (currVersion != this.version) {
       Application.prefs.setValue(VERSION_PREF, this.version);
       this.isNewlyInstalledOrUpgraded = true;
-      let browser = this._getFrontBrowserWindow.getBrowser();
+      let browser = this._getFrontBrowserWindow().getBrowser();
       let url = Application.prefs.getValue(FIRST_RUN_PREF, "");
       let tab = browser.addTab(url);
       browser.selectedTab = tab;
     }
-    
+
     // Set up observation for task state changes
     var self = this;
     Observers.add("testpilot:task:changed", this.onTaskStatusChanged,
                   self);
     // Set up observation for application shutdown.
     Observers.add("quit-application", this.globalShutdown, self);
-    
+
     // Set up timers to remind user x minutes after startup
     // and once per day thereafter.  Use nsITimer so it doesn't belong to
     // any one window.
     dump("Setting interval for showing reminders...\n");
-    
+
     this._shortTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this._shortTimer.initWithCallback(
       { notify: function(timer) { self._doHousekeeping();} },
@@ -116,7 +116,7 @@ let TestPilotSetup = {
     );
     this._longTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this._longTimer.initWithCallback(
-      { notify: function(timer) { 
+      { notify: function(timer) {
 	  self._notifyUserOfTasks(HIGH_PRIORITY_ONLY); }},
       Application.prefs.getValue(POPUP_REMINDER_INTERVAL, 86400000),
       Ci.nsITimer.TYPE_REPEATING_SLACK
@@ -129,6 +129,9 @@ let TestPilotSetup = {
     // onWindowLoad gets called once for each window, but only after we fire this
     // notification.
     dump("Testpilot startup complete.\n");
+    } catch(e) {
+      dump("Error in testPilot startup: " + e +"\n");
+    }
   },
 
   globalShutdown: function TPS_globalShutdown() {
@@ -143,16 +146,14 @@ let TestPilotSetup = {
   },
 
   _getFrontBrowserWindow: function TPS__getFrontWindow() {
-     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                         .getService(Ci.nsIWindowMediator);
-     // TODO Is "most recent" the same as "front"?
-     return wm.getMostRecentWindow("navigator:browser");
+    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                        .getService(Ci.nsIWindowMediator);
+    // TODO Is "most recent" the same as "front"?
+    return wm.getMostRecentWindow("navigator:browser");
   },
-
 
   onWindowUnload: function TPS__onWindowRegistered(window) {
     dump("Called TestPilotSetup.onWindow unload!\n");
-    // TODO need an uninstall method that calls TabsExperimentObserver.uninstall();.
     for (let i = 0; i < this.taskList.length; i++) {
       this.taskList[i].onWindowClosed(window);
     }
@@ -274,7 +275,7 @@ let TestPilotSetup = {
     for (i = 0; i < this.taskList.length; i++) {
       task = this.taskList[i];
       if (task.status == TaskConstants.STATUS_FINISHED) {
-        let text = "A Test Pilot study has completed: " 
+        let text = "A Test Pilot study has completed: "
                    + task.title + " needs your attention.";
 	this._showNotification(text, task);
 	return;
@@ -310,7 +311,7 @@ let TestPilotSetup = {
 	return;
       }
     }
-    
+
     // And finally, new experiment results:
     for (i = 0; i < this.taskList.length; i++) {
       task = this.taskList[i];
@@ -356,7 +357,7 @@ let TestPilotSetup = {
   },
 
   checkForTasks: function TPS_checkForTasks() {
-    TestPilotSetup.addTask(new TestPilotSurvey("survey_for_new_pilots",                          
+    TestPilotSetup.addTask(new TestPilotSurvey("survey_for_new_pilots",
                                                "Survey For New Test Pilots",
                                                SURVEY_URL));
 

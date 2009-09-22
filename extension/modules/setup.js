@@ -325,7 +325,7 @@ let TestPilotSetup = {
   _doHousekeeping: function TPS__doHousekeeping() {
     // check date on all tasks:
     for (let i = 0; i < this.taskList.length; i++) {
-      task = this.taskList[i];
+      let task = this.taskList[i];
       task.checkDate();
     }
     // Do a full reminder -- but at most once per browser session

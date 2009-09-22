@@ -87,7 +87,7 @@ var TestPilotTask = {
   get title() {
     return this._title;
   },
-  
+
   get id() {
     return this._id;
   },
@@ -160,7 +160,7 @@ TestPilotExperiment.prototype = {
     let startDateString = Application.prefs.getValue(START_DATE_PREF, false);
     if (startDateString) {
       this._startDate = Date.parse(startDateString);
-    } else { 
+    } else {
       this._startDate = Date.now();
       Application.prefs.setValue(START_DATE_PREF, (new Date()).toString());
     }
@@ -243,6 +243,7 @@ TestPilotExperiment.prototype = {
     // on success or failure.
     let uploadData = MetadataCollector.getMetadata();
     uploadData.contents = this._dataStore.barfAllData();
+    // TODO compress to smaller text size b4 uploading
     let dataString = encodeURI(JSON.stringify(uploadData));
 
     let params = "testid=" + this._id + "&data=" + dataString;
@@ -266,10 +267,12 @@ TestPilotExperiment.prototype = {
           callback(true);
 	} else {
 	  dump("ERROR POSTING DATA: " + req.responseText + "\n");
+          // TODO set up timer that keeps trying to upload data until
+          // there is a success.
 	  callback(false);
 	}
       }
-    }
+    };
     req.send( params );
   },
 
@@ -294,7 +297,7 @@ TestPilotExperiment.prototype = {
 	    dump(req.status + " posting error " + req.responseText +"\n");
 	  }
 	}
-      }
+      };
       dump("Sending quit reason.\n");
       req.send( params );
     }

@@ -41,7 +41,7 @@ function drawTabsOverTimeGraph(canvas, rawData, originX, originY, width, height)
   function lineToDataPoint(dataX, dataY) {
     ctx.lineTo(originX + dataX * xScale, originY - dataY * yScale);
   }
-  
+
   ctx.fillStyle = "rgb(200, 0, 0)";
   ctx.beginPath();
   ctx.moveTo(originX, originY);
@@ -51,7 +51,7 @@ function drawTabsOverTimeGraph(canvas, rawData, originX, originY, width, height)
 
   lineToDataPoint( data[data.length-1][0], 0);
   ctx.closePath();
-  ctx.fill(); 
+  ctx.fill();
 
   // Add legend to graph...
   let label = 0;
@@ -89,14 +89,14 @@ function drawCloseTabPieChart(canvas, rawData, originX, originY, radius) {
   // TODO should we interpret it differently if you close a tab that
   // is not the one you're looking at?
   for (let row=0; row < rawData.length; row++) {
-    if ( rawData[row].event_code == TabsExperimentConstants.CLOSE_EVENT ) { 
+    if ( rawData[row].event_code == TabsExperimentConstants.CLOSE_EVENT ) {
       numCloseEvents ++;
       numSwitchEvents = 0;
       lastCloseEventTime = rawData[row].timestamp;
     }
     if (rawData[row].event_code == TabsExperimentConstants.SWITCH_EVENT ) {
       numSwitchEvents ++;
-      if (numSwitchEvents == 2 && 
+      if (numSwitchEvents == 2 &&
 	  (rawData[row].timestamp - lastCloseEventTime) <= minTimeDiff) {
 	numClosedAndSwitched ++;
       }
@@ -112,7 +112,7 @@ function drawCloseTabPieChart(canvas, rawData, originX, originY, radius) {
 
   let closedAndSwitchedColor = "rgb(200, 0, 0)";
   let justClosedColor = "rgb(0, 0, 200)";
-  ctx.fillStyle = closedAndSwitchedColor
+  ctx.fillStyle = closedAndSwitchedColor;
   ctx.beginPath();
   ctx.moveTo( originX, originY );
   ctx.lineTo( originX + radius * Math.cos( 0 ),

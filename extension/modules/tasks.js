@@ -238,15 +238,40 @@ TestPilotExperiment.prototype = {
     }
   },
 
+  _makeCSV: function( metadata, contentData ) {
+    let rows = [];
+    rows.push( "event_code, tab_position, tab_window, ui_method, " +
+               "tab_site_hash, num_tabs, timestamp, extensions, " +
+               "location, version, os" );
+    let extensions = metadata.extensions;
+    let i;
+    for (i = 0; i < contentData.length; i++) {
+      let jsonRow = contentData[i];
+      let cells = [jsonRow.event_code,
+                   jsonRow.tab_position,
+                   jsonRow.tab_window,
+                   jsonRow.ui_method,
+                   jsonRow.tab_site_hash,
+                   jsonRow.num_tabs,
+                   jsonRow.timestamp];
+      cells.push( (i < extensions.length) ? extensions[i]: "");
+      cells.push( (i == 0) ? metadata.location : "");
+      cells.push( (i == 0) ? metadata.version : "");
+      cells.push( (i == 0) ? metadata.operatingSystem : "");
+      rows.push( cells.join(",") );
+    }
+
+    return rows.join("\n");
+  },
+
   upload: function TestPilotExperiment_upload(callback) {
     // Callback is a function that will be called back with true or false
     // on success or failure.
-    let uploadData = MetadataCollector.getMetadata();
-    uploadData.contents = this._dataStore.barfAllData();
-    // TODO compress to smaller text size b4 uploading
-    let dataString = encodeURI(JSON.stringify(uploadData));
+    let dataString = this._makeCSV(MetadataCollector.getMetadata(),
+                                   this._dataStore.barfAllData());
+    // used to be: encodeURI(JSON.stringify(uploadData));
 
-    let params = "testid=" + this._id + "&data=" + dataString;
+    let params = "testid=" + this._id + "&data=" + encodeURI(dataString);
     // TODO note there is an 8MB max on POST data in PHP, so if we have a REALLY big
     // pile we may need to do multiple posts.
     var self = this;

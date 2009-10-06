@@ -80,7 +80,7 @@ const TABS_TABLE_NAME = "testpilot_tabs_experiment";
 
 // event.timeStamp is milliseconds since epoch
 // This schema is subject to change before the Tabs Experiment is released:
-const TABS_EXPERIMENT_SCHEMA = 
+const TABS_EXPERIMENT_SCHEMA =
   "CREATE TABLE " + TABS_TABLE_NAME + "(" +
   " event_code INTEGER," +
   " tab_position INTEGER," +
@@ -168,7 +168,7 @@ ExperimentDataStore.prototype = {
 };
 
 // TODO Make sure this is only run once even if module imported multiple times:
-var TabsExperimentDataStore = new ExperimentDataStore(TABS_EXPERIMENT_FILE, 
+var TabsExperimentDataStore = new ExperimentDataStore(TABS_EXPERIMENT_FILE,
 						      TABS_TABLE_NAME,
 						      TABS_EXPERIMENT_SCHEMA);
 

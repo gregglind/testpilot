@@ -67,8 +67,6 @@ function Weave_sha1(string) {
   return hash;
 }
 
-// TODO sha1 hash all the extension names
-
 let MetadataCollector = {
   // Collects metadata such as what country you're in, what extensions you have installed, etc.
   getExtensions: function MetadataCollector_getExtensions() {

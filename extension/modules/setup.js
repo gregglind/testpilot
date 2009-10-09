@@ -40,7 +40,10 @@ EXPORTED_SYMBOLS = ["TestPilotSetup"];
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-Components.utils.import("resource://testpilot/modules/Observers.js");
+var Cuddlefish = {};
+Components.utils.import("resource://testpilot/modules/cuddlefish.js",
+                        Cuddlefish);
+
 Components.utils.import("resource://testpilot/modules/tabs_observer.js");
 Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
 Components.utils.import("resource://testpilot/modules/tasks.js");
@@ -78,12 +81,17 @@ let TestPilotSetup = {
   startupComplete: false,
   _shortTimer: null,
   _longTimer: null,
+  _obs: null,
   taskList: [],
 
   globalStartup: function TPS__doGlobalSetup() {
     // Only ever run this stuff ONCE, on the first window restore.
     // Should get called by the Test Pilot component.
     dump("TestPilotSetup.globalStartup was called.\n");
+
+    let loader = new Cuddlefish.Loader({rootPath: "lib/"});
+    this._obs = loader.require("observer-service");
+
     try {
     // Show first run page (in front window) if newly installed or upgraded.
     let currVersion = Application.prefs.getValue(VERSION_PREF, "firstrun");
@@ -98,10 +106,11 @@ let TestPilotSetup = {
 
     // Set up observation for task state changes
     var self = this;
-    Observers.add("testpilot:task:changed", this.onTaskStatusChanged,
+    // TODO replacing all calls to Observers with calls to this._obs
+    this._obs.add("testpilot:task:changed", this.onTaskStatusChanged,
                   self);
     // Set up observation for application shutdown.
-    Observers.add("quit-application", this.globalShutdown, self);
+    this._obs.add("quit-application", this.globalShutdown, self);
 
     // Set up timers to remind user x minutes after startup
     // and once per day thereafter.  Use nsITimer so it doesn't belong to
@@ -125,7 +134,7 @@ let TestPilotSetup = {
     // Install tasks.
     this.checkForTasks();
     this.startupComplete = true;
-    Observers.notify("testpilot:startup:complete", "", null);
+    this._obs.notify("testpilot:startup:complete", "", null);
     // onWindowLoad gets called once for each window, but only after we fire this
     // notification.
     dump("Testpilot startup complete.\n");
@@ -139,9 +148,9 @@ let TestPilotSetup = {
     this._shortTimer.cancel();
     this._longTimer.cancel();
     let self = this;
-    Observers.remove("testpilot:task:changed", this.onTaskStatusChanged,
+    this._obs.remove("testpilot:task:changed", this.onTaskStatusChanged,
                   self);
-    Observers.remove("quit-application", this.globalShutdown, self);
+    this._obs.remove("quit-application", this.globalShutdown, self);
     dump("Done unregistering everything.\n");
   },
 

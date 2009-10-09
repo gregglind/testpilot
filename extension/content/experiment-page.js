@@ -28,7 +28,8 @@
   function makeThereBeAPopup() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     var task = TestPilotSetup.getTaskById(1);
-    TestPilotSetup._showNotification("This is a test notification.", task);
+    var text = "Results are now available for " + task.title;
+    TestPilotSetup._showNotification(text, task);
   }
 
   function uploadData() {

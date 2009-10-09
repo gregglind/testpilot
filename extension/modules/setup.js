@@ -41,7 +41,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 var Cuddlefish = {};
-Components.utils.import("resource://testpilot/modules/cuddlefish.js",
+Components.utils.import("resource://testpilot/modules/lib/cuddlefish.js",
                         Cuddlefish);
 
 Components.utils.import("resource://testpilot/modules/tabs_observer.js");
@@ -89,10 +89,10 @@ let TestPilotSetup = {
     // Should get called by the Test Pilot component.
     dump("TestPilotSetup.globalStartup was called.\n");
 
-    let loader = new Cuddlefish.Loader({rootPath: "lib/"});
+    try {
+    let loader = new Cuddlefish.Loader({rootPath: "resource://testpilot/modules/lib/"});
     this._obs = loader.require("observer-service");
 
-    try {
     // Show first run page (in front window) if newly installed or upgraded.
     let currVersion = Application.prefs.getValue(VERSION_PREF, "firstrun");
     if (currVersion != this.version) {

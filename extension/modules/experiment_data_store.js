@@ -46,6 +46,9 @@ var _dirSvc = Cc["@mozilla.org/file/directory_service;1"]
 var _storSvc = Cc["@mozilla.org/storage/service;1"]
                  .getService(Ci.mozIStorageService);
 
+const TYPE_INT_32 = 0;
+const TYPE_DOUBLE = 1;
+
 const TabsExperimentConstants = {
   // constants for event_code
   OPEN_EVENT: 1,
@@ -79,32 +82,45 @@ const TABS_EXPERIMENT_FILE = "testpilot_tabs_experiment_results.sqlite";
 const TABS_TABLE_NAME = "testpilot_tabs_experiment";
 
 // event.timeStamp is milliseconds since epoch
-// This schema is subject to change before the Tabs Experiment is released:
-const TABS_EXPERIMENT_SCHEMA =
-  "CREATE TABLE " + TABS_TABLE_NAME + "(" +
-  " event_code INTEGER," +
-  " tab_position INTEGER," +
-  " tab_window INTEGER," +
-  " ui_method INTEGER," +
-  " tab_site_hash INTEGER," +
-  " num_tabs INTEGER," +
-  " timestamp INTEGER);"; // is there a different data type better for timestamp?
-// For all fields, 0 means unspecified
 
-function ExperimentDataStore(fileName, tableName, schema) {
-  this._init(fileName, tableName, schema);
+var TABS_EXPERIMENT_COLUMNS =  [{property: "event_code", type: TYPE_INT_32},
+                                {property: "tab_position", type: TYPE_INT_32},
+                                {property: "tab_window", type: TYPE_INT_32},
+                                {property: "ui_method", type: TYPE_INT_32},
+                                {property: "tab_site_hash", type: TYPE_INT_32},
+                                {property: "num_tabs", type: TYPE_INT_32},
+                                {property: "timestamp", type: TYPE_DOUBLE}];
+
+function ExperimentDataStore(fileName, tableName, columns) {
+  this._init(fileName, tableName, columns);
 }
 ExperimentDataStore.prototype = {
-  _init: function EDS__init(fileName, tableName, schema) {
+  _init: function EDS__init(fileName, tableName, columns) {
     this._fileName = fileName;
     this._tableName = tableName;
-    this._schema = schema;
+    this._columns = columns;
     let file = _dirSvc.get("ProfD", Ci.nsIFile);
     file.append(this._fileName);
     // openDatabase creates the file if it's not there yet:
     this._connection = DbUtils.openDatabase(file);
+    // Create schema based on columns:
+    let schemaClauses = [];
+    for (let i = 0; i < this._columns.length; i++) {
+      let colName = this._columns[i].property;
+      let colType;
+      switch( this._columns[i].type) {
+      case TYPE_INT_32: case TYPE_DOUBLE:
+        colType = "INTEGER";
+        break;
+        // TODO string types etc.
+      }
+      schemaClauses.push( colName + " " + colType );
+    }
+    let schema = "CREATE TABLE " + this._tableName + "("
+                  + schemaClauses.join(", ") + ");";
     // CreateTable creates the table only if it does not already exist:
-    this._connection = DbUtils.createTable(this._connection, this._tableName, this._schema);
+    this._connection = DbUtils.createTable(this._connection, this._tableName,
+                                           schema);
   },
 
   _createStatement: function _createStatement(selectSql) {
@@ -117,24 +133,28 @@ ExperimentDataStore.prototype = {
   },
 
   storeEvent: function EDS_storeEvent( uiEvent ) {
-    // uiEvent is assumed to have attribute names matching db columns
-    // TODO rewrite this to be schema-independent.
-    let insertSql = "INSERT INTO " + this._tableName +
-                    " VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)";
+    let i;
+    let columnNumbers = [ ("?" + i) for (i in this._columns)];
+    let insertSql = "INSERT INTO " + this._tableName + " VALUES (";
+    insertSql += columnNumbers.join(", ") + ")\"";
     let insStmt = this._createStatement(insertSql);
-    // If uiEvent is missing some of these fields, they end up as 0.
-    insStmt.bindInt32Parameter(0, uiEvent.event_code);
-    insStmt.bindInt32Parameter(1, uiEvent.tab_position);
-    insStmt.bindInt32Parameter(2, uiEvent.tab_window);
-    insStmt.bindInt32Parameter(3, uiEvent.ui_method);
-    insStmt.bindInt32Parameter(4, uiEvent.tab_site_hash);
-    insStmt.bindInt32Parameter(5, uiEvent.num_tabs);
-    insStmt.bindDoubleParameter(6, uiEvent.timestamp);
+    for (i = 0; i < this._columns.length; i++) {
+      let datum =  uiEvent[this._columns[i].property];
+      switch (this._columns[i].type) {
+        case TYPE_INT_32:
+          insStmt.bindInt32Parameter( i, datum);
+        break;
+        case TYPE_DOUBLE:
+          insStmt.bindDoubleParameter( i, datum);
+        break;
+        // etc.  String types?
+      }
+    }
     insStmt.execute();
     insStmt.finalize();
   },
 
-  barfAllData: function EDS_barfAllData() {
+  getAllDataAsJSON: function EDS_getAllDataAsJSON() {
     // Note this works without knowing what the schema is
     let selectSql = "SELECT * FROM " + this._tableName;
     let selStmt = this._createStatement(selectSql);
@@ -142,19 +162,41 @@ ExperimentDataStore.prototype = {
     let i;
     while (selStmt.executeStep()) {
       let newRecord = {};
-      let numCols = selStmt.columnCount;
+      let numCols = selStmt.columnCount; // or this._columns.length ?
       for (i = 0; i < numCols; i++) {
-	let colName = selStmt.getColumnName(i);
-	if (colName == "timestamp") {
-	  newRecord[colName] = selStmt.getDouble(i);
-	} else {
-          newRecord[colName] = selStmt.getInt32(i);
-	}
+        let colName = this._columns[i].property;
+        switch (this._columns[i].type) {
+          case TYPE_INT_32:
+            newRecord[colName] = selStmt.getInt32(i);
+          break;
+          case TYPE_DOUBLE:
+            newRecord[colName] = selStmt.getDouble(i);
+          break;
+          // etc.  String types?
+        }
       }
       records.push(newRecord);
     }
     selStmt.finalize();
     return records;
+  },
+
+  getAllDataAsCSV: function EDS_getAllDataAsCSV() {
+    let rows = [];
+    let i, j;
+    let colNames = [ this._columns[i].property for (i in this._columns) ];
+    rows.push( colNames.join(", ") );
+    let contentData = this.getAllDataAsJSON();
+    for (i = 0; i < contentData.length; i++) {
+      let jsonRow = contentData[i];
+      let cells = [];
+      for (j = 0; j < this._columns.length; j++) {
+        cells.push( jsonRow[ this._columns[j].property ] );
+      }
+      rows.push( cells.join(",") );
+    }
+    return rows;
+    // Note it returns rows unjoined, so that metadata can be easily inserted.
   },
 
   wipeAllData: function EDS_wipeAllData() {
@@ -170,5 +212,5 @@ ExperimentDataStore.prototype = {
 // TODO Make sure this is only run once even if module imported multiple times:
 var TabsExperimentDataStore = new ExperimentDataStore(TABS_EXPERIMENT_FILE,
 						      TABS_TABLE_NAME,
-						      TABS_EXPERIMENT_SCHEMA);
+						      TABS_EXPERIMENT_COLUMNS);
 

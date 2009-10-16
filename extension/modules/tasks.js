@@ -157,6 +157,9 @@ TestPilotExperiment.prototype = {
     this._taskInit(id, title, url);
     this._dataStore = dataStore;
 
+    // TODO should have the flexibility to start the StartDate either when
+    // installed (for basic panel?) or at a date specified in metadata
+    // (for opt-in tests like AB tests and stuff)
     let startDateString = Application.prefs.getValue(START_DATE_PREF, false);
     if (startDateString) {
       this._startDate = Date.parse(startDateString);
@@ -188,6 +191,8 @@ TestPilotExperiment.prototype = {
 
   get infoPageUrl() {
     switch (this._status) {
+      // TODO these URLs should have a ? parameter on them which gives the experiment
+      // ID...
       case TaskConstants.STATUS_NEW:
       case TaskConstants.STATUS_PENDING:
       case TaskConstants.STATUS_STARTING:
@@ -240,6 +245,8 @@ TestPilotExperiment.prototype = {
 
   _makeCSV: function( metadata, contentData ) {
     let rows = [];
+    // TODO this function has tabs-specific stuff all mangled up together with
+    // general metadata stuff.  Separate them!!
     rows.push( "event_code, tab_position, tab_window, ui_method, " +
                "tab_site_hash, num_tabs, timestamp, extensions, " +
                "location, version, os" );
@@ -264,6 +271,8 @@ TestPilotExperiment.prototype = {
     return rows.join("\n");
   },
 
+  // TODO When we have multiple experiments running, are the uploads
+  // separate or are they all together?
   upload: function TestPilotExperiment_upload(callback) {
     // Callback is a function that will be called back with true or false
     // on success or failure.

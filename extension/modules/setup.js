@@ -132,7 +132,7 @@ let TestPilotSetup = {
     );
 
     // Install tasks.
-    this.checkForTasks();
+    this.checkForTasks(loader);
     this.startupComplete = true;
     this._obs.notify("testpilot:startup:complete", "", null);
     // onWindowLoad gets called once for each window, but only after we fire this
@@ -366,6 +366,17 @@ let TestPilotSetup = {
   },
 
   checkForTasks: function TPS_checkForTasks() {
+    let loader = new Cuddlefish.Loader({rootPaths: ["resource://testpilot/modules/",
+                                                    "resource://testpilot/modules/lib/"]});
+    let REL = loader.require("remote-experiment-loader");
+    this._remoteExperimentLoader = new REL.RemoteExperimentLoader();
+
+    this._remoteExperimentLoader.checkForUpdates(function(success) {
+                                                   dump("Success? " + success + "\n");
+                                                 });
+    let experiments = this._remoteExperimentLoader.getExperiments();
+
+
     TestPilotSetup.addTask(new TestPilotSurvey("survey_for_new_pilots",
                                                "Survey For New Test Pilots",
                                                SURVEY_URL));

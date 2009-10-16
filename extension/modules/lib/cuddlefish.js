@@ -90,7 +90,9 @@
      if (options.memory)
        globals.memory = options.memory;
 
-     var loaderOptions = {rootPath: options.rootPath,
+     dump("Instantiating Loader with fs = " + options.fs + "\n");
+     var loaderOptions = {fs: options.fs,
+                          rootPath: options.rootPath,
                           rootPaths: options.rootPaths,
                           defaultPrincipal: "system",
                           globals: globals};

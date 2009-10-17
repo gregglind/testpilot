@@ -49,48 +49,6 @@ var _storSvc = Cc["@mozilla.org/storage/service;1"]
 const TYPE_INT_32 = 0;
 const TYPE_DOUBLE = 1;
 
-const TabsExperimentConstants = {
-  // constants for event_code
-  OPEN_EVENT: 1,
-  CLOSE_EVENT: 2,
-  DRAG_EVENT: 3,
-  DROP_EVENT: 4,
-  SWITCH_EVENT: 5,
-  LOAD_EVENT: 6,
-  STARTUP_EVENT: 7,
-  SHUTDOWN_EVENT: 8,
-  OPEN_WINDOW_EVENT: 9,
-  CLOSE_WINDOW_EVENT: 10,
-
-  // constants for ui_method
-  UI_CLICK: 1,
-  UI_KEYBOARD: 2,
-  UI_MENU: 3,
-  UI_LINK: 4,
-  UI_URLENTRY: 5,
-  UI_SEARCH: 6,
-  UI_BOOKMARK: 7,
-  UI_HISTORY: 8
-};
-
-// TODO: Firefox blurs/focuses, i.e. user switches application?
-// Tabs that are 'permanenly open'
-
-const TABS_EXPERIMENT_FILE = "testpilot_tabs_experiment_results.sqlite";
-/* In this schema, each row represents a single UI event. */
-
-const TABS_TABLE_NAME = "testpilot_tabs_experiment";
-
-// event.timeStamp is milliseconds since epoch
-
-var TABS_EXPERIMENT_COLUMNS =  [{property: "event_code", type: TYPE_INT_32},
-                                {property: "tab_position", type: TYPE_INT_32},
-                                {property: "tab_window", type: TYPE_INT_32},
-                                {property: "ui_method", type: TYPE_INT_32},
-                                {property: "tab_site_hash", type: TYPE_INT_32},
-                                {property: "num_tabs", type: TYPE_INT_32},
-                                {property: "timestamp", type: TYPE_DOUBLE}];
-
 function ExperimentDataStore(fileName, tableName, columns) {
   this._init(fileName, tableName, columns);
 }

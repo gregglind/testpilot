@@ -381,11 +381,12 @@ let TestPilotSetup = {
                                                "Survey For New Test Pilots",
                                                SURVEY_URL));
 
-    TestPilotSetup.addTask(new TestPilotExperiment(1,
-						   "Tab Open/Close Study",
-						   EXPERIMENT_URL,
-					           TabsExperimentDataStore,
-					           TabsExperimentObserver));
+    /* TODO using the experiment code for each experiment:
+     * instantiate a data store using experiment.dataStoreInfo,
+     * instantiate the observer class provided in experiment.observer,
+     * instantiate a TestPilotExperiment using the data store,
+     * observer, and additional metadata from experiment.experimentInfo;
+     * finally, pass this to TestPilotSetup.addTask. */
   },
 
   getTaskById: function TPS_getTaskById(id) {

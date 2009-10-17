@@ -243,42 +243,28 @@ TestPilotExperiment.prototype = {
     }
   },
 
-  _makeCSV: function( metadata, contentData ) {
-    let rows = [];
-    // TODO this function has tabs-specific stuff all mangled up together with
-    // general metadata stuff.  Separate them!!
-    rows.push( "event_code, tab_position, tab_window, ui_method, " +
-               "tab_site_hash, num_tabs, timestamp, extensions, " +
-               "location, version, os" );
-    let extensions = metadata.extensions;
-    let i;
-    for (i = 0; i < contentData.length; i++) {
-      let jsonRow = contentData[i];
-      let cells = [jsonRow.event_code,
-                   jsonRow.tab_position,
-                   jsonRow.tab_window,
-                   jsonRow.ui_method,
-                   jsonRow.tab_site_hash,
-                   jsonRow.num_tabs,
-                   jsonRow.timestamp];
-      cells.push( (i < extensions.length) ? extensions[i]: "");
-      cells.push( (i == 0) ? metadata.location : "");
-      cells.push( (i == 0) ? metadata.version : "");
-      cells.push( (i == 0) ? metadata.operatingSystem : "");
-      rows.push( cells.join(",") );
+  _appendMetadataToCSV: function TestPilotExperiment__appendMetadata() {
+    let rows = this._dataStore.getAllDataAsCSV();
+    let metadata = MetadataCollector.getMetadata();
+    rows[0] = rows[0] + ", extensions, location, version, os";
+    if (metadata.extensions.length > 0) {
+      rows[1] = rows[1] + ", " + metadata.extensions[0];
     }
+    rows[1] = rows[1] + ", " + metadata.location + ", " + metadata.version + ", ";
+    rows[1] = rows[1] + metadata.operatingSystem;
 
+    for (i = 1; i < metadata.extensions.length; i++) {
+      rows[i + 1] = rows[i + 1] + metadata.extensions[i];
+    }
     return rows.join("\n");
   },
 
-  // TODO When we have multiple experiments running, are the uploads
-  // separate or are they all together?
+  // Note: When we have multiple experiments running, the uploads
+  // are separate files.
   upload: function TestPilotExperiment_upload(callback) {
     // Callback is a function that will be called back with true or false
     // on success or failure.
-    let dataString = this._makeCSV(MetadataCollector.getMetadata(),
-                                   this._dataStore.barfAllData());
-    // used to be: encodeURI(JSON.stringify(uploadData));
+    let dataString = this._appendMetadataToCSV();
 
     let params = "testid=" + this._id + "&data=" + encodeURI(dataString);
     // TODO note there is an 8MB max on POST data in PHP, so if we have a REALLY big

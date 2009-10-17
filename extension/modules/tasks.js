@@ -146,6 +146,7 @@ var TestPilotTask = {
 };
 
 function TestPilotExperiment(id, title, url, dataStore, observer) {
+  // Note dataStore is an object, but observer is a constructor function
   this._init(id, title, url, dataStore, observer);
 }
 TestPilotExperiment.prototype = {
@@ -218,7 +219,7 @@ TestPilotExperiment.prototype = {
     let Observer = this._observerConstructor;
     // Only register observers if the test is in progress:
     if (this._status <= TaskConstants.STATUS_FINISHED) {
-      this._observersList.push( new Observer(window) );
+      this._observersList.push( new Observer(window, this._dataStore) );
     }
   },
 

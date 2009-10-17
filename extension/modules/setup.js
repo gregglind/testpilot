@@ -381,12 +381,21 @@ let TestPilotSetup = {
                                                "Survey For New Test Pilots",
                                                SURVEY_URL));
 
-    /* TODO using the experiment code for each experiment:
-     * instantiate a data store using experiment.dataStoreInfo,
-     * instantiate the observer class provided in experiment.observer,
-     * instantiate a TestPilotExperiment using the data store,
-     * observer, and additional metadata from experiment.experimentInfo;
-     * finally, pass this to TestPilotSetup.addTask. */
+    for (let filename in experiments) {
+      // TODO also pull additional info from experimentInfo, such as
+      // basicPanel, optInRequired, versionNumber, startDate, and duration.
+      let expInfo = experiments[filename].experimentInfo;
+      let dsInfo = experiments[filename].dataStoreInfo;
+      let dataStore = new ExperimentDataStore( dsInfo.fileName,
+                                               dsInfo.tableName,
+                                               dsInfo.columns );
+      let task = new TestPilotExperiment(expInfo.testId,
+                                         expInfo.testName,
+                                         expInfo.testInfoUrl,
+                                         dataStore,
+                                         experiments[filename].Observer);
+      TestPilotSetup.addTask(task);
+    }
   },
 
   getTaskById: function TPS_getTaskById(id) {

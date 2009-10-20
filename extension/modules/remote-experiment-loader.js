@@ -51,6 +51,9 @@ function downloadFile(url, cb) {
 
 const BASE_URL = "https://testpilot.mozillalabs.com/testcases/";
 var Cuddlefish = require("cuddlefish");
+// Cuddlefish.Loader and Cuddlefish.loader (.parentLoader ?)
+// .fs property exposes filesystem object.
+
 var SecurableModule = require("securable-module");
 // example contents of extensions.testpilot.experiment.codeFs:
 // {'fs': {"bookmark01/experiment": "<plain-text code @ bookmarks.js>"}}

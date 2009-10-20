@@ -328,11 +328,51 @@ exports.Observer.prototype = {
   }
 };
 
-exports.statusPagePlugin = {
-  inProgressHtml: "",  // this gets displayed in status page when experiment
-                       // is still in progress
-  completedHtml: "",   // this gets displayed in status page when experiment
-                       // is completed
+// TODO my experimentID must be passed along to other pages such as status-quit.html.
+exports.webContent = {
+  inProgressHtml: ' <h2>Hello Test Pilot,</h2> \
+    <h3>Thank you for helping with our <a href="https://testpilot.mozillalabs.com/testcases/tab-open-close.html">"Tab Open/Close" </a>study.</h3> \
+    <p><b>This study aims to understand what users typically do next after opening or closing a tab.</b> You don\'t have to do anything except use the Web normally.</p> \
+    <p>When you interact with tabs, Test Pilot will record what you do (open/close/switch etc) and when you do it (timestamp). We will then analyze this data to detect patterns that will help us build a better browser. More information is available on <a href="https://testpilot.mozillalabs.com/testcases/tab-open-close.html">the study\'s website.</a></p> \
+    <p>So, buckle up and get ready for your first flight! </p> \
+    <h4>This study is currently running.  It will end <span id="test-end-time"></span>. If you don\'t want to participate, please <a href="chrome://testpilot/content/status-quit.html">click here to quit</a>.</h4> \
+    <h3>The fine print:</h3> \
+      <ul> \
+	<li>The websites (URLs) that you visit will never be recorded.</li> \
+    <li>At the end of the test, you will be able to choose if you want to submit your test data or not.</li> \
+       <li>All test data you submit will be anonymized and will not be personally identifiable.</li> \
+      </ul> \
+	<div class="dataBox"> \
+          <h3>View Your Data:</h3> \
+ 	  <p>You are using the <span id="md-locale"></span> language version of Firefox <span id="md-version"></span> on <span id="md-os"></span> with <span id="md-num-ext"></span> installed.</p> \
+	  <p>The graphs below are just two examples of the kind of questions we\'ll be able to answer using the data collected in this study.  If you like, you can look at <a onclick="showRawData();">the complete raw data set</a> which we hope will be able to answer many other questions as well.</p> \
+	  <p>1. How many tabs did you have open at a time? <a href="https://testpilot.mozillalabs.com/testcases/tab-open-close.html">(More info...)</a></p> \
+          <canvas id="tabs-over-time-canvas" width="450" height="220"></canvas> \
+	  <p>2. When you closed a tab, did you stay on the default tab or did you switch to another one immediately? <a href="https://testpilot.mozillalabs.com/testcases/tab-open-close.html">(More info...)</a></p> \
+        <canvas id="tab-close-pie-chart-canvas" width="350" height="250"></canvas> \
+        </div>',
+
+  completedHtml: '<h2>Congratulations!</h2> \
+    <h3>You have completed the <a href="">Tab Open/Close Study</a>!</h3> \
+    <p>&nbsp;</p> \
+    <div class="home_callout_continue"><img class="homeIcon" src="chrome://testpilot/skin/images/home_computer.png"> <span id="upload-status"><a onclick="uploadData();">Submit your data &raquo;</a></span></div> \
+    <p>&nbsp;</p> \
+    <p>We will analyze the data submitted by all Test Pilots in order to to detect patterns that will help us build a better browser.  When the analysis is done, we will let you know where you can see the results.</p>      <p><a onclick="showRawData();">Click here</a> to see a display of all the collected data in its raw form, exactly as it will be sent. If there is anything there that you are not comfortable with sending to us, you can <a href="chrome://testpilot/content/status-quit.html">click here to delete the data without sending it</a>.</p> \
+    <h3>The fine print:</h3> \
+    <ul> \
+      <li>The websites (URLs) that you visit have not been recorded.</li> \
+      <li>All test data you submit will be anonymized and will not be personally identifiable.</li> \
+      <li>After you submit the data, it will be deleted from your computer.</li> \
+    </ul> \
+    <div class="dataBox"> \
+    <h3>View Your Data:</h3>\
+    <p>You are using the <span id="md-locale"></span> language version of Firefox <span id="md-version"></span> on <span id="md-os"></span> with <span id="md-num-ext"></span> installed.</p> \
+    <p>1. How many tabs did you have open at a time? <a href="https://testpilot.mozillalabs.com/testcases/tab-open-close.html">(More info...)</a></p> \
+    <canvas id="tabs-over-time-canvas" width="450" height="220"></canvas> \
+    <p>2. When you closed a tab, did you stay on the default tab or did you switch to another one immediately? <a href="https://testpilot.mozillalabs.com/testcases/tab-open-close.html">(More info...)</a></p> \
+    <canvas id="tab-close-pie-chart-canvas" width="350" height="250"></canvas> \
+    </div>',
+
   upcomingHtml: "",    // For tests which don't start automatically, this gets
                        // displayed in status page before test starts.
   onPageLoad: function() {

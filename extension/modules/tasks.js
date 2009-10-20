@@ -76,12 +76,13 @@ var TestPilotTask = {
   _status: null,
   _url: null,
 
-  _taskInit: function TestPilotTask__taskInit(id, title, infoPageUrl) {
+  _taskInit: function TestPilotTask__taskInit(id, title, infoPageUrl, webContent) {
     this._id = id;
     this._title = title;
     this._status = Application.prefs.getValue(STATUS_PREF_PREFIX + this._id,
                                               TaskConstants.STATUS_NEW);
     this._url = infoPageUrl;
+    this._webContent = webContent;
   },
 
   get title() {
@@ -102,6 +103,10 @@ var TestPilotTask = {
 
   get infoPageUrl() {
     return this._url;
+  },
+
+  get webContent() {
+    return this._webContent;
   },
 
   onNewWindow: function TestPilotTask_onNewWindow(window) {
@@ -145,17 +150,18 @@ var TestPilotTask = {
   }
 };
 
-function TestPilotExperiment(id, title, url, dataStore, observer) {
+function TestPilotExperiment(id, title, url, dataStore, observer, webContent) {
   // Note dataStore is an object, but observer is a constructor function
-  this._init(id, title, url, dataStore, observer);
+  this._init(id, title, url, dataStore, observer, webContent);
 }
 TestPilotExperiment.prototype = {
   _init: function TestPilotExperiment__init(id,
 					    title,
                                             url,
 					    dataStore,
-					    observer) {
-    this._taskInit(id, title, url);
+					    observer,
+                                            webContent) {
+    this._taskInit(id, title, url, webContent);
     this._dataStore = dataStore;
 
     // TODO should have the flexibility to start the StartDate either when
@@ -191,25 +197,24 @@ TestPilotExperiment.prototype = {
   },
 
   get infoPageUrl() {
+    let param = "?eid=" + this._id;
     switch (this._status) {
-      // TODO these URLs should have a ? parameter on them which gives the experiment
-      // ID...
       case TaskConstants.STATUS_NEW:
       case TaskConstants.STATUS_PENDING:
       case TaskConstants.STATUS_STARTING:
       case TaskConstants.STATUS_IN_PROGRESS:
-        return "chrome://testpilot/content/status.html";
+        return "chrome://testpilot/content/status.html" + param;
       break;
       case TaskConstants.STATUS_FINISHED:
-        return "chrome://testpilot/content/status-complete.html";
+        return "chrome://testpilot/content/status-complete.html" + param;
       break;
       case TaskConstants.STATUS_CANCELLED:
-        return "chrome://testpilot/content/status-cancelled.html";
+        return "chrome://testpilot/content/status-cancelled.html" + param;
       break;
       case TaskConstants.STATUS_SUBMITTED:
       case TaskConstants.STATUS_RESULTS:
       case TaskConstants.STATUS_ARCHIVED:
-        return "chrome://testpilot/content/status-thanks.html";
+        return "chrome://testpilot/content/status-thanks.html" + param;
       break;
     }
     return this._url;

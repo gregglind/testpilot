@@ -3,6 +3,18 @@
                       "Test Pilot: Raw Tab Usage Data", "chrome,centerscreen,resizable,scrollbars");
   }
 
+  function getUrlParam(name) {
+    // from http://www.netlobo.com/url_query_string_javascript.html
+    name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+    var regexS = "[\\?&]"+name+"=([^&#]*)";
+    var regex = new RegExp( regexS );
+    var results = regex.exec( window.location.href );
+    if( results == null )
+      return "";
+    else
+      return results[1];
+  }
+
   // TODO handle the case where there's no data.
   function getDbContents() {
     Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
@@ -104,8 +116,30 @@
     window.location = "chrome://testpilot/content/status-cancelled.html";
   }
 
-  function loadExperimentPage(experimentId) {
-    drawSomeGraphs();
+  function loadExperimentPage(status) {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    // Get experimentID from get args of page
+    var eid = parseInt(getUrlParam("eid"));
+    var experiment = TestPilotSetup.getTaskById(eid);
+    var webContent;
+    // TODO maybe get status from the task itself and merge pages?
+    if (status == "in-progress") {
+      webContent = experiment.webContent.inProgressHtml;
+    } else if (status == "completed") {
+      webContent = experiment.webContent.completedHtml;
+    } else if (status == "upcoming") {
+      webContent = experiment.webContent.upcomingHtml;
+    }
+    var contentDiv = document.getElementById("intro");
+    contentDiv.innerHTML = webContent;
+
+    // TODO create a menu (tab-styled?) to switch between all current
+    // experiments!!
+
+    // Metadata and start/end date should be filled in for every experiment:
     showMetaData();
-    getTestEndingDate(experimentId);
+    getTestEndingDate(eid);
+
+    // Do whatever the experiment's web content wants done on load:
+    webContent.onPageLoad();
   }

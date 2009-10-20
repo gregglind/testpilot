@@ -389,11 +389,13 @@ let TestPilotSetup = {
       let dataStore = new ExperimentDataStore( dsInfo.fileName,
                                                dsInfo.tableName,
                                                dsInfo.columns );
+      let webContent = experiments[filename].webContent;
       let task = new TestPilotExperiment(expInfo.testId,
                                          expInfo.testName,
                                          expInfo.testInfoUrl,
                                          dataStore,
-                                         experiments[filename].Observer);
+                                         experiments[filename].Observer,
+                                         webContent);
       TestPilotSetup.addTask(task);
     }
   },

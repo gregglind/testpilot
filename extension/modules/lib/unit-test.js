@@ -35,6 +35,49 @@
  * ***** END LICENSE BLOCK ***** */
 
 var timer = require("timer");
+var file = require("file");
+
+exports.findAndRunTests = function findAndRunTests(options) {
+  var finder = new TestFinder(options.dirs);
+  var runner = new TestRunner();
+  runner.startMany({tests: finder.findTests(),
+                    onDone: options.onDone});
+};
+
+var TestFinder = exports.TestFinder = function TestFinder(dirs) {
+  this.dirs = dirs;
+};
+
+TestFinder.prototype = {
+  _makeTest: function _makeTest(suite, name, test) {
+    function runTest(runner) {
+      console.info("executing '" + suite + "." + name + "'");
+      test(runner);
+    }
+    return runTest;
+  },
+
+  findTests: function findTests() {
+    var self = this;
+    var tests = [];
+
+    this.dirs.forEach(
+      function(dir) {
+        var suites = [name.slice(0, -3)
+                      for each (name in file.list(dir))
+                      if (/^test-.*\.js$/.test(name))];
+
+        suites.forEach(
+          function(suite) {
+            var module = require(suite);
+            for (name in module)
+              if (name.indexOf("test") == 0)
+                tests.push(self._makeTest(suite, name, module[name]));
+          });
+      });
+    return tests;
+  }
+};
 
 var TestRunner = exports.TestRunner = function TestRunner(options) {
   this.passed = 0;
@@ -44,19 +87,43 @@ var TestRunner = exports.TestRunner = function TestRunner(options) {
 TestRunner.prototype = {
   DEFAULT_PAUSE_TIMEOUT: 10000,
 
+  makeSandboxedLoader: function makeSandboxedLoader(options) {
+    if (!options)
+      options = {};
+    var Cuddlefish = require("cuddlefish");
+
+    options.fs = Cuddlefish.parentLoader.fs;
+    return new Cuddlefish.Loader(options);
+  },
+
   pass: function pass(message) {
-    console.log("pass:", message);
+    console.info("pass:", message);
     this.passed++;
   },
 
   fail: function fail(message) {
-    console.log("fail:", message);
+    console.error("fail:", message);
     this.failed++;
   },
 
   exception: function exception(e) {
     console.exception(e);
     this.failed++;
+  },
+
+  assertMatches: function assertMatches(string, regexp, message) {
+    if (regexp.test(string)) {
+      if (!message)
+        message = uneval(string) + " matches " + uneval(regexp);
+      this.pass(message);
+    } else {
+      var no = uneval(string) + " doesn't match " + uneval(regexp);
+      if (!message)
+        message = no;
+      else
+        message = message + " (" + no + ")";
+      this.fail(message);
+    }
   },
 
   assertRaises: function assertRaises(func, predicate, message) {
@@ -67,7 +134,25 @@ TestRunner.prototype = {
       else
         this.fail("function failed to throw exception");
     } catch (e) {
-      this.assertEqual(e.message, predicate, message);
+      if (typeof(predicate) == "object")
+        this.assertMatches(e.message, predicate, message);
+      else
+        this.assertEqual(e.message, predicate, message);
+    }
+  },
+
+  assertNotEqual: function assertNotEqual(a, b, message) {
+    if (a != b) {
+      if (!message)
+        message = "a != b != " + uneval(a);
+      this.pass(message);
+    } else {
+      var equality = uneval(a) + " == " + uneval(b);
+      if (!message)
+        message = equality;
+      else
+        message += " (" + equality + ")";
+      this.fail(message);
     }
   },
 

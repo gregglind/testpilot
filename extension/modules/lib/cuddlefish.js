@@ -79,6 +79,21 @@
      this.require("unload").send();
    }
 
+   var cuddlefishSandboxFactory = {
+     createSandbox: function(options) {
+       var filename = options.filename ? options.filename : null;
+       var sandbox = this.__proto__.createSandbox(options);
+       sandbox.defineProperty("__url__", filename);
+       return sandbox;
+     },
+     __proto__: new securableModule.SandboxFactory("system")
+   };
+
+   function CuddlefishModule(loader) {
+     this.parentLoader = loader;
+     this.__proto__ = exports;
+   }
+
    var Loader = exports.Loader = function Loader(options) {
      var globals = {Cc: Components.classes,
                     Ci: Components.interfaces,
@@ -90,14 +105,17 @@
      if (options.memory)
        globals.memory = options.memory;
 
-     dump("Instantiating Loader with fs = " + options.fs + "\n");
-     var loaderOptions = {fs: options.fs,
-                          rootPath: options.rootPath,
+     var modules = {};
+     var loaderOptions = {rootPath: options.rootPath,
                           rootPaths: options.rootPaths,
-                          defaultPrincipal: "system",
-                          globals: globals};
+                          fs: options.fs,
+                          sandboxFactory: cuddlefishSandboxFactory,
+                          globals: globals,
+                          modules: modules};
 
      var loader = new securableModule.Loader(loaderOptions);
+     var path = loader.fs.resolveModule(null, "cuddlefish");
+     modules[path] = new CuddlefishModule(loader);
 
      if (!globals.console) {
        var console = loader.require("plain-text-console");

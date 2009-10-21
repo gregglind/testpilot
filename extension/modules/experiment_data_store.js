@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-EXPORTED_SYMBOLS = ["ExperimentDataStore", "TabsExperimentConstants", "TabsExperimentDataStore"];
+EXPORTED_SYMBOLS = ["ExperimentDataStore"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -166,9 +166,3 @@ ExperimentDataStore.prototype = {
     dump("ExperimentDataStore.wipeAllData complete.\n");
   }
 };
-
-// TODO Make sure this is only run once even if module imported multiple times:
-var TabsExperimentDataStore = new ExperimentDataStore(TABS_EXPERIMENT_FILE,
-						      TABS_TABLE_NAME,
-						      TABS_EXPERIMENT_COLUMNS);
-

@@ -91,9 +91,6 @@ function getTabGroupIdFromUrl(url) {
 }
 
 // The tabs experiment observer!
-// TODO: This needs to take the data store object as an argument to the
-// constructor.
-
 exports.Observer = function TabsExperimentObserver(window, store) {
   this._init(window, store);
 };

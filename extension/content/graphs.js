@@ -4,7 +4,6 @@
 // axes expects an object like this:
 // { xScale: 1.5, yScale: 0.5, xMin: 0, xMax: 3000, yMin: -50, yMax: 50}
 
-// TODO separate tab-study specific analysis from general graphing tools
 function drawTimeSeriesGraph(canvas, data, boundingRect, axes, fillColor) {
   let ctx = canvas.getContext("2d");
   let br = boundingRect;

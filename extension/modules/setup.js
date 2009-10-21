@@ -43,8 +43,6 @@ const Ci = Components.interfaces;
 var Cuddlefish = {};
 Components.utils.import("resource://testpilot/modules/lib/cuddlefish.js",
                         Cuddlefish);
-
-Components.utils.import("resource://testpilot/modules/tabs_observer.js");
 Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
 Components.utils.import("resource://testpilot/modules/tasks.js");
 

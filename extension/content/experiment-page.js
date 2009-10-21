@@ -15,20 +15,6 @@
       return results[1];
   }
 
-  // TODO handle the case where there's no data.
-  function getDbContents() {
-    Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
-    return TabsExperimentDataStore.barfAllData();
-  }
-
-  function drawSomeGraphs() {
-    var rawData = getDbContents();
-    var canvas1 = document.getElementById("tabs-over-time-canvas");
-    drawTabsOverTimeGraph(canvas1, rawData, 40, 210, 400, 200);
-    var canvas2 = document.getElementById("tab-close-pie-chart-canvas");
-    drawCloseTabPieChart(canvas2, rawData, 125, 125, 100);
-  }
-
   // TODO replace this with an opt-out button.
   function wipeDb() {
     Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
@@ -141,5 +127,5 @@
     getTestEndingDate(eid);
 
     // Do whatever the experiment's web content wants done on load:
-    webContent.onPageLoad();
+    webContent.onPageLoad(experiment);
   }

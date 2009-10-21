@@ -196,7 +196,14 @@ TestPilotExperiment.prototype = {
     return this._endDate;
   },
 
+  get dataStoreAsJSON() {
+    return this._dataStore.getAllDataAsJSON();
+  },
+
   get infoPageUrl() {
+    // TODO: maybe we don't need to switch out to separate pages here...
+    // since the pages end up calling back to this experiment's .webContents,
+    // we could switch on status when we return the web contents.
     let param = "?eid=" + this._id;
     switch (this._status) {
       case TaskConstants.STATUS_NEW:

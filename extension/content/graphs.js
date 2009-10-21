@@ -1,50 +1,29 @@
-function drawTabsOverTimeGraph(canvas, rawData, originX, originY, width, height) {
+
+// boundingRect expects an object like this:
+// { originX: 0, originY: 0, width: 500, height: 300 }
+// axes expects an object like this:
+// { xScale: 1.5, yScale: 0.5, xMin: 0, xMax: 3000, yMin: -50, yMax: 50}
+
+// TODO separate tab-study specific analysis from general graphing tools
+function drawTimeSeriesGraph(canvas, data, boundingRect, axes, fillColor) {
   let ctx = canvas.getContext("2d");
-
-  let data = [];
-  let firstTimestamp = null;
-  let maxTabs = 0;
-
-  if (rawData.length == 0) {
-    // no data yet.
-    return;
-  }
-  // Convert raw data to structured data
-  for (let row = 0; row < rawData.length; row++) {
-    if (row == 0) {
-      firstTimestamp = rawData[row].timestamp;
-    }
-    if (rawData[row].num_tabs > maxTabs) {
-      maxTabs = rawData[row].num_tabs;
-    }
-    if (row > 0) {
-      data.push( [rawData[row].timestamp - firstTimestamp,
-		  rawData[row-1].num_tabs] );
-    }
-    data.push( [ rawData[row].timestamp - firstTimestamp,
-		 rawData[row].num_tabs ] );
-  }
-
-  let lastTimestamp = data[data.length - 1][0];
-
-  let xScale = width / lastTimestamp;
-  let yScale = height / maxTabs;
-
+  let br = boundingRect;
   // Draw axes:
   ctx.beginPath();
-  ctx.moveTo(originX, originY);
-  ctx.lineTo(originX, originY - height);
-  ctx.moveTo(originX, originY);
-  ctx.lineTo(originX + width, originY);
+  ctx.moveTo(br.originX, br.originY);
+  ctx.lineTo(br.originX, br.originY - br.height);
+  ctx.moveTo(br.originX, br.originY);
+  ctx.lineTo(br.originX + br.width, br.originY);
   ctx.stroke();
 
   function lineToDataPoint(dataX, dataY) {
-    ctx.lineTo(originX + dataX * xScale, originY - dataY * yScale);
+    ctx.lineTo(br.originX + dataX * axes.xScale,
+               br.originY - dataY * axes.yScale);
   }
 
-  ctx.fillStyle = "rgb(200, 0, 0)";
+  ctx.fillStyle = fillColor;
   ctx.beginPath();
-  ctx.moveTo(originX, originY);
+  ctx.moveTo(br.originX, br.originY);
   for (let i = 0; i < data.length; i++) {
     lineToDataPoint( data[i][0], data[i][1] );
   }
@@ -57,96 +36,63 @@ function drawTabsOverTimeGraph(canvas, rawData, originX, originY, width, height)
   let label = 0;
   ctx.mozTextStyle = "12pt sans serif";
   ctx.fillStyle = "black";
-  while (label < maxTabs) {
+  while (label < axes.yMax) {
     ctx.beginPath();
-    ctx.moveTo(originX, originY - label * yScale);
-    ctx.lineTo(originX - 5, originY - label * yScale);
+    ctx.moveTo(br.originX, br.originY - label * axes.yScale);
+    ctx.lineTo(br.originX - 5, br.originY - label * axes.yScale);
     ctx.stroke();
     ctx.save();
-    ctx.translate(originX - 25, originY - label * yScale);
+    ctx.translate(br.originX - 25, br.originY - label * axes.yScale);
     ctx.mozDrawText(label);
     ctx.restore();
+    // TODO don't hard-code label interval.
     label += 5;
   }
+
 }
 
+function drawPieChart(canvas, data, origin, radius, colors, labels) {
+  // TODO this is hard-coded right now to have 2 numbers in it but
+  // could easily be generalized for more.
+  let total = data[0] + data[1];
 
-function drawCloseTabPieChart(canvas, rawData, originX, originY, radius) {
   let ctx = canvas.getContext("2d");
-  let minTimeDiff = 5000; // 5 seconds
-  // TODO split into smaller chunks -- 1 second 2 seconds 5 seconds 10 seconds?
+  let angle = 2*Math.PI * data[0] / total;
 
-  let numCloseEvents = 0;
-  let numSwitchEvents = 0;
-  let numClosedAndSwitched = 0;
-  let lastCloseEventTime = 0;
-
-  if (rawData.length == 0) {
-    // No data yet.
-    return;
-  }
-
-  // TODO should we interpret it differently if you close a tab that
-  // is not the one you're looking at?
-  for (let row=0; row < rawData.length; row++) {
-    if ( rawData[row].event_code == TabsExperimentConstants.CLOSE_EVENT ) {
-      numCloseEvents ++;
-      numSwitchEvents = 0;
-      lastCloseEventTime = rawData[row].timestamp;
-    }
-    if (rawData[row].event_code == TabsExperimentConstants.SWITCH_EVENT ) {
-      numSwitchEvents ++;
-      if (numSwitchEvents == 2 &&
-	  (rawData[row].timestamp - lastCloseEventTime) <= minTimeDiff) {
-	numClosedAndSwitched ++;
-      }
-    }
-  }
-
-  if (numCloseEvents == 0) {
-    // No data yet.
-    return;
-  }
-
-  let angle = 2*Math.PI * numClosedAndSwitched / numCloseEvents;
-
-  let closedAndSwitchedColor = "rgb(200, 0, 0)";
-  let justClosedColor = "rgb(0, 0, 200)";
-  ctx.fillStyle = closedAndSwitchedColor;
+  ctx.fillStyle = colors[0];
   ctx.beginPath();
-  ctx.moveTo( originX, originY );
-  ctx.lineTo( originX + radius * Math.cos( 0 ),
-	      originY - radius * Math.sin( 0 ) );
-  ctx.arc( originX, originY, radius, 0, angle, false);
-  ctx.lineTo( originX, originY );
+  ctx.moveTo( origin.x, origin.y);
+  ctx.lineTo( origin.x + radius * Math.cos( 0 ),
+	      origin.y - radius * Math.sin( 0 ) );
+  ctx.arc( origin.x, origin.y, radius, 0, angle, false);
+  ctx.lineTo( origin.x, origin.y );
   ctx.fill();
   ctx.stroke();
 
-  ctx.fillStyle = justClosedColor;
+  ctx.fillStyle = colors[1];
   ctx.beginPath();
-  ctx.moveTo( originX, originY );
-  ctx.lineTo( originX + radius * Math.cos( angle ),
-	      originY + radius * Math.sin( angle ) );
-  ctx.arc( originX, originY, radius, angle, 2 * Math.PI, false);
-  ctx.lineTo( originX, originY) ;
+  ctx.moveTo( origin.x, origin.y );
+  ctx.lineTo( origin.x + radius * Math.cos( angle ),
+	      origin.y + radius * Math.sin( angle ) );
+  ctx.arc( origin.x, origin.y, radius, angle, 2 * Math.PI, false);
+  ctx.lineTo( origin.x, origin.y) ;
   ctx.fill();
   ctx.stroke();
 
   // Add legend to graph...
-  ctx.fillStyle = closedAndSwitchedColor;
-  ctx.fillRect( originX + radius + 10, 10, 20, 20 );
-  ctx.strokeRect( originX + radius + 10, 10, 20, 20 );
-  ctx.fillStyle = justClosedColor;
-  ctx.fillRect( originX + radius + 10, 50, 20, 20 );
-  ctx.strokeRect( originX + radius + 10, 50, 20, 20 );
+  ctx.fillStyle = colors[0];
+  ctx.fillRect( origin.x + radius + 10, 10, 20, 20 );
+  ctx.strokeRect( origin.x + radius + 10, 10, 20, 20 );
+  ctx.fillStyle = colors[1];
+  ctx.fillRect( origin.x + radius + 10, 50, 20, 20 );
+  ctx.strokeRect( origin.x + radius + 10, 50, 20, 20 );
   ctx.mozTextStyle = "12pt sans serif";
   ctx.fillStyle = "black";
   ctx.save();
-  ctx.translate( originX + radius + 35, 30);
-  ctx.mozDrawText("Switched");
+  ctx.translate( origin.x + radius + 35, 30);
+  ctx.mozDrawText(labels[0]);
   ctx.restore();
-  ctx.translate( originX + radius + 35, 70);
-  ctx.mozDrawText("Stayed");
+  ctx.translate( origin.x + radius + 35, 70);
+  ctx.mozDrawText(labels[1]);
   ctx.restore();
-
 }

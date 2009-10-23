@@ -83,9 +83,6 @@ exports.RemoteExperimentLoader.prototype = {
     this._remoteExperiments = {};
     let self = this;
 
-    // Load up anything already stored in codeStorage...
-    console.info("About to call codeStorage.get.");
-    let experimentsJson = this._codeStorage.get();
     // Use a composite file system here, compositing codeStorage and a new
     // local file system so that securable modules loaded remotely can
     // themselves require modules in the cuddlefish lib.
@@ -142,6 +139,9 @@ exports.RemoteExperimentLoader.prototype = {
   // Filename might be something like "bookmarks01/experiment.js"
 
   getExperiments: function() {
+    // Load up anything already stored in codeStorage...
+    console.info("About to call codeStorage.get.");
+    let experimentsJson = this._codeStorage.get();
     console.info("About to iterate filenames in json.");
     for (let filename in experimentsJson.fs) {
       try {

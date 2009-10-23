@@ -373,9 +373,6 @@ let TestPilotSetup = {
     let rel = new remoteLoaderModule.RemoteExperimentLoader();
     this._remoteExperimentLoader = rel;
 
-    dump("CheckForTasks is calling getExperiments().\n");
-    let experiments = rel.getExperiments();
-
     dump("Initing the survery.\n");
     TestPilotSetup.addTask(new TestPilotSurvey("survey_for_new_pilots",
                                                "Survey For New Test Pilots",
@@ -386,9 +383,9 @@ let TestPilotSetup = {
     this._remoteExperimentLoader.checkForUpdates(
       function(success) {
         dump("Getting updated experiments... Success? " + success + "\n");
-        if (success) {
-          experiments = rel.getExperiments();
-        }
+        // Actually, we do exactly the same thing whether we succeeded in
+        // downloading new contents or not...
+        let experiments = rel.getExperiments();
 
         for (let filename in experiments) {
           dump("Attempting to load experiment " + filename + "\n");

@@ -94,10 +94,6 @@ exports.RemoteExperimentLoader.prototype = {
       {fs: new SecurableModule.CompositeFileSystem(
          [self._codeStorage, Cuddlefish.parentLoader.fs])
       });
-    console.info("About to iterate filenames in json.");
-    for (let filename in experimentsJson.fs) {
-      this._remoteExperiments[filename] = this._loader.require(filename);
-    }
     console.info("Done instantiating remoteExperimentLoader.");
   },
 
@@ -146,6 +142,16 @@ exports.RemoteExperimentLoader.prototype = {
   // Filename might be something like "bookmarks01/experiment.js"
 
   getExperiments: function() {
+    console.info("About to iterate filenames in json.");
+    for (let filename in experimentsJson.fs) {
+      try {
+        this._remoteExperiments[filename] = this._loader.require(filename);
+      } catch(e) {
+        console.warn("Error loading " + filename);
+        console.warn(e);
+      }
+    }
+
     return this._remoteExperiments;
   }
 };

@@ -4,6 +4,11 @@
 
 const MY_EXPERIMENT_ID = 1;
 
+// These constants are defined in experiment_data_store... duplicated here.
+// How to use them without duplicating them?
+const TYPE_INT_32 = 0;
+const TYPE_DOUBLE = 1;
+
 const TabsExperimentConstants = {
   // constants for event_code
   OPEN_EVENT: 1,

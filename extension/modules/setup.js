@@ -364,38 +364,53 @@ let TestPilotSetup = {
   },
 
   checkForTasks: function TPS_checkForTasks() {
+    dump("In checkForTasks!  Making new cuddlefish loader:\n");
     let loader = new Cuddlefish.Loader({rootPaths: ["resource://testpilot/modules/",
                                                     "resource://testpilot/modules/lib/"]});
-    let REL = loader.require("remote-experiment-loader");
-    this._remoteExperimentLoader = new REL.RemoteExperimentLoader();
+    dump("Made new cuddlefish loader.  Now requiring remote experiment loader:\n");
+    let remoteLoaderModule = loader.require("remote-experiment-loader");
+    dump("Now instantiating remoteExperimentLoader:");
+    let rel = new remoteLoaderModule.RemoteExperimentLoader();
+    this._remoteExperimentLoader = rel;
 
-    this._remoteExperimentLoader.checkForUpdates(function(success) {
-                                                   dump("Success? " + success + "\n");
-                                                 });
-    let experiments = this._remoteExperimentLoader.getExperiments();
+    dump("CheckForTasks is calling getExperiments().\n");
+    let experiments = rel.getExperiments();
 
-
+    dump("Initing the survery.\n");
     TestPilotSetup.addTask(new TestPilotSurvey("survey_for_new_pilots",
                                                "Survey For New Test Pilots",
                                                SURVEY_URL));
 
-    for (let filename in experiments) {
-      // TODO also pull additional info from experimentInfo, such as
-      // basicPanel, optInRequired, versionNumber, startDate, and duration.
-      let expInfo = experiments[filename].experimentInfo;
-      let dsInfo = experiments[filename].dataStoreInfo;
-      let dataStore = new ExperimentDataStore( dsInfo.fileName,
-                                               dsInfo.tableName,
-                                               dsInfo.columns );
-      let webContent = experiments[filename].webContent;
-      let task = new TestPilotExperiment(expInfo.testId,
-                                         expInfo.testName,
-                                         expInfo.testInfoUrl,
-                                         dataStore,
-                                         experiments[filename].Observer,
-                                         webContent);
-      TestPilotSetup.addTask(task);
-    }
+    // TODO I think this bit here is a timing problem -- it's trying to load
+    // in the module before the xhr is complete.
+    this._remoteExperimentLoader.checkForUpdates(
+      function(success) {
+        dump("Getting updated experiments... Success? " + success + "\n");
+        if (success) {
+          experiments = rel.getExperiments();
+        }
+
+        for (let filename in experiments) {
+          dump("Attempting to load experiment " + filename + "\n");
+          // TODO also pull additional info from experimentInfo, such as
+          // basicPanel, optInRequired, versionNumber, startDate, and duration.
+          let expInfo = experiments[filename].experimentInfo;
+          let dsInfo = experiments[filename].dataStoreInfo;
+          let dataStore = new ExperimentDataStore( dsInfo.fileName,
+                                                   dsInfo.tableName,
+                                                   dsInfo.columns );
+          let webContent = experiments[filename].webContent;
+          let task = new TestPilotExperiment(expInfo.testId,
+                                             expInfo.testName,
+                                             expInfo.testInfoUrl,
+                                             dataStore,
+                                             experiments[filename].Observer,
+                                             webContent);
+          TestPilotSetup.addTask(task);
+          dump("Loaded experiment " + filename + "\n");
+        }
+      }
+    );
   },
 
   getTaskById: function TPS_getTaskById(id) {

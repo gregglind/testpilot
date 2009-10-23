@@ -11,6 +11,7 @@ function PreferencesStore(prefName) {
   };
 
   this.setFile = function setFile(filename, contents) {
+    console.info("PreferencesStore setting file: filename = " + filename);
     var data = this.get();
     if (!("fs" in data))
       data.fs = {};
@@ -19,14 +20,22 @@ function PreferencesStore(prefName) {
   };
 
   this.resolveModule = function resolveModule(root, path) {
+    console.info("PreferencesStore attempting to resolve module: root = " + root + ", path = " + path );
     let data = this.get();
     let fs = data["fs"] || {};
-    if ((path+".js") in fs)
+    if (path.slice(-3) != ".js") {
+      path = path + ".js";
+    }
+    if (path in fs) {
+      console.info("Path is resolved.");
       return path;
+    }
+    console.info("No match.");
     return null;
   };
 
   this.getFile = function(path) {
+    console.info("PreferencesStore attempting to getFile: path = " + path );
     let data = this.get();
     let fs = data["fs"] || {};
     return {contents: fs[path]};
@@ -67,26 +76,29 @@ exports.RemoteExperimentLoader = function() {
 };
 
 exports.RemoteExperimentLoader.prototype = {
-
   _init: function() {
+    // Crash is happening here, before we call checkForUpdates.
+    console.info("About to instantiate preferences store.");
     this._codeStorage = new PreferencesStore("extensions.testpilot.experiment.codeFs");
     this._remoteExperiments = {};
     let self = this;
 
     // Load up anything already stored in codeStorage...
+    console.info("About to call codeStorage.get.");
     let experimentsJson = this._codeStorage.get();
-    dump("In remoteExperimentLoader, self._codeStorage is " + self._codeStorage + "\n");
     // Use a composite file system here, compositing codeStorage and a new
     // local file system so that securable modules loaded remotely can
     // themselves require modules in the cuddlefish lib.
+    console.info("About to instantiate cuddlefish loader.");
     this._loader = Cuddlefish.Loader(
       {fs: new SecurableModule.CompositeFileSystem(
-         [self._codeStorage,
-          new SecurableModule.LocalFileSystem("resource://testpilot/modules/lib/")])
+         [self._codeStorage, Cuddlefish.parentLoader.fs])
       });
+    console.info("About to iterate filenames in json.");
     for (let filename in experimentsJson.fs) {
-      this._remoteExperiments[filename] = loader.require(filename);
+      this._remoteExperiments[filename] = this._loader.require(filename);
     }
+    console.info("Done instantiating remoteExperimentLoader.");
   },
 
   checkForUpdates: function(callback) {
@@ -97,7 +109,12 @@ exports.RemoteExperimentLoader.prototype = {
     let self = this;
     downloadFile(url.resolve(BASE_URL, "index.json"), function onDone(data) {
       if (data) {
-        data = JSON.parse(data);
+        try {
+          data = JSON.parse(data);
+        } catch (e) {
+          console.warn("JSON parsing error: " + e );
+          callback(false);
+        }
         // Go through each file indicated in index.json, attempt to load it,
         // and if we get it, replace the one in self._remoteExperiments with
         // the new module.
@@ -106,10 +123,12 @@ exports.RemoteExperimentLoader.prototype = {
         for (let i = 0; i < data.experiments.length; i++) {
           let filename = data.experiments[i].filename;
           downloadFile(
-            url(BASE_URL, data.experiments[0].filename),
+            url.resolve(BASE_URL, data.experiments[0].filename),
             function onDone(code) {
               if (code) {
-                codeStorage.setFile(filename, code);
+                console.info("Downloaded code for " + filename);
+                self._codeStorage.setFile(filename, code);
+                console.warn("Attempting to load file: " + filename);
                 self._remoteExperiments[filename] = self._loader.require(filename);
               } else {
                 console.warn("Could not download " + filename );

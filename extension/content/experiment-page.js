@@ -1,6 +1,8 @@
-  function showRawData() {
+  function showRawData(experimentId) {
     window.openDialog("chrome://testpilot/content/raw-data-dialog.xul",
-                      "Test Pilot: Raw Tab Usage Data", "chrome,centerscreen,resizable,scrollbars");
+                      "Test Pilot: Raw Tab Usage Data",
+                      "chrome,centerscreen,resizable,scrollbars",
+                      experimentId);
   }
 
   function getUrlParam(name) {

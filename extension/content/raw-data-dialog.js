@@ -36,10 +36,13 @@
 
 const Cu = Components.utils;
 
-Cu.import("resource://testpilot/modules/experiment_data_store.js");
+Cu.import("resource://testpilot/modules/setup.js");
 
 function showdbcontents() {
-  var rawData = TabsExperimentDataStore.barfAllData();
+  // experimentId is passed in through window.openDialog.  Access it like so:
+  var experimentId = window.arguments[0];
+  var rawData = TestPilotSetup.getTaskById(experimentId).dataStoreAsJSON;
+  // TODO the rest of this is full of tabs-experiment-specific stuff!!!!
   var listbox = document.getElementById("raw-data-listbox");
   var columnNames = ["timestamp", "tab_position", "event_code", "ui_method", "num_tabs", "tab_site_hash", "tab_window"];
   var c = TabsExperimentConstants;

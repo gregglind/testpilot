@@ -349,7 +349,7 @@ exports.webContent = {
 	<div class="dataBox"> \
           <h3>View Your Data:</h3> \
  	  <p>You are using the <span id="md-locale"></span> language version of Firefox <span id="md-version"></span> on <span id="md-os"></span> with <span id="md-num-ext"></span> installed.</p> \
-	  <p>The graphs below are just two examples of the kind of questions we\'ll be able to answer using the data collected in this study.  If you like, you can look at <a onclick="showRawData();">the complete raw data set</a> which we hope will be able to answer many other questions as well.</p> \
+	  <p>The graphs below are just two examples of the kind of questions we\'ll be able to answer using the data collected in this study.  If you like, you can look at <a onclick="showRawData(1);">the complete raw data set</a> which we hope will be able to answer many other questions as well.</p> \
 	  <p>1. How many tabs did you have open at a time? <a href="https://testpilot.mozillalabs.com/testcases/tab-open-close.html">(More info...)</a></p> \
           <canvas id="tabs-over-time-canvas" width="450" height="220"></canvas> \
 	  <p>2. When you closed a tab, did you stay on the default tab or did you switch to another one immediately? <a href="https://testpilot.mozillalabs.com/testcases/tab-open-close.html">(More info...)</a></p> \
@@ -361,7 +361,7 @@ exports.webContent = {
     <p>&nbsp;</p> \
     <div class="home_callout_continue"><img class="homeIcon" src="chrome://testpilot/skin/images/home_computer.png"> <span id="upload-status"><a onclick="uploadData();">Submit your data &raquo;</a></span></div> \
     <p>&nbsp;</p> \
-    <p>We will analyze the data submitted by all Test Pilots in order to to detect patterns that will help us build a better browser.  When the analysis is done, we will let you know where you can see the results.</p>      <p><a onclick="showRawData();">Click here</a> to see a display of all the collected data in its raw form, exactly as it will be sent. If there is anything there that you are not comfortable with sending to us, you can <a href="chrome://testpilot/content/status-quit.html">click here to delete the data without sending it</a>.</p> \
+    <p>We will analyze the data submitted by all Test Pilots in order to to detect patterns that will help us build a better browser.  When the analysis is done, we will let you know where you can see the results.</p>      <p><a onclick="showRawData(1);">Click here</a> to see a display of all the collected data in its raw form, exactly as it will be sent. If there is anything there that you are not comfortable with sending to us, you can <a href="chrome://testpilot/content/status-quit.html">click here to delete the data without sending it</a>.</p> \
     <h3>The fine print:</h3> \
     <ul> \
       <li>The websites (URLs) that you visit have not been recorded.</li> \

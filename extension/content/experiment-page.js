@@ -107,17 +107,17 @@
     // Get experimentID from get args of page
     var eid = parseInt(getUrlParam("eid"));
     var experiment = TestPilotSetup.getTaskById(eid);
-    var webContent;
+    var webContentHtml;
     // TODO maybe get status from the task itself and merge pages?
     if (status == "in-progress") {
-      webContent = experiment.webContent.inProgressHtml;
+      webContentHtml = experiment.webContent.inProgressHtml;
     } else if (status == "completed") {
-      webContent = experiment.webContent.completedHtml;
+      webContentHtml = experiment.webContent.completedHtml;
     } else if (status == "upcoming") {
-      webContent = experiment.webContent.upcomingHtml;
+      webContentHtml = experiment.webContent.upcomingHtml;
     }
     var contentDiv = document.getElementById("intro");
-    contentDiv.innerHTML = webContent;
+    contentDiv.innerHTML = webContentHtml;
 
     // TODO create a menu (tab-styled?) to switch between all current
     // experiments!!
@@ -127,5 +127,5 @@
     getTestEndingDate(eid);
 
     // Do whatever the experiment's web content wants done on load:
-    webContent.onPageLoad(experiment);
+    experiment.webContent.onPageLoad(experiment, document);
   }

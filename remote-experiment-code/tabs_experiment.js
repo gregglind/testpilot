@@ -457,7 +457,7 @@ exports.webContent = {
     }
   },
 
-  onPageLoad: function(experiment) {
+  onPageLoad: function(experiment, document) {
     // Get raw data:
     let rawData = experiment.dataStoreAsJSON;
     // Graph it:

@@ -407,6 +407,16 @@ let TestPilotSetup = {
     );
   },
 
+  reloadRemoteExperiments: function TPS_reloadRemoteExperiments() {
+    // TODO
+    // step 1: shutdown and remove each task which is an experiment
+    //         (i.e. not the surveys)
+    // step 1.5:
+
+    this._loader.unload();
+    // one call to this unloads all laoded securablemodules
+  },
+
   getTaskById: function TPS_getTaskById(id) {
     for (let i = 0; i < this.taskList.length; i++) {
       let task = this.taskList[i];

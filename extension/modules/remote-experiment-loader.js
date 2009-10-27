@@ -91,6 +91,10 @@ exports.RemoteExperimentLoader.prototype = {
       {fs: new SecurableModule.CompositeFileSystem(
          [self._codeStorage, Cuddlefish.parentLoader.fs])
       });
+    // set up the unloading
+    require("unload").when( function() {
+                              self._loader.unload();
+                            });
     console.info("Done instantiating remoteExperimentLoader.");
   },
 

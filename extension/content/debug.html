@@ -12,6 +12,11 @@
     task.changeStatus(newStatus, false);
   }
 
+  function reloadAllExperiments() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    TestPilotSetup.reloadRemoteExperiments();
+  }
+
 </script>
 
 <style type="text/css">
@@ -20,7 +25,7 @@
 
 </head>
 
-<body onload="drawSomeGraphs();">
+<body>
 <h1>Test Pilot Tabs Experiment Contents</h1>
 <p><button onclick="showRawData();">Show Raw Data</button>
 <button onclick="wipeDb();">Wipe My Data</button>

@@ -9,6 +9,14 @@ const MY_EXPERIMENT_ID = 1;
 const TYPE_INT_32 = 0;
 const TYPE_DOUBLE = 1;
 
+
+require("unload").when(
+  function myDestructor() {
+    // TODO call uninstall on all observer instances!
+  });
+
+
+
 const TabsExperimentConstants = {
   // constants for event_code
   OPEN_EVENT: 1,
@@ -105,8 +113,23 @@ exports.Observer.prototype = {
     this._window = window;
     this._dataStore = store;
     this._windowId = g_nextWindowId;
+    this._registeredListeners = [];
     g_nextWindowId ++;
     this.install();
+  },
+
+  _listen: function TPS__listener(container, eventName, method, catchCap) {
+    // Keep a record of this so that we can automatically unregister during
+    // uninstall:
+    let self = this;
+    let handler = function(event) {
+      method.call(self, event);
+    };
+    container.addEventListener(eventName, handler, catchDuringCapture);
+
+    this._registeredListeners.push(
+      {container: container, eventName: eventName, handler: handler,
+       catchCap: catchCap});
   },
 
   install: function TabsExperimentObserver_install() {
@@ -115,36 +138,18 @@ exports.Observer.prototype = {
     dump("Installing tabsExperimentObserver on a window!\n");
     // Can we catch the click event during the capturing phase??
     // last argument of addEventListener is true to catch during capture, false to catch during bubbling.
-    var self = this;
-    container.addEventListener("TabOpen",
-                               function(event) {self.onTabOpened(event);},
-                               false);
-    container.addEventListener("TabClose",
-                               function(event) {self.onTabClosed(event);},
-                               false);
-    container.addEventListener("TabSelect",
-                               function(event) {self.onTabSelected(event);},
-                               false);
 
-    container.addEventListener("dragstart",
-                               function(event) {self.onDragStart(event);},
-                               false);
-    container.addEventListener("drop",
-                               function(event) {self.onDrop(event);},
-                               false);
-
+    this._listen(container, "TabOpen", this.onTabOpened, false);
+    this._listen(container, "TabClose", this.onTabClosed, false);
+    this._listen(container, "TabSelect", this.onTabSelected, false);
+    this._listen(container, "dragstart", this.onDragStart, false);
+    this._listen(container, "drop", this.onDrop, false);
     // TODO what other events can we listen for here?  What if we put the
     // listener on the browser or the window?
 
-    container.addEventListener("mousedown",
-                               function(event) {self.onClick(event);},
-                               true);
-    container.addEventListener("mouseup",
-                               function(event) {self.onMouseUp(event);},
-                               true);
-    container.addEventListener("keydown",
-                               function(event) {self.onKey(event);},
-                               true);
+    this._listen(container, "mousedown", this.onClick, true);
+    this._listen(container, "mouseup", this.onMouseUp, true);
+    this._listen(container, "keydown", this.onKey, true);
 
     // apparently there are events called ondragover, ondragleave, ondragstart,
     // ondragend, and ondrop.
@@ -152,9 +157,7 @@ exports.Observer.prototype = {
     // For URL loads, we register a DOMContentLoaded on the appcontent:
     let appcontent = this._window.document.getElementById("appcontent");
     if (appcontent) {
-      appcontent.addEventListener("DOMContentLoaded",
-				  function(event) { self.onUrlLoad(event); },
-                                  true);
+      this._listen(appContent, "DOMContentLoaded", this.onUrlLoad, true);
     }
 
     // Record the window-opening event:
@@ -167,16 +170,14 @@ exports.Observer.prototype = {
   },
 
   uninstall: function TabsExperimentObserver_uninstall() {
-    // TODO this is never actually called yet...
-    /*let container = browser.tabContainer;
-    container.removeEventListener("TabOpen", this.onTabOpened, false);
-    container.removeEventListener("TabClose", this.onTabClosed, false);
-    container.removeEventListener("TabSelect", this.onTabSelected, false);
-    container.removeEventListener("mousedown", this.onClick, true);
-    container.removeEventListener("mouseup", this.onMouseUp, true);
-    container.removeEventListener("keydown", this.onKey, true);*/
+    for (let i = 0; i < this._registeredListeners.length; i++) {
+      let rl = this._registeredListeners[i];
+      rl.container.removeEventListener(rl.eventName, rl.handler, rl.catchCap);
+    }
 
     // Record the window-closing event:
+    // (TODO uninstall is not always the result of a window close... these
+    // are two separate things now)
     dump("Uninstalling tabsExperimentObserver.\n");
     let windowId = this._windowId;
     this._dataStore.storeEvent({

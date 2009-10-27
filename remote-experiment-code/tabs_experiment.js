@@ -380,7 +380,7 @@ exports.webContent = {
   upcomingHtml: "",    // For tests which don't start automatically, this gets
                        // displayed in status page before test starts.
 
-  _drawNumTabsTimeSeries: function(rawData, canvas) {
+  _drawNumTabsTimeSeries: function(rawData, canvas, graphUtils) {
     let data = [];
     let row;
     let boundingRect = { originX: 40,
@@ -415,10 +415,10 @@ exports.webContent = {
                 yMin: 0,
                 yMax: maxTabs };
     // drawTimeSeriesGraph is defined in client-side graphs.js
-    drawTimeSeriesGraph(canvas, data, boundingRect, axes, red);
+    graphUtils.drawTimeSeriesGraph(canvas, data, boundingRect, axes, red);
   },
 
-  _drawTabClosePieChart: function(rawData, canvas) {
+  _drawTabClosePieChart: function(rawData, canvas, graphUtils) {
     let origin = {x: 125, y: 125};
     let radius = 100;
     let row;
@@ -451,21 +451,21 @@ exports.webContent = {
     if (numCloseEvents > 0) {
       let data = [numClosedAndSwitched,
                   numCloseEvents - numClosedAndSwitched];
-      drawPieChart(canvas, data, origin, radius,
+      graphUtils.drawPieChart(canvas, data, origin, radius,
                    ["rgb(200, 0, 0)", "rgb(0, 0, 200)"],
                    ["Switched", "Stayed"]);
     }
   },
 
-  onPageLoad: function(experiment, document) {
+  onPageLoad: function(experiment, document, graphUtils) {
     // Get raw data:
     let rawData = experiment.dataStoreAsJSON;
     // Graph it:
     if (rawData.length > 0) {
       let canvas1 = document.getElementById("tabs-over-time-canvas");
       let canvas2 = document.getElementById("tab-close-pie-chart-canvas");
-      this._drawNumTabsTimeSeries(rawData, canvas1);
-      this._drawTabClosePieChart(rawData, canvas2);
+      this._drawNumTabsTimeSeries(rawData, canvas1, graphUtils);
+      this._drawTabClosePieChart(rawData, canvas2, graphUtils);
       return;
     } // Otherwise, there's nothing to graph.
   }

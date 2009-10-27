@@ -127,5 +127,6 @@
     getTestEndingDate(eid);
 
     // Do whatever the experiment's web content wants done on load:
+    dump("Calling onPageLoad with document = " + document + "\n");
     experiment.webContent.onPageLoad(experiment, document);
   }

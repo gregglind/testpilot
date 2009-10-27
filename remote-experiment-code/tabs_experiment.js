@@ -408,8 +408,8 @@ exports.webContent = {
     let lastTimestamp = data[data.length - 1][0];
 
     let red = "rgb(200,0,0)";
-    let axes = {xScale: width / lastTimestamp,
-                yScale: height / maxTabs,
+    let axes = {xScale: boundingRect.width / lastTimestamp,
+                yScale: boundingRect.height / maxTabs,
                 xMin: firstTimestamp,
                 xMax: lastTimestamp,
                 yMin: 0,

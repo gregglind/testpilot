@@ -59,11 +59,8 @@ const ANY_PRIORITY = 3;
 // TODO move homepage to a pref?
 const TEST_PILOT_HOME_PAGE = "http://testpilot.mozillalabs.com";
 
-
 // TODO this stuff shouldn't be hard-coded here:
 const SURVEY_URL = "http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d";
-const EXPERIMENT_URL = "chrome://testpilot/content/datastore.html";
-
 
 let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);

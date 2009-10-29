@@ -76,6 +76,8 @@ let TestPilotSetup = {
   startupComplete: false,
   _shortTimer: null,
   _longTimer: null,
+  _loader: null,
+  _remoteExperimentLoader: null,
   _obs: null,
   taskList: [],
 
@@ -85,6 +87,7 @@ let TestPilotSetup = {
     dump("TestPilotSetup.globalStartup was called.\n");
 
     try {
+      // TODO this is one of two loaders we create... only need one!
     let loader = new Cuddlefish.Loader({rootPath: "resource://testpilot/modules/lib/"});
     this._obs = loader.require("observer-service");
 
@@ -101,7 +104,6 @@ let TestPilotSetup = {
 
     // Set up observation for task state changes
     var self = this;
-    // TODO replacing all calls to Observers with calls to this._obs
     this._obs.add("testpilot:task:changed", this.onTaskStatusChanged,
                   self);
     // Set up observation for application shutdown.
@@ -127,7 +129,7 @@ let TestPilotSetup = {
     );
 
     // Install tasks.
-    this.checkForTasks(loader);
+    this.checkForTasks();
     this.startupComplete = true;
     this._obs.notify("testpilot:startup:complete", "", null);
     // onWindowLoad gets called once for each window, but only after we fire this
@@ -361,28 +363,36 @@ let TestPilotSetup = {
   },
 
   checkForTasks: function TPS_checkForTasks() {
-    dump("In checkForTasks!  Making new cuddlefish loader:\n");
-    let loader = new Cuddlefish.Loader({rootPaths: ["resource://testpilot/modules/",
+    dump("In checkForTasks!\n");
+    if (! this._loader) {
+      dump("Making new cuddlefish loader:\n");
+      // TODO this is the other of the two loaders we create... only need
+      // one!!
+      this._loader = new Cuddlefish.Loader({rootPaths: ["resource://testpilot/modules/",
                                                     "resource://testpilot/modules/lib/"]});
-    dump("Made new cuddlefish loader.  Now requiring remote experiment loader:\n");
-    let remoteLoaderModule = loader.require("remote-experiment-loader");
-    dump("Now instantiating remoteExperimentLoader:");
-    let rel = new remoteLoaderModule.RemoteExperimentLoader();
-    this._remoteExperimentLoader = rel;
+      dump("Made new cuddlefish loader.\n");
+    }
+
+    if (! this._remoteExperimentLoader ) {
+      dump("Now requiring remote experiment loader:\n");
+      let remoteLoaderModule = this._loader.require("remote-experiment-loader");
+      dump("Now instantiating remoteExperimentLoader:");
+      let rel = new remoteLoaderModule.RemoteExperimentLoader();
+      this._remoteExperimentLoader = rel;
+    }
 
     dump("Initing the survery.\n");
     TestPilotSetup.addTask(new TestPilotSurvey("survey_for_new_pilots",
                                                "Survey For New Test Pilots",
                                                SURVEY_URL));
 
-    // TODO I think this bit here is a timing problem -- it's trying to load
-    // in the module before the xhr is complete.
+    let self = this;
     this._remoteExperimentLoader.checkForUpdates(
       function(success) {
         dump("Getting updated experiments... Success? " + success + "\n");
         // Actually, we do exactly the same thing whether we succeeded in
         // downloading new contents or not...
-        let experiments = rel.getExperiments();
+        let experiments = self._remoteExperimentLoader.getExperiments();
 
         for (let filename in experiments) {
           dump("Attempting to load experiment " + filename + "\n");
@@ -408,13 +418,16 @@ let TestPilotSetup = {
   },
 
   reloadRemoteExperiments: function TPS_reloadRemoteExperiments() {
-    // TODO
-    // step 1: shutdown and remove each task which is an experiment
-    //         (i.e. not the surveys)
-    // step 1.5:
+    for (let i = 0; i < this.taskList.length; i++) {
+      // TODO is there anything that needs to be done on shutdown for either
+      // the TestPilotExperiment (the task) or the ExperimentDataStore
+      // instances?
+    }
 
+    this.taskList = [];
     this._loader.unload();
-    // one call to this unloads all laoded securablemodules
+
+    this.checkForTasks();
   },
 
   getTaskById: function TPS_getTaskById(id) {

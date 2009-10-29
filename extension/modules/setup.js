@@ -87,9 +87,11 @@ let TestPilotSetup = {
     dump("TestPilotSetup.globalStartup was called.\n");
 
     try {
-      // TODO this is one of two loaders we create... only need one!
-    let loader = new Cuddlefish.Loader({rootPath: "resource://testpilot/modules/lib/"});
-    this._obs = loader.require("observer-service");
+    dump("Making new cuddlefish loader:\n");
+    this._loader = new Cuddlefish.Loader({rootPaths: ["resource://testpilot/modules/",
+                                                    "resource://testpilot/modules/lib/"]});
+    dump("Made new cuddlefish loader.\n");
+    this._obs = this._loader.require("observer-service");
 
     // Show first run page (in front window) if newly installed or upgraded.
     let currVersion = Application.prefs.getValue(VERSION_PREF, "firstrun");
@@ -363,16 +365,6 @@ let TestPilotSetup = {
   },
 
   checkForTasks: function TPS_checkForTasks() {
-    dump("In checkForTasks!\n");
-    if (! this._loader) {
-      dump("Making new cuddlefish loader:\n");
-      // TODO this is the other of the two loaders we create... only need
-      // one!!
-      this._loader = new Cuddlefish.Loader({rootPaths: ["resource://testpilot/modules/",
-                                                    "resource://testpilot/modules/lib/"]});
-      dump("Made new cuddlefish loader.\n");
-    }
-
     if (! this._remoteExperimentLoader ) {
       dump("Now requiring remote experiment loader:\n");
       let remoteLoaderModule = this._loader.require("remote-experiment-loader");

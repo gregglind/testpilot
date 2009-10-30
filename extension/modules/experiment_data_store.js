@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-EXPORTED_SYMBOLS = ["ExperimentDataStore"];
+EXPORTED_SYMBOLS = ["ExperimentDataStore", "TYPE_INT_32", "TYPE_DOUBLE"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -91,10 +91,15 @@ ExperimentDataStore.prototype = {
   },
 
   storeEvent: function EDS_storeEvent( uiEvent ) {
-    let i;
-    let columnNumbers = [ ("?" + i) for (i in this._columns)];
+    let columnNumbers = [];
+    for (let i = 1; i <= this._columns.length; i++) {
+      // the i = 1 is so that we'll start with 1 instead of 0... we want
+      // a string like "...VALUES (?1, ?2, ?3)"
+      columnNumbers.push( "?" + i);
+    }
     let insertSql = "INSERT INTO " + this._tableName + " VALUES (";
-    insertSql += columnNumbers.join(", ") + ")\"";
+    insertSql += columnNumbers.join(", ") + ")";
+    dump("InsertSQL is " + insertSql + "\n");
     let insStmt = this._createStatement(insertSql);
     for (i = 0; i < this._columns.length; i++) {
       let datum =  uiEvent[this._columns[i].property];

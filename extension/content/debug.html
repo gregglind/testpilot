@@ -17,6 +17,11 @@
     TestPilotSetup.reloadRemoteExperiments();
   }
 
+  function runUnitTests() {
+    Components.utils.import("resource://testpilot/tests/test_data_store.js");
+    testTheDataStore();
+  }
+
 </script>
 
 <style type="text/css">
@@ -32,6 +37,7 @@
 <button onclick="uploadData();">Upload My Data</button>
 <button onclick="makeThereBeAPopup();">Popup</button>
 <button onclick="reloadAllExperiments();">Reload All Experiments</button>
+<button onclick="runUnitTests();">Run Unit Tests</button>
 <input type="text" id="status-code"/><button onclick="setTaskStatus();">Set</button>
 </p>
 <p><span id="debug"></span></p>

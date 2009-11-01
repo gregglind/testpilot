@@ -11,7 +11,6 @@ function PreferencesStore(prefName) {
   };
 
   this.setFile = function setFile(filename, contents) {
-    console.info("PreferencesStore setting file: filename = " + filename);
     var data = this.get();
     if (!("fs" in data))
       data.fs = {};
@@ -20,27 +19,25 @@ function PreferencesStore(prefName) {
   };
 
   this.resolveModule = function resolveModule(root, path) {
-    console.info("PreferencesStore attempting to resolve module: root = " + root + ", path = " + path );
     let data = this.get();
     let fs = data["fs"] || {};
     if (path.slice(-3) != ".js") {
       path = path + ".js";
     }
     if (path in fs) {
-      console.info("Path is resolved.");
       return path;
     }
-    console.info("No match.");
     return null;
   };
 
   this.getFile = function(path) {
-    console.info("PreferencesStore attempting to getFile: path = " + path );
     let data = this.get();
     let fs = data["fs"] || {};
     return {contents: fs[path]};
   };
 }
+
+exports.PreferencesStore = PreferencesStore;
 
 function downloadFile(url, cb) {
   var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
@@ -71,31 +68,45 @@ var SecurableModule = require("securable-module");
     // {'experiments': [{'name': 'Bookmark Experiment',
     //                           'filename': 'bookmarks.js'}]}
 
-exports.RemoteExperimentLoader = function() {
-  this._init();
+exports.RemoteExperimentLoader = function( fileGetterFunction ) {
+  /* fileGetterFunction is an optional stub function for unit testing.  Pass in
+   * nothing to have it use the default behavior of downloading the files from the
+   * Test Pilot server.  FileGetterFunction must take (url, callback).*/
+  this._init(fileGetterFunction);
 };
 
 exports.RemoteExperimentLoader.prototype = {
-  _init: function() {
-    // Crash is happening here, before we call checkForUpdates.
+  _init: function(fileGetterFunction) {
+    if (fileGetterFunction != undefined) {
+      this._fileGetter = fileGetterFunction;
+    } else {
+      this._fileGetter = downloadFile;
+    }
     console.info("About to instantiate preferences store.");
     this._codeStorage = new PreferencesStore("extensions.testpilot.experiment.codeFs");
     this._remoteExperiments = {};
     let self = this;
 
-    // Use a composite file system here, compositing codeStorage and a new
-    // local file system so that securable modules loaded remotely can
-    // themselves require modules in the cuddlefish lib.
+    /* Use a composite file system here, compositing codeStorage and a new
+     * local file system so that securable modules loaded remotely can
+     * themselves require modules in the cuddlefish lib. */
     console.info("About to instantiate cuddlefish loader.");
-    this._loader = Cuddlefish.Loader(
-      {fs: new SecurableModule.CompositeFileSystem(
-         [self._codeStorage, Cuddlefish.parentLoader.fs])
-      });
+    this._refreshLoader();
     // set up the unloading
     require("unload").when( function() {
                               self._loader.unload();
                             });
     console.info("Done instantiating remoteExperimentLoader.");
+  },
+
+  _refreshLoader: function() {
+    if (this._loader) {
+      this._loader.unload();
+    }
+    this._loader = Cuddlefish.Loader(
+      {fs: new SecurableModule.CompositeFileSystem(
+         [self._codeStorage, Cuddlefish.parentLoader.fs])
+      });
   },
 
   checkForUpdates: function(callback) {
@@ -104,7 +115,12 @@ exports.RemoteExperimentLoader.prototype = {
     // restart any experiment whose code has changed.
     var url = require("url");
     let self = this;
-    downloadFile(url.resolve(BASE_URL, "index.json"), function onDone(data) {
+    // Just added: Unload everything before checking for updates, to be sure we
+    // get the newest stuff.
+    console.warn("Unloading everything to prepare to check for updates.");
+    this._refreshLoader();
+
+    self._fileGetter(url.resolve(BASE_URL, "index.json"), function onDone(data) {
       if (data) {
         try {
           data = JSON.parse(data);
@@ -119,7 +135,7 @@ exports.RemoteExperimentLoader.prototype = {
         // than what we already have.
         for (let i = 0; i < data.experiments.length; i++) {
           let filename = data.experiments[i].filename;
-          downloadFile(
+          self._fileGetter(
             url.resolve(BASE_URL, data.experiments[0].filename),
             function onDone(code) {
               if (code) {
@@ -127,11 +143,16 @@ exports.RemoteExperimentLoader.prototype = {
                 self._codeStorage.setFile(filename, code);
                 console.warn("Attempting to load file: " + filename);
                 self._remoteExperiments[filename] = self._loader.require(filename);
+                console.warn("Finished loading file: " + filename);
               } else {
                 console.warn("Could not download " + filename );
               }
             });
         }
+        console.warn("Done with for loop now.\n");
+        // TODO:I think this callback(true) is happening in the wrong place.  It
+        // shouldn't get called until all of the calls to fileGetter that are triggered
+        // inside the for loop have all returned!!  But how do we do that?
         callback(true);
       } else {
         console.warn("Could not download index.json from test pilot server.");

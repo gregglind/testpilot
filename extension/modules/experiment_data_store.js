@@ -99,7 +99,6 @@ ExperimentDataStore.prototype = {
     }
     let insertSql = "INSERT INTO " + this._tableName + " VALUES (";
     insertSql += columnNumbers.join(", ") + ")";
-    dump("InsertSQL is " + insertSql + "\n");
     let insStmt = this._createStatement(insertSql);
     for (i = 0; i < this._columns.length; i++) {
       let datum =  uiEvent[this._columns[i].property];

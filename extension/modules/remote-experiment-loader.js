@@ -60,6 +60,8 @@ var Cuddlefish = require("cuddlefish");
 // Cuddlefish.Loader and Cuddlefish.loader (.parentLoader ?)
 // .fs property exposes filesystem object.
 
+var resolveUrl = require("url").resolve;
+
 var SecurableModule = require("securable-module");
 // example contents of extensions.testpilot.experiment.codeFs:
 // {'fs': {"bookmark01/experiment": "<plain-text code @ bookmarks.js>"}}
@@ -105,7 +107,37 @@ exports.RemoteExperimentLoader.prototype = {
     }
     this._loader = Cuddlefish.Loader(
       {fs: new SecurableModule.CompositeFileSystem(
-         [self._codeStorage, Cuddlefish.parentLoader.fs])
+         [this._codeStorage, Cuddlefish.parentLoader.fs])
+      });
+  },
+
+  _recursiveUpdate: function(experimentList, finalCallback) {
+    if (experimentList.length == 0) {
+      // If there are no more files to download, call the final callback to report
+      // success:
+      finalCallback(true);
+      return;
+    }
+
+    // Split off the array: load the first one now, and load the rest (recursively)
+    // when the callback is finished.
+    let first = experimentList[0];
+    let rest = experimentList.slice(1); // TODO check if slice(1) is right.
+    let self = this;
+    let filename = first.filename;
+    self._fileGetter( resolveUrl(BASE_URL, filename),
+      function onDone(code) {
+        if (code) {
+          console.info("Downloaded code for " + filename);
+          self._codeStorage.setFile(filename, code);
+          console.warn("Attempting to load file: " + filename);
+          self._remoteExperiments[filename] = self._loader.require(filename);
+          console.warn("Finished loading file: " + filename);
+        } else {
+          console.warn("Could not download " + filename );
+        }
+        // Now do the next file load...
+        self._recursiveUpdate(rest, finalCallback);
       });
   },
 
@@ -113,43 +145,30 @@ exports.RemoteExperimentLoader.prototype = {
     // Run this like once per day.  Callback will be called with true or false
     // to let us know whether there are any updates, so that client code can
     // restart any experiment whose code has changed.
-    var url = require("url");
+
     let self = this;
     // Just added: Unload everything before checking for updates, to be sure we
     // get the newest stuff.
     console.warn("Unloading everything to prepare to check for updates.");
     this._refreshLoader();
 
-    self._fileGetter(url.resolve(BASE_URL, "index.json"), function onDone(data) {
+    self._fileGetter(resolveUrl(BASE_URL, "index.json"), function onDone(data) {
       if (data) {
         try {
           data = JSON.parse(data);
         } catch (e) {
           console.warn("JSON parsing error: " + e );
           callback(false);
+          return;
         }
+        // TODO include dates in index.json, only pull files if they're newer
+        // than what we already have.
+
         // Go through each file indicated in index.json, attempt to load it,
         // and if we get it, replace the one in self._remoteExperiments with
         // the new module.
-        // TODO include dates in index.json, only pull files if they're newer
-        // than what we already have.
-        for (let i = 0; i < data.experiments.length; i++) {
-          let filename = data.experiments[i].filename;
-          self._fileGetter(
-            url.resolve(BASE_URL, data.experiments[0].filename),
-            function onDone(code) {
-              if (code) {
-                console.info("Downloaded code for " + filename);
-                self._codeStorage.setFile(filename, code);
-                console.warn("Attempting to load file: " + filename);
-                self._remoteExperiments[filename] = self._loader.require(filename);
-                console.warn("Finished loading file: " + filename);
-              } else {
-                console.warn("Could not download " + filename );
-              }
-            });
-        }
-        console.warn("Done with for loop now.\n");
+        self._recursiveUpdate(data.experiments, callback);
+
         // TODO:I think this callback(true) is happening in the wrong place.  It
         // shouldn't get called until all of the calls to fileGetter that are triggered
         // inside the for loop have all returned!!  But how do we do that?

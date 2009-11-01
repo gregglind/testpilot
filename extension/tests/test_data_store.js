@@ -171,6 +171,9 @@ function testRemoteLoader() {
         cheapAssertFail("checkForUpdates 2nd time returned failure.");
       }
       dump("Done with 2nd callback.\n");
+
+      // TODO a third test: make getFileFunc return *failure*, and make sure the
+      // cached version still gets used and still works!
     });
   });
 }

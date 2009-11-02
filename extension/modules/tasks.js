@@ -232,6 +232,9 @@ TestPilotExperiment.prototype = {
   },
 
   onNewWindow: function TestPilotExperiment_onNewWindow(window) {
+    /* TestPilotSetup will handle calling this method for each experiment
+     * for each window that was open on Firefox startup, as well as for
+     * each window that is opened from that point on. */
     let Observer = this._observerConstructor;
     // Only register observers if the test is in progress:
     if (this._status <= TaskConstants.STATUS_FINISHED) {

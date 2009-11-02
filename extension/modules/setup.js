@@ -131,11 +131,14 @@ let TestPilotSetup = {
     );
 
     // Install tasks.
-    this.checkForTasks();
-    this.startupComplete = true;
-    this._obs.notify("testpilot:startup:complete", "", null);
-    // onWindowLoad gets called once for each window, but only after we fire this
-    // notification.
+    this.checkForTasks(function() {
+                         /* Callback to complete startup after we finish
+                          * checking for tasks. */
+                         self.startupComplete = true;
+                         self._obs.notify("testpilot:startup:complete", "", null);
+                         /* onWindowLoad gets called once for each window,
+                          * but only after we fire this notification. */
+                         });
     dump("Testpilot startup complete.\n");
     } catch(e) {
       dump("Error in testPilot startup: " + e +"\n");
@@ -364,7 +367,7 @@ let TestPilotSetup = {
     return Application.extensions.get(EXTENSION_ID).version;
   },
 
-  checkForTasks: function TPS_checkForTasks() {
+  checkForTasks: function TPS_checkForTasks(callback) {
     if (! this._remoteExperimentLoader ) {
       dump("Now requiring remote experiment loader:\n");
       let remoteLoaderModule = this._loader.require("remote-experiment-loader");
@@ -387,23 +390,32 @@ let TestPilotSetup = {
         let experiments = self._remoteExperimentLoader.getExperiments();
 
         for (let filename in experiments) {
-          dump("Attempting to load experiment " + filename + "\n");
-          // TODO also pull additional info from experimentInfo, such as
-          // basicPanel, optInRequired, versionNumber, startDate, and duration.
-          let expInfo = experiments[filename].experimentInfo;
-          let dsInfo = experiments[filename].dataStoreInfo;
-          let dataStore = new ExperimentDataStore( dsInfo.fileName,
-                                                   dsInfo.tableName,
-                                                   dsInfo.columns );
-          let webContent = experiments[filename].webContent;
-          let task = new TestPilotExperiment(expInfo.testId,
-                                             expInfo.testName,
-                                             expInfo.testInfoUrl,
-                                             dataStore,
-                                             experiments[filename].Observer,
-                                             webContent);
-          TestPilotSetup.addTask(task);
-          dump("Loaded experiment " + filename + "\n");
+          try {
+            // The try-catch ensures that if something goes wrong in loading one
+            // experiment, the other experiments after that one still get loaded.
+            dump("Attempting to load experiment " + filename + "\n");
+            // TODO also pull additional info from experimentInfo, such as
+            // basicPanel, optInRequired, versionNumber, startDate, and duration.
+            let expInfo = experiments[filename].experimentInfo;
+            let dsInfo = experiments[filename].dataStoreInfo;
+            let dataStore = new ExperimentDataStore( dsInfo.fileName,
+                                                     dsInfo.tableName,
+                                                     dsInfo.columns );
+            let webContent = experiments[filename].webContent;
+            let task = new TestPilotExperiment(expInfo.testId,
+                                               expInfo.testName,
+                                               expInfo.testInfoUrl,
+                                               dataStore,
+                                               experiments[filename].Observer,
+                                               webContent);
+            TestPilotSetup.addTask(task);
+            dump("Loaded experiment " + filename + "\n");
+          } catch (e) {
+            dump("Failed to load experiment " + filename + ": " + e + "\n");
+          }
+        }
+        if (callback) {
+          callback();
         }
       }
     );

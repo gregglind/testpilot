@@ -74,6 +74,10 @@ function onMenuButtonMouseDown() {
 }
 
 function window_onLoad() {
+  /* "Hold" window load events for TestPilotSetup, passing them along only
+   * after startup is complete.  It's hacky, but the benefit is that
+   * TestPilotSetup.onWindowLoad can treat all windows the same no matter
+   * whether they opened with Firefox on startup or were opened later. */
   if (TestPilotSetup.startupComplete) {
     TestPilotSetup.onWindowLoad(window);
   } else {

@@ -168,5 +168,12 @@ ExperimentDataStore.prototype = {
     wipeStmt.execute();
     wipeStmt.finalize();
     dump("ExperimentDataStore.wipeAllData complete.\n");
-  }
+  },
+
+  getHumanReadableColumnNames: function EDS_getHumanReadableColumnNames() {
+    let i;
+    return [ this._columns[i].properName for (i in this._columns) ];
+  },
+
+
 };

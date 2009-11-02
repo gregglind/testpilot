@@ -15,6 +15,28 @@ function cheapAssertEqual(a, b, errorMsg) {
   }
 }
 
+function cheapAssertEqualArrays(a, b, errorMsg) {
+  testsRun += 1;
+  let equal = true;
+  if (a.length != b.length) {
+    equal = false;
+  } else {
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) {
+        equal = false;
+      }
+    }
+  }
+  if (equal) {
+    dump("UNIT TEST PASSED.\n");
+    testsPassed += 1;
+  } else {
+    dump("UNIT TEST FAILED: ");
+    dump(errorMsg + "\n");
+    dump(a + " does not equal " + b + "\n");
+  }
+}
+
 function cheapAssertFail(errorMsg) {
   testsRun += 1;
   dump("UNIT TEST FAILED: ");
@@ -32,9 +54,9 @@ function testTheDataStore() {
 
   Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
 
-  var columns =  [{property: "prop_a", type: TYPE_INT_32},
-                  {property: "prop_b", type: TYPE_INT_32},
-                  {property: "prop_c", type: TYPE_DOUBLE}
+  var columns =  [{property: "prop_a", type: TYPE_INT_32, properName: "Length"},
+                  {property: "prop_b", type: TYPE_INT_32, properName: "Width"},
+                  {property: "prop_c", type: TYPE_DOUBLE, properName: "Depth"}
                   ];
 
   var fileName = "testpilot_storage_unit_test.sqlite";
@@ -52,6 +74,9 @@ function testTheDataStore() {
                       {prop_a: 26, prop_b: 18, prop_c: 0.002},
                       {prop_a: 39, prop_b: 9, prop_c: 0.003},
                       {prop_a: 52, prop_b: 0, prop_c: 0.004}];
+
+  cheapAssertEqualArrays(store.getHumanReadableColumnNames(), ["Length", "Width", "Depth"],
+                   "Human readable column names are not correct.");
 
   cheapAssertEqual(JSON.stringify(json),
                    JSON.stringify(expectedJson),

@@ -54,9 +54,10 @@ function testTheDataStore() {
 
   Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
 
-  var columns =  [{property: "prop_a", type: TYPE_INT_32, properName: "Length"},
-                  {property: "prop_b", type: TYPE_INT_32, properName: "Width"},
-                  {property: "prop_c", type: TYPE_DOUBLE, properName: "Depth"}
+  var columns =  [{property: "prop_a", type: TYPE_INT_32, displayName: "Length"},
+                  {property: "prop_b", type: TYPE_INT_32, displayName: "Type",
+                   displayValue: ["Spam", "Egg", "Sausage", "Baked Beans"]},
+                  {property: "prop_c", type: TYPE_DOUBLE, displayName: "Depth"}
                   ];
 
   var fileName = "testpilot_storage_unit_test.sqlite";
@@ -64,32 +65,48 @@ function testTheDataStore() {
 
   var store = new ExperimentDataStore(fileName, tableName, columns);
 
-  store.storeEvent({prop_a: 13, prop_b: 27, prop_c: 0.001});
-  store.storeEvent({prop_a: 26, prop_b: 18, prop_c: 0.002});
-  store.storeEvent({prop_a: 39, prop_b: 9, prop_c: 0.003});
+  store.storeEvent({prop_a: 13, prop_b: 3, prop_c: 0.001});
+  store.storeEvent({prop_a: 26, prop_b: 2, prop_c: 0.002});
+  store.storeEvent({prop_a: 39, prop_b: 1, prop_c: 0.003});
   store.storeEvent({prop_a: 52, prop_b: 0, prop_c: 0.004});
 
   var json = store.getAllDataAsJSON(); // test output
-  var expectedJson = [{prop_a: 13, prop_b: 27, prop_c: 0.001},
-                      {prop_a: 26, prop_b: 18, prop_c: 0.002},
-                      {prop_a: 39, prop_b: 9, prop_c: 0.003},
+  var expectedJson = [{prop_a: 13, prop_b: 3, prop_c: 0.001},
+                      {prop_a: 26, prop_b: 2, prop_c: 0.002},
+                      {prop_a: 39, prop_b: 1, prop_c: 0.003},
                       {prop_a: 52, prop_b: 0, prop_c: 0.004}];
 
-  cheapAssertEqualArrays(store.getHumanReadableColumnNames(), ["Length", "Width", "Depth"],
+  cheapAssertEqualArrays(store.getHumanReadableColumnNames(), ["Length", "Type", "Depth"],
                    "Human readable column names are not correct.");
+
+  cheapAssertEqualArrays(store.getPropertyNames(), ["prop_a", "prop_b", "prop_c"],
+                        "Property names are not correct.");
 
   cheapAssertEqual(JSON.stringify(json),
                    JSON.stringify(expectedJson),
                    "Stringified JSON does not match expectations.");
 
-  // TODO test getAllDataAsCSV as well.
-  store.wipeAllData();
+  // Let's ask for the human-readable values now...
+  json = store.getAllDataAsJSON(true);
 
+  expectedJson = [{prop_a: 13, prop_b: "Baked Beans", prop_c: 0.001},
+                  {prop_a: 26, prop_b: "Sausage", prop_c: 0.002},
+                  {prop_a: 39, prop_b: "Egg", prop_c: 0.003},
+                  {prop_a: 52, prop_b: "Spam", prop_c: 0.004}];
+  cheapAssertEqual(JSON.stringify(json),
+                   JSON.stringify(expectedJson),
+                   "JSON with human-radable values does not match expectations.");
+
+
+  // TODO test getAllDataAsCSV as well.
+
+  // Wipe all data and ensure that we get back blanks:
+  store.wipeAllData();
   json = store.getAllDataAsJSON();
   expectedJson = [];
   cheapAssertEqual(JSON.stringify(json),
                    JSON.stringify(expectedJson),
-                   "Stringified JSON does not match expectations.");
+                   "JSON after wipe fails to be empty.");
 };
 
 

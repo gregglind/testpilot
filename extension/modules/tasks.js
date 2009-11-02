@@ -196,6 +196,10 @@ TestPilotExperiment.prototype = {
     return this._endDate;
   },
 
+  get dataStore() {
+    return this._dataStore;
+  },
+
   get dataStoreAsJSON() {
     return this._dataStore.getAllDataAsJSON();
   },

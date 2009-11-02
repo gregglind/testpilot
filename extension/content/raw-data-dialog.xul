@@ -11,23 +11,9 @@
   <script src="chrome://testpilot/content/raw-data-dialog.js"/>
 
   <listbox id="raw-data-listbox" rows="20">
-    <listcols>
-      <listcol/>
-      <listcol/>
-      <listcol/>
-      <listcol/>
-      <listcol/>
-      <listcol/>
-      <listcol/>
+    <listcols id="raw-data-listcols">
     </listcols>
-    <listhead>
-      <listheader label="Time"/>
-      <listheader label="Tab Pos."/>
-      <listheader label="Event"/>
-      <listheader label="UI Method"/>
-      <listheader label="Num. Tabs"/>
-      <listheader label="Tab Group ID"/>
-      <listheader label="Window ID"/>
+    <listhead id="raw-data-listhead">
     </listhead>
   </listbox>
 

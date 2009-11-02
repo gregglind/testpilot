@@ -116,7 +116,12 @@ ExperimentDataStore.prototype = {
     insStmt.finalize();
   },
 
-  getAllDataAsJSON: function EDS_getAllDataAsJSON() {
+  getAllDataAsJSON: function EDS_getAllDataAsJSON( useDisplayValues ) {
+    /* if useDisplayValues is true, the values in the returned JSON are translated to
+     * their human-readable equivalents, using the mechanism provided in the columns
+     * set.  If it's false, the values in the returned JSON are straight numerical
+     * values. */
+
     // Note this works without knowing what the schema is
     let selectSql = "SELECT * FROM " + this._tableName;
     let selStmt = this._createStatement(selectSql);
@@ -124,17 +129,35 @@ ExperimentDataStore.prototype = {
     let i;
     while (selStmt.executeStep()) {
       let newRecord = {};
-      let numCols = selStmt.columnCount; // or this._columns.length ?
+      let numCols = selStmt.columnCount;
       for (i = 0; i < numCols; i++) {
-        let colName = this._columns[i].property;
-        switch (this._columns[i].type) {
+        let column = this._columns[i];
+        let value = 0;
+        // The type property of the column tells us what data type binding to use when
+        // pulling the value from the database.
+        switch (column.type) {
           case TYPE_INT_32:
-            newRecord[colName] = selStmt.getInt32(i);
+            value = selStmt.getInt32(i);
           break;
           case TYPE_DOUBLE:
-            newRecord[colName] = selStmt.getDouble(i);
+            value = selStmt.getDouble(i);
           break;
-          // etc.  String types?
+          // etc. TODO: String types?
+        }
+
+        /* The column may have a property called displayValue, which can be either
+         * a function returning a string or an array of strings.  If we're called
+         * with useDisplayValues, then take the raw numeric value and either use it as
+         * an index to the array of strings or use it as input to the function in order
+         * to get the human-readable display name of the value. */
+        if ( useDisplayValues && column.displayValue != undefined) {
+          if (typeof( column.displayValue) == "function") {
+            newRecord[column.property] = column.displayValue( value );
+          } else {
+            newRecord[column.property] = column.displayValue[value];
+          }
+        } else {
+          newRecord[column.property] = value;
         }
       }
       records.push(newRecord);
@@ -143,12 +166,13 @@ ExperimentDataStore.prototype = {
     return records;
   },
 
-  getAllDataAsCSV: function EDS_getAllDataAsCSV() {
+  getAllDataAsCSV: function EDS_getAllDataAsCSV( useDisplayValues ) {
+    /* Same as getAllDataAsJSON, but returns array of CSV rows instead. */
     let rows = [];
     let i, j;
     let colNames = [ this._columns[i].property for (i in this._columns) ];
     rows.push( colNames.join(", ") );
-    let contentData = this.getAllDataAsJSON();
+    let contentData = this.getAllDataAsJSON(useDisplayValues);
     for (i = 0; i < contentData.length; i++) {
       let jsonRow = contentData[i];
       let cells = [];
@@ -172,8 +196,12 @@ ExperimentDataStore.prototype = {
 
   getHumanReadableColumnNames: function EDS_getHumanReadableColumnNames() {
     let i;
-    return [ this._columns[i].properName for (i in this._columns) ];
+    return [ this._columns[i].displayName for (i in this._columns) ];
   },
 
+  getPropertyNames: function EDS_getPropertyNames() {
+    let i;
+    return [ this._columns[i].property for (i in this._columns) ];
+  }
 
 };

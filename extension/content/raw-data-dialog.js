@@ -41,40 +41,30 @@ Cu.import("resource://testpilot/modules/setup.js");
 function showdbcontents() {
   // experimentId is passed in through window.openDialog.  Access it like so:
   var experimentId = window.arguments[0];
-  var rawData = TestPilotSetup.getTaskById(experimentId).dataStoreAsJSON;
-  // TODO the rest of this is full of tabs-experiment-specific stuff!!!!
+  var dataStore = TestPilotSetup.getTaskById(experimentId).dataStore;
+  var rawData = dataStore.getAllDataAsJSON(true);
   var listbox = document.getElementById("raw-data-listbox");
-  var columnNames = ["timestamp", "tab_position", "event_code", "ui_method", "num_tabs", "tab_site_hash", "tab_window"];
-  var c = TabsExperimentConstants;
+  var columnNames = dataStore.getHumanReadableColumnNames();
+  var propertyNames = dataStore.getPropertyNames();
+
   var i,j;
+  // Create the listcols and listheaders in the xul listbox to match the human
+  // readable column names provided:
+  var listcols = document.getElementById("raw-data-listcols");
+  var listhead = document.getElementById("raw-data-listhead");
+  for (j = 0; j < columnNames.length; j++) {
+    listcols.appendChild(document.createElement("listcol"));
+    var newHeader = document.createElement("listheader");
+    newHeader.setAttribute("label", columnNames[j]);
+    listhead.appendChild(newHeader);
+  }
+
+  // Convert each object in the JSON into a row of the listbox.
   for (i = 0; i < rawData.length; i++) {
     var row = document.createElement("listitem");
     for (j = 0; j < columnNames.length; j++) {
       var cell = document.createElement("listcell");
-      var value = rawData[i][columnNames[j]];
-      if (columnNames[j] == "event_code") {
-        switch (value) {
-          case c.OPEN_EVENT: value = "Open"; break;
-          case c.CLOSE_EVENT: value = "Close"; break;
-          case c.DRAG_EVENT: value = "Drag"; break;
-          case c.DROP_EVENT: value = "Drop"; break;
-          case c.SWITCH_EVENT: value = "Switch"; break;
-          case c.LOAD_EVENT: value = "Load"; break;
-          case c.STARTUP_EVENT: value = "Startup"; break;
-          case c.SHUTDOWN_EVENT: value = "Shutdown"; break;
-          case c.OPEN_WINDOW_EVENT: value = "Window Open"; break;
-          case c.CLOSE_WINDOW_EVENT: value = "Window Close"; break;
-        }
-      } else if (columnNames[j] == "ui_method") {
-        switch(value) {
-          case c.UI_CLICK: value = "Click"; break;
-          case c.UI_KEYBOARD: value = "Keyboard"; break;
-          case c.UI_MENU: value = "Menu"; break;
-          case c.UI_LINK: value = "Link"; break;
-        }
-      } else if (columnNames[j] == "timestamp") {
-	value = new Date(value).toLocaleString();
-      }
+      var value = rawData[i][propertyNames[j]];
       cell.setAttribute("label", value);
       row.appendChild(cell);
     }

@@ -130,7 +130,11 @@ function testRemoteLoader() {
 
   let getFileFunc = function(url, callback) {
     if (url.indexOf("index.json") > -1) {
-      callback(indexJson);
+      if (indexJson != "") {
+        callback(indexJson);
+      } else {
+        callback(null);
+      }
     } else if (url.indexOf("foo.js") > -1) {
       callback(theRemoteFile);
     } else {
@@ -138,17 +142,15 @@ function testRemoteLoader() {
     }
   };
 
-  var checkForUpdatesCalledBack = false;
   let remoteLoader = new remoteLoaderModule.RemoteExperimentLoader(getFileFunc);
+
   remoteLoader.checkForUpdates(function(success) {
-    dump("In the callback now.  Success is " + success + "\n");
     if (success) {
       let foo = remoteLoader.getExperiments()["foo.js"];
       cheapAssertEqual(foo.foo(6, 7), 42, "Foo doesn't work.");
     } else {
       cheapAssertFail("checkForUpdates returned failure.");
     }
-    dump("Done with callback.\n");
 
     /* Now we change the remote code and call checkForUpdates again...
      * test that this results in the newly redefined version of function foo
@@ -156,24 +158,21 @@ function testRemoteLoader() {
      * remoteExperimentLoader to reinitialize its
      * Cuddlefish.loader during the call to checkForUpdates. */
     theRemoteFile = "exports.foo = function(x, y) { return x + y; }";
-    getFileFunc("foo.js", function(stuff) {
-                  cheapAssertEqual(stuff,
-                                   "exports.foo = function(x, y) { return x + y; }",
-                                   "getFileFunc is not returning newest version.");
-                });
-
     remoteLoader.checkForUpdates( function(success) {
-      dump("In the 2nd callback now.  Success is " + success + "\n");
       if (success) {
-        let foo = remoteLoader.getExperiments()["foo.js"];
+         let foo = remoteLoader.getExperiments()["foo.js"];
         cheapAssertEqual(foo.foo(6, 7), 13, "2nd version of Foo doesn't work.");
       } else {
         cheapAssertFail("checkForUpdates 2nd time returned failure.");
       }
-      dump("Done with 2nd callback.\n");
-
-      // TODO a third test: make getFileFunc return *failure*, and make sure the
-      // cached version still gets used and still works!
+      /* For the third part of the test, make getFileFunc FAIL,
+       * and make sure the cached version still gets used and still works! */
+      indexJson = "";
+      remoteLoader.checkForUpdates( function(success) {
+        cheapAssertEqual(success, false, "3rd check for updates should have failed.");
+        let foo = remoteLoader.getExperiments()["foo.js"];
+        cheapAssertEqual(foo.foo(6, 7), 13, "Should still have the 2nd version of Foo.");
+      });
     });
   });
 }

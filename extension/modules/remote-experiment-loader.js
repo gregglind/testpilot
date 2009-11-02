@@ -168,11 +168,6 @@ exports.RemoteExperimentLoader.prototype = {
         // and if we get it, replace the one in self._remoteExperiments with
         // the new module.
         self._recursiveUpdate(data.experiments, callback);
-
-        // TODO:I think this callback(true) is happening in the wrong place.  It
-        // shouldn't get called until all of the calls to fileGetter that are triggered
-        // inside the for loop have all returned!!  But how do we do that?
-        callback(true);
       } else {
         console.warn("Could not download index.json from test pilot server.");
         callback(false);

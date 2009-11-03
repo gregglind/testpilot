@@ -37,6 +37,19 @@ function cheapAssertEqualArrays(a, b, errorMsg) {
   }
 }
 
+function cheapAssertRange(lowerBound, value, upperBound, errorMsg) {
+  testsRun += 1;
+  if (lowerBound <= value && value <= upperBound) {
+    dump("UNIT TEST PASSED.\n");
+    testsPassed += 1;
+  } else {
+    dump("UNIT TEST FAILED: ");
+    dump(errorMsg + "\n");
+    dump(value + " is outside the range of " + lowerBound + " to "
+         + upperBound + "\n");
+  }
+}
+
 function cheapAssertFail(errorMsg) {
   testsRun += 1;
   dump("UNIT TEST FAILED: ");
@@ -126,8 +139,12 @@ function testTheCuddlefishPreferencesFilesystem() {
   let pfs = new remoteLoaderModule.PreferencesStore(prefName);
   let contents1 = "function foo(x, y) { return x * y; }";
   let contents2 = "function bar(x, y) { return x / y; }";
+
+  let earlyBoundDate = new Date();
   pfs.setFile("foo.js", contents1);
   pfs.setFile("bar.js", contents2);
+  let lateBoundDate = new Date();
+
   let path = pfs.resolveModule("/", "foo.js");
   cheapAssertEqual(path, "foo.js", "resolveModule does not return expected path.");
   path = pfs.resolveModule("/", "bar.js");
@@ -137,8 +154,13 @@ function testTheCuddlefishPreferencesFilesystem() {
 
   let file = pfs.getFile("foo.js");
   cheapAssertEqual(file.contents, contents1, "File contents do not match.");
+  cheapAssertRange(earlyBoundDate, pfs.getFileModifiedDate("foo.js"), lateBoundDate,
+                   "File modified date not correct.");
+
   file = pfs.getFile("bar.js");
   cheapAssertEqual(file.contents, contents2, "File contents do not match.");
+  cheapAssertRange(earlyBoundDate, pfs.getFileModifiedDate("bar.js"), lateBoundDate,
+                   "File modified date not correct.");
 
   delete pfs;
   let pfs2 = new remoteLoaderModule.PreferencesStore(prefName);

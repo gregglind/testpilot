@@ -11,10 +11,13 @@ function PreferencesStore(prefName) {
   };
 
   this.setFile = function setFile(filename, contents) {
-    var data = this.get();
+    let data = this.get();
     if (!("fs" in data))
       data.fs = {};
+    if (!("modifiedDates" in data))
+      data.modifiedDates = {};
     data.fs[filename] = contents;
+    data.modifiedDates[filename] = (new Date).getTime();
     this.set(data);
   };
 
@@ -34,20 +37,45 @@ function PreferencesStore(prefName) {
     let data = this.get();
     let fs = data["fs"] || {};
     return {contents: fs[path]};
+
+  };
+
+  this.getFileModifiedDate = function(path) {
+    let data = this.get();
+    let dates = data["modifiedDates"] || {};
+    return dates[path];
   };
 }
 
 exports.PreferencesStore = PreferencesStore;
 
-function downloadFile(url, cb) {
+function downloadFile(url, cb, lastModified) {
+  // lastModified is a timestamp (ms since epoch); if provided, then the file
+  // will not be downloaded unless it is newer than this.
   var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
               .createInstance( Ci.nsIXMLHttpRequest );
   req.open('GET', url, true);
+  if (lastModified != undefined) {
+    let d = new Date();
+    d.setTime(lastModified);
+    // example header: If-Modified-Since: Sat, 29 Oct 1994 19:43:31 GMT
+    req.setRequestHeader("If-Modified-Since", d.toGMTString());
+    console.info("Setting if-modified-since header to " + d.toGMTString());
+  }
   req.onreadystatechange = function(aEvt) {
     if (req.readyState == 4) {
       if (req.status == 200) {
 	cb(req.responseText);
+      } else if (req.status == 304) {
+        // 304 is "Not Modified", which we can get because we send an
+        // If-Modified-Since header.
+        console.info("File " + url + " not modified; using cached version.");
+        cb(null);
+        // calling back with null lets the RemoteExperimentLoader know it should
+        // keep using the old cached version of the code.
       } else {
+        // Some kind of error.
+        console.warn("Got a " + req.status + " error code downloading " + url);
 	cb(null);
       }
     }
@@ -122,23 +150,24 @@ exports.RemoteExperimentLoader.prototype = {
     // Split off the array: load the first one now, and load the rest (recursively)
     // when the callback is finished.
     let first = experimentList[0];
-    let rest = experimentList.slice(1); // TODO check if slice(1) is right.
+    let rest = experimentList.slice(1);
     let self = this;
     let filename = first.filename;
+    let modificationDate = this._codeStorage.getFileModifiedDate(filename);
     self._fileGetter( resolveUrl(BASE_URL, filename),
       function onDone(code) {
+        // code will be non-null if there is actually new code to download.
         if (code) {
           console.info("Downloaded code for " + filename);
           self._codeStorage.setFile(filename, code);
           console.warn("Attempting to load file: " + filename);
           self._remoteExperiments[filename] = self._loader.require(filename);
           console.warn("Finished loading file: " + filename);
-        } else {
-          console.warn("Could not download " + filename );
         }
         // Now do the next file load...
         self._recursiveUpdate(rest, finalCallback);
-      });
+      },
+      modificationDate);
   },
 
   checkForUpdates: function(callback) {
@@ -161,8 +190,8 @@ exports.RemoteExperimentLoader.prototype = {
           callback(false);
           return;
         }
-        // TODO include dates in index.json, only pull files if they're newer
-        // than what we already have.
+        // TODO remember last-modified dates for all the files we have;
+        // only pull files if they're newer than what we already have.
 
         // Go through each file indicated in index.json, attempt to load it,
         // and if we get it, replace the one in self._remoteExperiments with

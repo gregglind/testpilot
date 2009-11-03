@@ -94,6 +94,23 @@
     }
   }
 
+  function makeLinksToAllExperiments() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    dump("Making links to all experiments...\n");
+    let experiments = TestPilotSetup.getExperimentNamesAndUrls();
+    let list = document.getElementById("experiment-links-menu");
+    dump("Experiments length is " + experiments.length + "\n");
+    for (let i = 0; i < experiments.length; i++) {
+      let listItem = document.createElement("li");
+      list.appendChild(listItem);
+      let link = document.createElement("a");
+      link.setAttribute("href", experiments[i].url);
+      link.innerHTML = experiments[i].name;
+      listItem.appendChild(link);
+    }
+    dump("Done making links to all experiments.\n");
+  }
+
   function quitExperiment(experimentId) {
     Components.utils.import("resource://testpilot/modules/setup.js");
     var reason = document.getElementById("reason-for-quit").value;
@@ -134,6 +151,7 @@
     // Metadata and start/end date should be filled in for every experiment:
     showMetaData();
     getTestEndingDate(eid);
+    makeLinksToAllExperiments();
 
     // Do whatever the experiment's web content wants done on load:
     var graphUtils = {drawPieChart: drawPieChart,

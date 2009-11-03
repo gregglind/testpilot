@@ -445,6 +445,17 @@ let TestPilotSetup = {
       }
     }
     return null;
+  },
+
+  getExperimentNamesAndUrls: function TPS_getExperimentNamesAndUrls() {
+    let retVal = [];
+    for (let i = 0; i < this.taskList.length; i++) {
+      let task = this.taskList[i];
+      if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
+        retVal.push({ name: task.title, url: task.infoPageUrl});
+      }
+    }
+    return retVal;
   }
 };
 

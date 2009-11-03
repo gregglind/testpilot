@@ -125,7 +125,9 @@ let TestPilotSetup = {
     this._longTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this._longTimer.initWithCallback(
       { notify: function(timer) {
-	  self._notifyUserOfTasks(HIGH_PRIORITY_ONLY); }},
+          self._notifyUserOfTasks(HIGH_PRIORITY_ONLY);
+          self.reloadRemoteExperiments();
+      }},
       Application.prefs.getValue(POPUP_REMINDER_INTERVAL, 86400000),
       Ci.nsITimer.TYPE_REPEATING_SLACK
     );

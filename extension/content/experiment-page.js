@@ -106,9 +106,17 @@
 
   function loadExperimentPage(status) {
     Components.utils.import("resource://testpilot/modules/setup.js");
-    // Get experimentID from get args of page
+    var contentDiv = document.getElementById("intro");
+    // Get experimentID from the GET args of page
     var eid = parseInt(getUrlParam("eid"));
     var experiment = TestPilotSetup.getTaskById(eid);
+    if (!experiment) {
+      // Possible that experiments aren't done loading yet.  Try again in
+      // a few seconds.
+      contentDiv.innerHTML = "Loading, please wait a moment...";
+      window.setTimeout(function() { loadExperimentPage(status);}, 2000);
+      return;
+    }
     var webContentHtml;
     // TODO maybe get status from the task itself and merge pages?
     if (status == "in-progress") {
@@ -118,7 +126,7 @@
     } else if (status == "upcoming") {
       webContentHtml = experiment.webContent.upcomingHtml;
     }
-    var contentDiv = document.getElementById("intro");
+
     contentDiv.innerHTML = webContentHtml;
 
     // TODO create a menu (tab-styled?) to switch between all current

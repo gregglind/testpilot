@@ -17,7 +17,6 @@
       return results[1];
   }
 
-  // TODO replace this with an opt-out button.
   function wipeDb() {
     Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
     TabsExperimentDataStore.wipeAllData();

@@ -149,6 +149,7 @@ let TestPilotSetup = {
 
   globalShutdown: function TPS_globalShutdown() {
     dump("Global shutdown.  Unregistering everything.\n");
+    this._loader.unload();
     this._shortTimer.cancel();
     this._longTimer.cancel();
     let self = this;

@@ -150,18 +150,28 @@ var TestPilotTask = {
   }
 };
 
-function TestPilotExperiment(id, title, url, dataStore, observer, webContent) {
+function TestPilotExperiment(expInfo, dataStore, observer, webContent) {
   // Note dataStore is an object, but observer is a constructor function
-  this._init(id, title, url, dataStore, observer, webContent);
+  this._init(expInfo, dataStore, observer, webContent);
 }
 TestPilotExperiment.prototype = {
-  _init: function TestPilotExperiment__init(id,
-					    title,
-                                            url,
+  _init: function TestPilotExperiment__init(expInfo,
 					    dataStore,
 					    observer,
                                             webContent) {
-    this._taskInit(id, title, url, webContent);
+    // expInfo is a dictionary defined in the remote experiment code, which
+    // should have the following properties:
+    // startDate
+    // duration
+    // testName
+    // testId
+    // testInfoUrl
+    // testResultsUrl
+    // optInRequired  (boolean)
+    // recursAutomatically (boolean)
+    // versionNumber
+    this._taskInit(expInfo.testId, expInfo.testName,
+                   expInfo.testInfoUrl, webContent);
     this._dataStore = dataStore;
 
     // TODO should have the flexibility to start the StartDate either when

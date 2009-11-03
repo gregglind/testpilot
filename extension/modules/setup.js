@@ -61,6 +61,7 @@ const TEST_PILOT_HOME_PAGE = "http://testpilot.mozillalabs.com";
 
 // TODO this stuff shouldn't be hard-coded here:
 const SURVEY_URL = "http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d";
+const SURVEY_RESULTS_URL = "http://www.surveymonkey.com/sr.aspx?sm=oZPWdDCVgnJqkmPERROH6AWWPcmTImSDiMyFunw16b8_3d";
 
 let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
@@ -405,9 +406,7 @@ let TestPilotSetup = {
                                                      dsInfo.tableName,
                                                      dsInfo.columns );
             let webContent = experiments[filename].webContent;
-            let task = new TestPilotExperiment(expInfo.testId,
-                                               expInfo.testName,
-                                               expInfo.testInfoUrl,
+            let task = new TestPilotExperiment(expInfo,
                                                dataStore,
                                                experiments[filename].Observer,
                                                webContent);

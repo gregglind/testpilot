@@ -161,6 +161,8 @@ exports.RemoteExperimentLoader.prototype = {
           console.info("Downloaded code for " + filename);
           self._codeStorage.setFile(filename, code);
           console.warn("Attempting to load file: " + filename);
+          // TODO I think the following line is not needed, since it's done in
+          // getExperiments().  Test without it?
           self._remoteExperiments[filename] = self._loader.require(filename);
           console.warn("Finished loading file: " + filename);
         }
@@ -190,12 +192,9 @@ exports.RemoteExperimentLoader.prototype = {
           callback(false);
           return;
         }
-        // TODO remember last-modified dates for all the files we have;
-        // only pull files if they're newer than what we already have.
-
-        // Go through each file indicated in index.json, attempt to load it,
-        // and if we get it, replace the one in self._remoteExperiments with
-        // the new module.
+        /* Go through each file indicated in index.json, attempt to load it,
+         * and if we get it, replace the one in self._remoteExperiments with
+         * the new module. */
         self._recursiveUpdate(data.experiments, callback);
       } else {
         console.warn("Could not download index.json from test pilot server.");

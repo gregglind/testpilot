@@ -114,7 +114,6 @@ exports.RemoteExperimentLoader.prototype = {
     }
     console.info("About to instantiate preferences store.");
     this._codeStorage = new PreferencesStore("extensions.testpilot.experiment.codeFs");
-    this._remoteExperiments = {};
     let self = this;
 
     /* Use a composite file system here, compositing codeStorage and a new
@@ -158,13 +157,9 @@ exports.RemoteExperimentLoader.prototype = {
       function onDone(code) {
         // code will be non-null if there is actually new code to download.
         if (code) {
-          console.info("Downloaded code for " + filename);
+          console.info("Downloaded new code for " + filename);
           self._codeStorage.setFile(filename, code);
-          console.warn("Attempting to load file: " + filename);
-          // TODO I think the following line is not needed, since it's done in
-          // getExperiments().  Test without it?
-          self._remoteExperiments[filename] = self._loader.require(filename);
-          console.warn("Finished loading file: " + filename);
+          console.warn("Saved code for: " + filename);
         }
         // Now do the next file load...
         self._recursiveUpdate(rest, finalCallback);
@@ -192,9 +187,9 @@ exports.RemoteExperimentLoader.prototype = {
           callback(false);
           return;
         }
-        /* Go through each file indicated in index.json, attempt to load it,
-         * and if we get it, replace the one in self._remoteExperiments with
-         * the new module. */
+        /* Go through each file indicated in index.json, attempt to load it into
+         * codeStorage (replacing any older version there)
+         */
         self._recursiveUpdate(data.experiments, callback);
       } else {
         console.warn("Could not download index.json from test pilot server.");
@@ -210,15 +205,16 @@ exports.RemoteExperimentLoader.prototype = {
     console.info("About to call codeStorage.get.");
     let experimentsJson = this._codeStorage.get();
     console.info("About to iterate filenames in json.");
+    let remoteExperiments = {};
     for (let filename in experimentsJson.fs) {
       try {
-        this._remoteExperiments[filename] = this._loader.require(filename);
+        remoteExperiments[filename] = this._loader.require(filename);
       } catch(e) {
         console.warn("Error loading " + filename);
         console.warn(e);
       }
     }
 
-    return this._remoteExperiments;
+    return remoteExperiments;
   }
 };

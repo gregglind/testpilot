@@ -175,7 +175,7 @@ TestPilotExperiment.prototype = {
     this._dataStore = dataStore;
     this._testResultsUrl = expInfo.testResultsUrl;
     this._versionNumber = expInfo.versionNumber;
-    // TODO implement expInfo.optInRequired, expInfo.recurseAutomatically
+    // TODO implement expInfo.optInRequired, expInfo.recursAutomatically
     // TODO include this._versionNumber in metadata.
 
     // TODO should have the flexibility to start the StartDate either when
@@ -239,7 +239,7 @@ TestPilotExperiment.prototype = {
       case TaskConstants.STATUS_RESULTS:
       case TaskConstants.STATUS_ARCHIVED:
         // Return the results page, if we have one...
-      if (this._testResultsUrl) {
+      if (this._testResultsUrl != undefined) {
         return this._testResultsUrl;
       } else {
         return "chrome://testpilot/content/status-thanks.html" + param;
@@ -281,25 +281,24 @@ TestPilotExperiment.prototype = {
     }
 
     if (this._status >= TaskConstants.STATUS_SUBMITTED &&
-        this._resultsUrl != undefined) {
-
+        this._testResultsUrl != undefined) {
+      // If we've submitted data and a results URL is defined, bump status
+      // up to RESULTS and let user know that the results are now available.
       this.changeStatus( TaskConstants.STATUS_RESULTS );
-    // If we've submitted data and a results URL is defined, bump status
-    // up to RESULTS and let user know that the results are now available.
     }
   },
 
   _appendMetadataToCSV: function TestPilotExperiment__appendMetadata() {
     let rows = this._dataStore.getAllDataAsCSV();
     let metadata = MetadataCollector.getMetadata();
-    rows[0] = rows[0] + ", extensions, location, version, os";
+    rows[0] = rows[0] + ", extensions, location, fx_version, os, exp_version";
     if (metadata.extensions.length > 0) {
       rows[1] = rows[1] + ", " + metadata.extensions[0];
     }
     rows[1] = rows[1] + ", " + metadata.location + ", " + metadata.version + ", ";
-    rows[1] = rows[1] + metadata.operatingSystem;
+    rows[1] = rows[1] + metadata.operatingSystem + ", " + this._versionNumber;
 
-    for (i = 1; i < metadata.extensions.length; i++) {
+    for (let i = 1; i < metadata.extensions.length; i++) {
       rows[i + 1] = rows[i + 1] + metadata.extensions[i];
     }
     return rows.join("\n");

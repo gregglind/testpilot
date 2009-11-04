@@ -230,19 +230,25 @@ let TestPilotSetup = {
         newMenuItem.setAttribute("class", "menuitem-iconic");
         newMenuItem.setAttribute("image", "chrome://testpilot/skin/new.png");
       }
-      if (task.status >= TaskConstants.STATUS_RESULTS) {
-        newMenuItem.setAttribute("label", task.title + " - Results Available");
+      if (task.status == TaskConstants.STATUS_FINISHED) {
+        newMenuItem.setAttribute("label",
+                                 "  " + task.title + " (Finished - Ready To Submit)");
       }
       if (task.status == TaskConstants.STATUS_SUBMITTED) {
 	// Disable it if it's cancelled or submitted
         newMenuItem.setAttribute("disabled", true);
-        newMenuItem.setAttribute("label", "  (Completed) " + task.title);
+        newMenuItem.setAttribute("label", "  " + task.title + " (Submitted)");
       }
       if (task.status == TaskConstants.STATUS_CANCELLED) {
 	// Disable it if it's cancelled or submitted
         newMenuItem.setAttribute("disabled", true);
-        newMenuItem.setAttribute("label", "  (Quit) " + task.title);
+        newMenuItem.setAttribute("label", "  " + task.title + " (Quit)");
       }
+      if (task.status >= TaskConstants.STATUS_RESULTS) {
+        newMenuItem.setAttribute("label",
+                                 "  " + task.title + " (Finished - Results Available)");
+      }
+
       // TODO other variations of icon and label for other statuses?
 
       newMenuItem.taskObject = task;

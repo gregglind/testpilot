@@ -40,7 +40,10 @@
       if (success) {
         window.location = "chrome://testpilot/content/status-thanks.html";
       } else {
-        uploadStatus.innerHTML = "Error!";
+        uploadStatus.innerHTML = "<p>Oops!  There was an error connecting to "
+          + "the Mozilla servers.  Maybe your network connection is down?</p>"
+          + "<p>Test Pilot will retry automatically, so it's OK to close this"
+          + " page now.</p>";
       }
     });
   }

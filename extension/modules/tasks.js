@@ -45,6 +45,7 @@ Components.utils.import("resource://testpilot/modules/metadata.js");
 const STATUS_PREF_PREFIX = "extensions.testpilot.taskstatus.";
 const START_DATE_PREF = "extensions.testpilot.tabsExperiment.startDate";
 const TEST_LENGTH_PREF = "extensions.testpilot.tabsExperiment.numDays";
+const RETRY_INTERVAL_PREF = "extensions.testpilot.uploadRetryInterval";
 const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
 
 
@@ -204,6 +205,8 @@ TestPilotExperiment.prototype = {
     // Observer is a constructor.  Constructing one will install it in the
     // window too.
     this._observerConstructor = observer;
+
+    this._uploadRetryTimer = null;
   },
 
   get taskType() {
@@ -313,6 +316,15 @@ TestPilotExperiment.prototype = {
   upload: function TestPilotExperiment_upload(callback) {
     // Callback is a function that will be called back with true or false
     // on success or failure.
+
+    /* If we've already uploaded, and the user tries to upload again for
+     * some reason (they could navigate back to the status-complete.html page,
+     * for instance), then proceed without uploading: */
+    if (this._status >= TaskConstants.STATUS_SUBMITTED) {
+      callback(true);
+      return;
+    }
+
     let dataString = this._appendMetadataToCSV();
 
     let params = "testid=" + this._id + "&data=" + encodeURI(dataString);
@@ -329,6 +341,9 @@ TestPilotExperiment.prototype = {
       if (req.readyState == 4) {
 	if (req.status == 200) {
 	  dump("DATA WAS POSTED SUCCESSFULLY " + req.responseText + "\n");
+          if (self._uploadRetryTimer) {
+            self._uploadRetryTimer.cancel(); // Stop retrying - it worked!
+          }
           self.changeStatus( TaskConstants.STATUS_SUBMITTED );
 	  dump("I did changeStatus, now wiping...\n");
 	  self._dataStore.wipeAllData();
@@ -336,8 +351,18 @@ TestPilotExperiment.prototype = {
           callback(true);
 	} else {
 	  dump("ERROR POSTING DATA: " + req.responseText + "\n");
-          // TODO set up timer that keeps trying to upload data until
-          // there is a success.
+          /* Something went wrong with the upload?
+           * Exit for now, but try again in an hour; maybe the network will
+           * be working better by then.  Note that this means Test Pilot will
+           * retry once an hour until either Firefox is restarted or until
+           * we succeed.
+           */
+          self._uploadRetryTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+          let interval = Application.prefs.getValue(RETRY_INTERVAL_PREF,
+                                                    3600000); // 1 hour
+          self._uploadRetryTimer.initWithCallback(
+            {notify: function(timer) {self.upload(function() {});}},
+            interval, Ci.nsITimer.TYPE_ONE_SHOT);
 	  callback(false);
 	}
       }

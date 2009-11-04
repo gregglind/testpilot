@@ -304,6 +304,8 @@ let TestPilotSetup = {
         let text = "A Test Pilot study has completed: "
                    + task.title + " needs your attention.";
 	this._showNotification(text, task);
+        // We return after showing something, because it only makes sense
+        // to show one notification at a time!
 	return;
       }
     }
@@ -345,7 +347,18 @@ let TestPilotSetup = {
 	text = "Results are now available for " + task.title;
 	this._showNotification(text, task);
       }
+      return;
     }
+
+    // High and medium priority stuff ends here.
+    if ( priority == HIGH_AND_MEDIUM_PRIORITY ) {
+      return;
+    }
+
+    // TODO:
+    // We could notify users of FINISHED -> SUBMITTED here, or
+    // FINISHED -> CANCELED, but it seems kind of pointless when they
+    // are already looking at a page that gives feedback about that.
   },
 
   _doHousekeeping: function TPS__doHousekeeping() {
@@ -363,11 +376,7 @@ let TestPilotSetup = {
   },
 
   onTaskStatusChanged: function TPS_onTaskStatusChanged() {
-    dump("Task status changed!\n");
     this._notifyUserOfTasks(ANY_PRIORITY);
-    // TODO notify of lower-priority state changes using observer message
-    // FINISHED -> SUBMITTED: "Your data has been submitted successfully."
-    // FINISHED -> CANCELED: "You have opted out of an experiment."
   },
 
   onMenuSelection: function TPS_onMenuSelection(event) {

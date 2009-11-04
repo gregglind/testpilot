@@ -379,7 +379,7 @@ TestPilotSurvey.prototype = {
   _init: function TestPilotSurvey__init(id, title, url, resultsUrl) {
     this._taskInit(id, title, url);
     this._resultsUrl = resultsUrl;
-    if (this._status < TaskConstants.STATUS_FINISHED) {
+    if (this._status < TaskConstants.STATUS_RESULTS) {
       this.checkForCompletion();
     }
   },
@@ -410,7 +410,7 @@ TestPilotSurvey.prototype = {
         if (req.status == 200) {
           if (req.responseText.indexOf(surveyCompletedText) > -1) {
             dump("Survey is completed.\n");
-            if (this._resultsUrl != undefined) {
+            if (self._resultsUrl != undefined) {
               self.changeStatus( TaskConstants.STATUS_RESULTS, true );
             } else {
               self.changeStatus( TaskConstants.STATUS_SUBMITTED, true );

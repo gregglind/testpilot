@@ -230,7 +230,10 @@ let TestPilotSetup = {
         newMenuItem.setAttribute("class", "menuitem-iconic");
         newMenuItem.setAttribute("image", "chrome://testpilot/skin/new.png");
       }
-      if (task.status >= TaskConstants.STATUS_SUBMITTED) {
+      if (task.status >= TaskConstants.STATUS_RESULTS) {
+        newMenuItem.setAttribute("label", task.title + " - Results Available");
+      }
+      if (task.status == TaskConstants.STATUS_SUBMITTED) {
 	// Disable it if it's cancelled or submitted
         newMenuItem.setAttribute("disabled", true);
         newMenuItem.setAttribute("label", "  (Completed) " + task.title);
@@ -383,7 +386,8 @@ let TestPilotSetup = {
     dump("Initing the survery.\n");
     TestPilotSetup.addTask(new TestPilotSurvey("survey_for_new_pilots",
                                                "Survey For New Test Pilots",
-                                               SURVEY_URL));
+                                               SURVEY_URL,
+                                               SURVEY_RESULTS_URL));
 
     let self = this;
     this._remoteExperimentLoader.checkForUpdates(

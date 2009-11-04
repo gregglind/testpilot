@@ -173,6 +173,10 @@ TestPilotExperiment.prototype = {
     this._taskInit(expInfo.testId, expInfo.testName,
                    expInfo.testInfoUrl, webContent);
     this._dataStore = dataStore;
+    this._testResultsUrl = expInfo.testResultsUrl;
+    this._versionNumber = expInfo.versionNumber;
+    // TODO implement expInfo.optInRequired, expInfo.recurseAutomatically
+    // TODO include this._versionNumber in metadata.
 
     // TODO should have the flexibility to start the StartDate either when
     // installed (for basic panel?) or at a date specified in metadata
@@ -215,9 +219,6 @@ TestPilotExperiment.prototype = {
   },
 
   get infoPageUrl() {
-    // TODO: maybe we don't need to switch out to separate pages here...
-    // since the pages end up calling back to this experiment's .webContents,
-    // we could switch on status when we return the web contents.
     let param = "?eid=" + this._id;
     switch (this._status) {
       case TaskConstants.STATUS_NEW:
@@ -233,9 +234,16 @@ TestPilotExperiment.prototype = {
         return "chrome://testpilot/content/status-cancelled.html" + param;
       break;
       case TaskConstants.STATUS_SUBMITTED:
+        return "chrome://testpilot/content/status-thanks.html" + param;
+      break;
       case TaskConstants.STATUS_RESULTS:
       case TaskConstants.STATUS_ARCHIVED:
+        // Return the results page, if we have one...
+      if (this._testResultsUrl) {
+        return this._testResultsUrl;
+      } else {
         return "chrome://testpilot/content/status-thanks.html" + param;
+      }
       break;
     }
     return this._url;
@@ -270,6 +278,14 @@ TestPilotExperiment.prototype = {
       for (let i=0; i < this._observersList.length; i++) {
         this._observersList[i].uninstall();
       }
+    }
+
+    if (this._status >= TaskConstants.STATUS_SUBMITTED &&
+        this._resultsUrl != undefined) {
+
+      this.changeStatus( TaskConstants.STATUS_RESULTS );
+    // If we've submitted data and a results URL is defined, bump status
+    // up to RESULTS and let user know that the results are now available.
     }
   },
 
@@ -356,12 +372,13 @@ TestPilotExperiment.prototype = {
 TestPilotExperiment.prototype.__proto__ = TestPilotTask;
 
 
-function TestPilotSurvey(id, title, url) {
-  this._init(id, title, url);
+function TestPilotSurvey(id, title, url, resultsUrl) {
+  this._init(id, title, url, resultsUrl);
 }
 TestPilotSurvey.prototype = {
- _init: function TestPilotSurvey__init(id, title, url) {
+  _init: function TestPilotSurvey__init(id, title, url, resultsUrl) {
     this._taskInit(id, title, url);
+    this._resultsUrl = resultsUrl;
     if (this._status < TaskConstants.STATUS_FINISHED) {
       this.checkForCompletion();
     }
@@ -369,6 +386,15 @@ TestPilotSurvey.prototype = {
 
   get taskType() {
     return TaskConstants.TYPE_SURVEY;
+  },
+
+  get infoPageUrl() {
+    if (this._status == TaskConstants.STATUS_RESULTS &&
+        this._resultsUrl != undefined) {
+      return this._resultsUrl;
+    } else {
+      return this._url;
+    }
   },
 
   checkForCompletion: function TestPilotSurvey_checkForCompletion() {
@@ -384,7 +410,11 @@ TestPilotSurvey.prototype = {
         if (req.status == 200) {
           if (req.responseText.indexOf(surveyCompletedText) > -1) {
             dump("Survey is completed.\n");
-	    self.changeStatus( TaskConstants.STATUS_SUBMITTED, true );
+            if (this._resultsUrl != undefined) {
+              self.changeStatus( TaskConstants.STATUS_RESULTS, true );
+            } else {
+              self.changeStatus( TaskConstants.STATUS_SUBMITTED, true );
+            }
 	  }
         } else {
           dump("Error loading page\n");

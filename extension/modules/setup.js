@@ -217,9 +217,11 @@ let TestPilotSetup = {
       // TODO is there a less inefficient way of doing this?
       for (let j = 0; j < menu.childNodes.length; j++) {
 	let childNode = menu.childNodes[j];
-	if (childNode.taskObject == task) {
-	  menu.removeChild(childNode);
-	  break;
+        if (childNode.taskObject) {
+          if (childNode.taskObject.id == task.id) {
+	    menu.removeChild(childNode);
+	    break;
+          }
 	}
       }
 

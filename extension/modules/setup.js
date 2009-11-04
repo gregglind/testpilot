@@ -409,8 +409,6 @@ let TestPilotSetup = {
             // The try-catch ensures that if something goes wrong in loading one
             // experiment, the other experiments after that one still get loaded.
             dump("Attempting to load experiment " + filename + "\n");
-            // TODO also pull additional info from experimentInfo, such as
-            // basicPanel, optInRequired, versionNumber, startDate, and duration.
             let expInfo = experiments[filename].experimentInfo;
             let dsInfo = experiments[filename].dataStoreInfo;
             let dataStore = new ExperimentDataStore( dsInfo.fileName,

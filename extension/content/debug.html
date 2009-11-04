@@ -22,6 +22,11 @@
     runAllTests();
   }
 
+  function remindMe() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    TestPilotSetup._doHousekeeping();
+  }
+
 </script>
 
 <style type="text/css">
@@ -38,6 +43,7 @@
 <button onclick="makeThereBeAPopup();">Popup</button>
 <button onclick="reloadAllExperiments();">Reload All Experiments</button>
 <button onclick="runUnitTests();">Run Unit Tests</button>
+<button onclick="remindMe();">Remind Me</button>
 <input type="text" id="status-code"/><button onclick="setTaskStatus();">Set</button>
 </p>
 <p><span id="debug"></span></p>

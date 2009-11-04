@@ -126,7 +126,7 @@ var TestPilotTask = {
     this._status = newStatus;
     // Set the pref:
     Application.prefs.setValue(STATUS_PREF_PREFIX + this._id, newStatus);
-    // Stop the blinking/ regenerate the menu items
+    // Notify user of status change:
     if (!suppressNotification) {
       Observers.notify("testpilot:task:changed", "", null);
     }
@@ -142,11 +142,16 @@ var TestPilotTask = {
     let browser = window.getBrowser();
     let tab = browser.addTab(this.infoPageUrl);
     browser.selectedTab = tab;
+    /* Advance the status when the user sees the page, so that we can stop
+     * notifying them about stuff they've seen. */
     if (this._status == TaskConstants.STATUS_NEW) {
       this.changeStatus(TaskConstants.STATUS_PENDING);
     } else if (this._status == TaskConstants.STATUS_STARTING) {
       this.changeStatus(TaskConstants.STATUS_IN_PROGRESS);
+    } else if (this._status == TaskConstants.STATUS_RESULTS) {
+      this.changeStatus( TaskConstants.STATUS_ARCHIVED );
     }
+
   }
 };
 
@@ -377,6 +382,7 @@ TestPilotSurvey.prototype = {
   _init: function TestPilotSurvey__init(id, title, url, resultsUrl) {
     this._taskInit(id, title, url);
     this._resultsUrl = resultsUrl;
+    dump("Initing survey.  This._status is " + this._status + "\n");
     if (this._status < TaskConstants.STATUS_RESULTS) {
       this.checkForCompletion();
     }
@@ -409,10 +415,13 @@ TestPilotSurvey.prototype = {
           if (req.responseText.indexOf(surveyCompletedText) > -1) {
             dump("Survey is completed.\n");
             if (self._resultsUrl != undefined) {
+              dump("Setting survey status to RESULTS\n");
               self.changeStatus( TaskConstants.STATUS_RESULTS, true );
             } else {
+              dump("Setting survey status to SUBMITTED\n");
               self.changeStatus( TaskConstants.STATUS_SUBMITTED, true );
             }
+            dump("Survey status is now " + self._status + "\n");
 	  }
         } else {
           dump("Error loading page\n");
@@ -423,6 +432,9 @@ TestPilotSurvey.prototype = {
   },
 
   onUrlLoad: function TPS_onUrlLoad(url) {
+    /* Viewing the appropriate URL makes survey status progress from
+     * NEW (havent' seen survey) to PENDING (seen it but not done it).
+     * So we can stop notifying people about the survey once they've seen it.*/
     if (url == this._url && this._status == TaskConstants.STATUS_NEW) {
       this.changeStatus( TaskConstants.STATUS_PENDING );
     }

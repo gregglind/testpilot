@@ -368,7 +368,6 @@ let TestPilotSetup = {
     // TODO notify of lower-priority state changes using observer message
     // FINISHED -> SUBMITTED: "Your data has been submitted successfully."
     // FINISHED -> CANCELED: "You have opted out of an experiment."
-    this.populateMenu();
   },
 
   onMenuSelection: function TPS_onMenuSelection(event) {

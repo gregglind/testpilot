@@ -176,7 +176,6 @@ TestPilotExperiment.prototype = {
     this._testResultsUrl = expInfo.testResultsUrl;
     this._versionNumber = expInfo.versionNumber;
     // TODO implement expInfo.optInRequired, expInfo.recursAutomatically
-    // TODO include this._versionNumber in metadata.
 
     // TODO should have the flexibility to start the StartDate either when
     // installed (for basic panel?) or at a date specified in metadata

@@ -59,10 +59,6 @@ const ANY_PRIORITY = 3;
 // TODO move homepage to a pref?
 const TEST_PILOT_HOME_PAGE = "http://testpilot.mozillalabs.com";
 
-// TODO this stuff shouldn't be hard-coded here:
-const SURVEY_URL = "http://www.surveymonkey.com/s.aspx?sm=bxR0HNhByEBfugh8GPASvQ_3d_3d";
-const SURVEY_RESULTS_URL = "http://www.surveymonkey.com/sr.aspx?sm=oZPWdDCVgnJqkmPERROH6AWWPcmTImSDiMyFunw16b8_3d";
-
 let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
 
@@ -399,12 +395,6 @@ let TestPilotSetup = {
       this._remoteExperimentLoader = rel;
     }
 
-    dump("Initing the survery.\n");
-    TestPilotSetup.addTask(new TestPilotSurvey("survey_for_new_pilots",
-                                               "Survey For New Test Pilots",
-                                               SURVEY_URL,
-                                               SURVEY_RESULTS_URL));
-
     let self = this;
     this._remoteExperimentLoader.checkForUpdates(
       function(success) {
@@ -418,16 +408,28 @@ let TestPilotSetup = {
             // The try-catch ensures that if something goes wrong in loading one
             // experiment, the other experiments after that one still get loaded.
             dump("Attempting to load experiment " + filename + "\n");
-            let expInfo = experiments[filename].experimentInfo;
-            let dsInfo = experiments[filename].dataStoreInfo;
-            let dataStore = new ExperimentDataStore( dsInfo.fileName,
-                                                     dsInfo.tableName,
-                                                     dsInfo.columns );
-            let webContent = experiments[filename].webContent;
-            let task = new TestPilotExperiment(expInfo,
-                                               dataStore,
-                                               experiments[filename].Observer,
-                                               webContent);
+
+            let task;
+            // Could be a survey: check if surveyInfo is exported:
+            if (experiments[filename].surveyInfo != undefined) {
+              let sInfo = experiments[filename].surveyInfo;
+              task = new TestPilotSurvey(sInfo.surveyId,
+                                         sInfo.surveyName,
+                                         sInfo.surveyUrl,
+                                         sInfo.resultsUrl);
+            } else {
+              // This one must be an experiment.
+              let expInfo = experiments[filename].experimentInfo;
+              let dsInfo = experiments[filename].dataStoreInfo;
+              let dataStore = new ExperimentDataStore( dsInfo.fileName,
+                                                       dsInfo.tableName,
+                                                       dsInfo.columns );
+              let webContent = experiments[filename].webContent;
+              task = new TestPilotExperiment(expInfo,
+                                             dataStore,
+                                             experiments[filename].Observer,
+                                             webContent);
+            }
             TestPilotSetup.addTask(task);
             dump("Loaded experiment " + filename + "\n");
           } catch (e) {

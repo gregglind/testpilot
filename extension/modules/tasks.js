@@ -418,7 +418,7 @@ TestPilotSurvey.prototype = {
   },
 
   get infoPageUrl() {
-    if (this._status == TaskConstants.STATUS_RESULTS &&
+    if (this._status >= TaskConstants.STATUS_RESULTS &&
         this._resultsUrl != undefined) {
       return this._resultsUrl;
     } else {

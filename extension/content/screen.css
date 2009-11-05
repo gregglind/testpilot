@@ -55,7 +55,7 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 }
 
 #contentWelcome {
-	margin-top: 380px;
+	margin-top: 120px;
 	padding: 8px 24px 24px 24px;
 	font-family: 'DroidSans';
 	text-align: left;

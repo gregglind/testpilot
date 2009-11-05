@@ -287,7 +287,7 @@ TestPilotExperiment.prototype = {
       }
     }
 
-    if (this._status >= TaskConstants.STATUS_SUBMITTED &&
+    if (this._status == TaskConstants.STATUS_SUBMITTED &&
         this._testResultsUrl != undefined) {
       // If we've submitted data and a results URL is defined, bump status
       // up to RESULTS and let user know that the results are now available.

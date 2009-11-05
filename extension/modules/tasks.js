@@ -43,11 +43,9 @@ Components.utils.import("resource://testpilot/modules/Observers.js");
 Components.utils.import("resource://testpilot/modules/metadata.js");
 
 const STATUS_PREF_PREFIX = "extensions.testpilot.taskstatus.";
-const START_DATE_PREF = "extensions.testpilot.tabsExperiment.startDate";
-const TEST_LENGTH_PREF = "extensions.testpilot.tabsExperiment.numDays";
+const START_DATE_PREF_PREFIX = "extensions.testpilot.startDate.";
 const RETRY_INTERVAL_PREF = "extensions.testpilot.uploadRetryInterval";
 const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
-
 
 const TaskConstants = {
  STATUS_NEW: 0, // It's new and you haven't seen it yet.
@@ -165,17 +163,18 @@ TestPilotExperiment.prototype = {
 					    dataStore,
 					    observer,
                                             webContent) {
-    // expInfo is a dictionary defined in the remote experiment code, which
-    // should have the following properties:
-    // startDate
-    // duration
-    // testName
-    // testId
-    // testInfoUrl
-    // testResultsUrl
-    // optInRequired  (boolean)
-    // recursAutomatically (boolean)
-    // versionNumber
+    /* expInfo is a dictionary defined in the remote experiment code, which
+     * should have the following properties:
+     * startDate (string representation of date)
+     * duration (number of days)
+     * testName (human-readable string)
+     * testId (int)
+     * testInfoUrl (url)
+     * testResultsUrl (url)
+     * optInRequired  (boolean)
+     * recursAutomatically (boolean)
+     * recurrenceInterval (number of days)
+     * versionNumber (int) */
     this._taskInit(expInfo.testId, expInfo.testName,
                    expInfo.testInfoUrl, webContent);
     this._dataStore = dataStore;
@@ -183,18 +182,26 @@ TestPilotExperiment.prototype = {
     this._versionNumber = expInfo.versionNumber;
     // TODO implement expInfo.optInRequired, expInfo.recursAutomatically
 
-    // TODO should have the flexibility to start the StartDate either when
-    // installed (for basic panel?) or at a date specified in metadata
-    // (for opt-in tests like AB tests and stuff)
-    let startDateString = Application.prefs.getValue(START_DATE_PREF, false);
+    let prefName = START_DATE_PREF_PREFIX + this._id;
+    let startDateString = Application.prefs.getValue(prefName, false);
     if (startDateString) {
+      // If this isn't the first time we're starting, use the start date
+      // already stored in prefs.
       this._startDate = Date.parse(startDateString);
     } else {
-      this._startDate = Date.now();
-      Application.prefs.setValue(START_DATE_PREF, (new Date()).toString());
+      // If a start date is provided in expInfo, use that.
+      // Otherwise, start immediately!
+      if (expInfo.startDate) {
+        this._startDate = Date.parse(expInfo.startDate);
+        Application.prefs.setValue(prefName, expInfo.startDate);
+      } else {
+        this._startDate = Date.now();
+        Application.prefs.setValue(prefName, (new Date()).toString());
+      }
     }
 
-    let duration = Application.prefs.getValue(TEST_LENGTH_PREF, 7);
+    // Duration is specified in days:
+    let duration = expInfo.duration || 7; // default 1 week
     this._endDate = this._startDate + duration * (24 * 60 * 60 * 1000);
 
     this.checkDate();

@@ -168,17 +168,19 @@ exports.RemoteExperimentLoader.prototype = {
   },
 
   checkForUpdates: function(callback) {
-    // Run this like once per day.  Callback will be called with true or false
-    // to let us know whether there are any updates, so that client code can
-    // restart any experiment whose code has changed.
-
+    /* Callback will be called with true or false
+     * to let us know whether there are any updates, so that client code can
+     * restart any experiment whose code has changed. */
+    let prefs = require("preferences-service");
+    let indexFileName = prefs.get("extensions.testpilot.indexFileName",
+                                  "index.json");
     let self = this;
     // Just added: Unload everything before checking for updates, to be sure we
     // get the newest stuff.
     console.warn("Unloading everything to prepare to check for updates.");
     this._refreshLoader();
 
-    self._fileGetter(resolveUrl(BASE_URL, "index.json"), function onDone(data) {
+    self._fileGetter(resolveUrl(BASE_URL, indexFileName), function onDone(data) {
       if (data) {
         try {
           data = JSON.parse(data);

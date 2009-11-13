@@ -1,7 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html> <head>
-<title></title>
-<script src="graphs.js" type="application/javascript;version=1.8"></script>
+<title>Test Pilot Debug Page</title>
 <script src="experiment-page.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
   function setTaskStatus() {
@@ -27,6 +26,30 @@
     TestPilotSetup._doHousekeeping();
   }
 
+  function getCodeStorage() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    var loader = TestPilotSetup._loader;
+    var module = loader.require("remote-experiment-loader");
+    return new module.PreferencesStore("extensions.testpilot.experiment.codeFs");
+  }
+
+  function loadExperimentCode() {
+    var filename = "a-week-life/a_week_life.js";
+    var textArea = document.getElementById("experiment-code-area");
+    prefStore = getCodeStorage();
+    code = prefStore.getFile(filename).contents;
+    textArea.value = code;
+  }
+
+  function saveAndRun() {
+    var filename = "a-week-life/a_week_life.js";
+    var textArea = document.getElementById("experiment-code-area");
+    prefStore = getCodeStorage();
+    code = prefStore.setFile(filename, textArea.value);
+    reloadAllExperiments(function(success) {
+      document.getElementById("debug").innerHTML = "Success? " + success;});
+  }
+
 </script>
 
 <style type="text/css">
@@ -36,7 +59,6 @@
 </head>
 
 <body>
-<h1>Test Pilot Tabs Experiment Contents</h1>
 <p><button onclick="showRawData(1);">Show Raw Data</button>
 <button onclick="wipeDb();">Wipe My Data</button>
 <button onclick="uploadData();">Upload My Data</button>
@@ -49,12 +71,10 @@
 <p><span id="debug"></span></p>
 
 
-<p>How many tabs did you have open at a time?</p>
-<canvas id="tabs-over-time-canvas" width="450" height="220"></canvas>
-
-<p>When you closed a tab, did you stay on the default tab or did you switch to another one immediately?</p>
-<canvas id="tab-close-pie-chart-canvas" width="350" height="250"></canvas>
-
+<textarea id="experiment-code-area" rows="40" cols="80">
+</textarea>
+<button onclick="loadExperimentCode();">Load Ye Code</button>
+<button onclick="saveAndRun();">Save And Run Ye Code</button>
 
 
 </body> </html>

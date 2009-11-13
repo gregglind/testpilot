@@ -443,7 +443,7 @@ let TestPilotSetup = {
     );
   },
 
-  reloadRemoteExperiments: function TPS_reloadRemoteExperiments() {
+  reloadRemoteExperiments: function TPS_reloadRemoteExperiments(callback) {
     for (let i = 0; i < this.taskList.length; i++) {
       // TODO is there anything that needs to be done on shutdown for either
       // the TestPilotExperiment (the task) or the ExperimentDataStore
@@ -453,7 +453,7 @@ let TestPilotSetup = {
     this.taskList = [];
     this._loader.unload();
 
-    this.checkForTasks();
+    this.checkForTasks(callback);
   },
 
   getTaskById: function TPS_getTaskById(id) {

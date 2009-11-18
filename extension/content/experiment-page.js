@@ -123,7 +123,7 @@
     window.location = "chrome://testpilot/content/status-cancelled.html";
   }
 
-  function loadExperimentPage(status) {
+  function loadExperimentPage() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     var contentDiv = document.getElementById("intro");
     // Get experimentID from the GET args of page
@@ -133,31 +133,31 @@
       // Possible that experiments aren't done loading yet.  Try again in
       // a few seconds.
       contentDiv.innerHTML = "Loading, please wait a moment...";
-      window.setTimeout(function() { loadExperimentPage(status);}, 2000);
+      window.setTimeout(function() { loadExperimentPage();}, 2000);
       return;
     }
-    var webContentHtml;
-    // TODO maybe get status from the task itself and merge pages?
-    if (status == "in-progress") {
-      webContentHtml = experiment.webContent.inProgressHtml;
-    } else if (status == "completed") {
-      webContentHtml = experiment.webContent.completedHtml;
-    } else if (status == "upcoming") {
-      webContentHtml = experiment.webContent.upcomingHtml;
-    }
 
-    contentDiv.innerHTML = webContentHtml;
-
-    // TODO create a menu (tab-styled?) to switch between all current
-    // experiments!!
+    contentDiv.innerHTML = experiment.getWebContent();
 
     // Metadata and start/end date should be filled in for every experiment:
     showMetaData();
     getTestEndingDate(eid);
-    makeLinksToAllExperiments();
+
+    // TODO have link back to menu (i.e. status.html with no eid)
 
     // Do whatever the experiment's web content wants done on load:
     var graphUtils = {drawPieChart: drawPieChart,
                       drawTimeSeriesGraph: drawTimeSeriesGraph};
     experiment.webContent.onPageLoad(experiment, document, graphUtils);
+  }
+
+  function onStatusPageLoad() {
+    var eidString = getUrlParam("eid");
+    if (eidString == "") {
+      // No EID provided - show status menu page.
+      var contentDiv = document.getElementById("intro");
+      makeLinksToAllExperiments();
+    } else {
+      loadExperimentPage();
+    }
   }

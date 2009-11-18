@@ -239,10 +239,8 @@ TestPilotExperiment.prototype = {
       case TaskConstants.STATUS_PENDING:
       case TaskConstants.STATUS_STARTING:
       case TaskConstants.STATUS_IN_PROGRESS:
-        return "chrome://testpilot/content/status.html" + param;
-      break;
       case TaskConstants.STATUS_FINISHED:
-        return "chrome://testpilot/content/status-complete.html" + param;
+        return "chrome://testpilot/content/status.html" + param;
       break;
       case TaskConstants.STATUS_CANCELLED:
         return "chrome://testpilot/content/status-cancelled.html" + param;
@@ -261,6 +259,24 @@ TestPilotExperiment.prototype = {
       break;
     }
     return this._url;
+  },
+
+  getWebContent: function TestPilotExperiment_getWebContent() {
+    switch (this._status) {
+      case TaskConstants.STATUS_NEW:
+      case TaskConstants.STATUS_PENDING:
+        return this.webContent.upcomingHtml;
+      break;
+      case TaskConstants.STATUS_STARTING:
+      case TaskConstants.STATUS_IN_PROGRESS:
+        return this.webContent.inProgressHtml;
+      break;
+      case TaskConstants.STATUS_FINISHED:
+        return this.webContent.completedHtml;
+      break;
+    }
+    // TODO what to do if status is cancelled, submitted, resulots, or archived?
+    return "";
   },
 
   onNewWindow: function TestPilotExperiment_onNewWindow(window) {
@@ -325,7 +341,7 @@ TestPilotExperiment.prototype = {
     // on success or failure.
 
     /* If we've already uploaded, and the user tries to upload again for
-     * some reason (they could navigate back to the status-complete.html page,
+     * some reason (they could navigate back to the status.html page,
      * for instance), then proceed without uploading: */
     if (this._status >= TaskConstants.STATUS_SUBMITTED) {
       callback(true);

@@ -108,6 +108,10 @@ var TestPilotTask = {
     return this._webContent;
   },
 
+  get resultsUrl() {
+    return undefined;
+  },
+
   onNewWindow: function TestPilotTask_onNewWindow(window) {
   },
 
@@ -261,6 +265,10 @@ TestPilotExperiment.prototype = {
     return this._url;
   },
 
+  get resultsUrl() {
+    return this._testResultsUrl;
+  },
+
   getWebContent: function TestPilotExperiment_getWebContent() {
     switch (this._status) {
       case TaskConstants.STATUS_NEW:
@@ -275,7 +283,7 @@ TestPilotExperiment.prototype = {
         return this.webContent.completedHtml;
       break;
     }
-    // TODO what to do if status is cancelled, submitted, resulots, or archived?
+    // TODO what to do if status is cancelled, submitted, results, or archived?
     return "";
   },
 
@@ -447,6 +455,10 @@ TestPilotSurvey.prototype = {
     } else {
       return this._url;
     }
+  },
+
+  get resultsUrl() {
+    return this._resultsUrl;
   },
 
   checkForCompletion: function TestPilotSurvey_checkForCompletion() {

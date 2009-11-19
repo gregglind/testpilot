@@ -37,15 +37,8 @@
 
 Components.utils.import("resource://testpilot/modules/setup.js");
 
-function openAboutTestPilotPage() {
-  var url = "http://testpilot.mozillalabs.com";
-  var browser = window.getBrowser();
-  var tab = browser.addTab(url);
-  browser.selectedTab = tab;
-}
-
-function openUpcomingTestsPage() {
-  var url = "https://wiki.mozilla.org/Labs/Test_Pilot";
+function openPage(url) {
+  // TODO if already open in a tab, go to that tab rather than re-opening
   var browser = window.getBrowser();
   var tab = browser.addTab(url);
   browser.selectedTab = tab;

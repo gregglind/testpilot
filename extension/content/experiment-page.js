@@ -24,6 +24,7 @@
     debug.innerHTML = "Wiped!";
   }
 
+  // For Debug Purposes Only
   function makeThereBeAPopup() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     var task = TestPilotSetup.getTaskById(1);
@@ -97,23 +98,6 @@
     }
   }
 
-  function makeLinksToAllExperiments() {
-    Components.utils.import("resource://testpilot/modules/setup.js");
-    dump("Making links to all experiments...\n");
-    let experiments = TestPilotSetup.getExperimentNamesAndUrls();
-    let list = document.getElementById("experiment-links-menu");
-    dump("Experiments length is " + experiments.length + "\n");
-    for (let i = 0; i < experiments.length; i++) {
-      let listItem = document.createElement("li");
-      list.appendChild(listItem);
-      let link = document.createElement("a");
-      link.setAttribute("href", experiments[i].url);
-      link.innerHTML = experiments[i].name;
-      listItem.appendChild(link);
-    }
-    dump("Done making links to all experiments.\n");
-  }
-
   function quitExperiment(experimentId) {
     Components.utils.import("resource://testpilot/modules/setup.js");
     var reason = document.getElementById("reason-for-quit").value;
@@ -151,12 +135,127 @@
     experiment.webContent.onPageLoad(experiment, document, graphUtils);
   }
 
+  function showStatusMenuPage() {
+    var contentDiv = document.getElementById("intro");
+    contentDiv.innerHTML = "";
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    Components.utils.import("resource://testpilot/modules/tasks.js");
+    // Get all tasks, sort them by status.
+
+    dump("Making links to all experiments...\n");
+    let experiments = TestPilotSetup.getAllTasks();
+    let runningExperiments = [];
+    let completedExperiments = [];
+    let upcomingExperiments = [];
+    let quitExperiments = [];
+    let currentSurveys = [];
+    let completedSurveys = [];
+
+    // If there are no experiments here, it must be because we're
+    // not done loading yet... try again in a few seconds.
+    if (experiments.length == 0 ) {
+      contentDiv.innerHTML = "Loading, please wait a moment...";
+      window.setTimeout(function() { showStatusMenuPage();}, 2000);
+      return;
+    }
+
+    dump("There are " + experiments.length + " experiments.\n");
+    for (let i = 0; i < experiments.length; i++) {
+      if (experiments[i].taskType == TaskConstants.TYPE_EXPERIMENT) {
+        switch (experiments[i].status) {
+        case TaskConstants.STATUS_NEW:
+        case TaskConstants.STATUS_PENDING:
+          upcomingExperiments.push(experiments[i]);
+        break;
+        case TaskConstants.STATUS_STARTING:
+        case TaskConstants.STATUS_IN_PROGRESS:
+        case TaskConstants.STATUS_FINISHED:
+          runningExperiments.push(experiments[i]);
+        break;
+        case TaskConstants.STATUS_SUBMITTED:
+        case TaskConstants.STATUS_RESULTS:
+        case TaskConstants.STATUS_ARCHIVED:
+          completedExperiments.push(experiments[i]);
+        break;
+        case TaskConstants.STATUS_CANCELLED:
+          quitExperiments.push(experiments[i]);
+        break;
+        }
+      } else {
+        switch (experiments[i].status) {
+        case TaskConstants.STATUS_NEW:
+        case TaskConstants.STATUS_PENDING:
+        case TaskConstants.STATUS_STARTING:
+        case TaskConstants.STATUS_IN_PROGRESS:
+          currentSurveys.push(experiments[i]);
+          break;
+        case TaskConstants.STATUS_FINISHED:
+        case TaskConstants.STATUS_SUBMITTED:
+        case TaskConstants.STATUS_RESULTS:
+        case TaskConstants.STATUS_ARCHIVED:
+          completedSurveys.push(experiments[i]);
+        break;
+        }
+      }
+    }
+
+    function addSubMenu( title, experiments ) {
+      // Don't add the submenu if it would be empty:
+      if (experiments.length == 0) {
+        return;
+      }
+      dump("Adding submenu called " + title + "\n");
+      let titleElem = document.createElement("h2");
+      titleElem.innerHTML = title;
+      contentDiv.appendChild(titleElem);
+      let list = document.createElement("ul");
+      contentDiv.appendChild(list);
+      dump("There are " + experiments.length + " experiments.\n");
+      for each (let experiment in experiments) {
+        let listItem = document.createElement("li");
+        list.appendChild(listItem);
+        let link = document.createElement("a");
+        link.setAttribute("href", experiment.infoPageUrl);
+        link.innerHTML = experiment.title;
+        listItem.appendChild(link);
+
+        if (experiment.status == TaskConstants.STATUS_FINISHED) {
+          let span = document.createElement("span");
+          span.innerHTML = " &mdash; Finished and ready to submit data!";
+          listItem.appendChild(span);
+        }
+
+        let resultsUrl = experiment.resultsUrl;
+        if (resultsUrl) {
+          let span = document.createElement("span");
+          span.innerHTML = " &mdash; Study Complete: ";
+          listItem.appendChild(span);
+          let resultsLink = document.createElement("a");
+          resultsLink.setAttribute("href", resultsUrl);
+          resultsLink.innerHTML = "See Analysis";
+          listItem.appendChild(resultsLink);
+        }
+      }
+      dump("Added submenu called " +  title + "\n");
+    }
+    addSubMenu("Tests In Progress:", runningExperiments);
+    addSubMenu("Current Surveys:", currentSurveys);
+    addSubMenu("Completed Tests:", completedExperiments);
+    addSubMenu("Completed Surveys:", completedSurveys);
+    addSubMenu("Upcoming Tests:", upcomingExperiments);
+    addSubMenu("Cancelled Tests:", quitExperiments);
+
+    // TODO: Show start and stop dates?
+    // TODO: Link to proposals for future tests?
+  }
+
   function onStatusPageLoad() {
+    /* If an experiment ID (eid) is provided in the url params, show status
+     * for that experiment.  If not, show the main menu with status for all
+     * installed experiments. */
     var eidString = getUrlParam("eid");
     if (eidString == "") {
-      // No EID provided - show status menu page.
-      var contentDiv = document.getElementById("intro");
-      makeLinksToAllExperiments();
+      showStatusMenuPage();
     } else {
       loadExperimentPage();
     }

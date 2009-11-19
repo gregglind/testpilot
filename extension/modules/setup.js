@@ -223,28 +223,24 @@ let TestPilotSetup = {
 
       let newMenuItem = window.document.createElement("menuitem");
       newMenuItem.setAttribute("label", "  " + task.title);
-      if (task.status == TaskConstants.STATUS_NEW) {
-	// Give it a new icon
+      switch (task.status) {
+      case TaskConstants.STATUS_NEW:
+        // Give it a new icon
         newMenuItem.setAttribute("class", "menuitem-iconic");
         newMenuItem.setAttribute("image", "chrome://testpilot/skin/new.png");
-      }
-      if (task.status == TaskConstants.STATUS_FINISHED) {
-        newMenuItem.setAttribute("label",
-                                 "  " + task.title + " (Finished - Ready To Submit)");
-      }
-      if (task.status == TaskConstants.STATUS_SUBMITTED) {
-	// Disable it if it's cancelled or submitted
-        newMenuItem.setAttribute("disabled", true);
-        newMenuItem.setAttribute("label", "  " + task.title + " (Submitted)");
-      }
-      if (task.status == TaskConstants.STATUS_CANCELLED) {
-	// Disable it if it's cancelled or submitted
-        newMenuItem.setAttribute("disabled", true);
-        newMenuItem.setAttribute("label", "  " + task.title + " (Quit)");
-      }
-      if (task.status >= TaskConstants.STATUS_RESULTS) {
+        break;
+      case TaskConstants.STATUS_FINISHED:
+        newMenuItem.setAttribute("label", "  " + task.title + " (Finished - Ready To Submit)");
+        break;
+      case TaskConstants.STATUS_RESULTS:
         newMenuItem.setAttribute("label",
                                  "  " + task.title + " (Finished - Results Available)");
+        break;
+      case TaskConstants.STATUS_SUBMITTED:
+      case TaskConstants.STATUS_CANCELLED:
+      case TaskConstants.STATUS_ARCHIVED:
+        // Do not include these in the menu.
+        continue;
       }
 
       // TODO other variations of icon and label for other statuses?
@@ -252,8 +248,6 @@ let TestPilotSetup = {
       newMenuItem.taskObject = task;
       let refElement = null;
       if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
-        // Hide the 'no-tests-yet' menu item, because there is a test:
-        window.document.getElementById("no-tests-yet").hidden = true;
         refElement = window.document.getElementById("test-menu-separator");
       } else if (task.taskType == TaskConstants.TYPE_SURVEY) {
         refElement = window.document.getElementById("survey-menu-separator");
@@ -466,16 +460,10 @@ let TestPilotSetup = {
     return null;
   },
 
-  getExperimentNamesAndUrls: function TPS_getExperimentNamesAndUrls() {
-    let retVal = [];
-    for (let i = 0; i < this.taskList.length; i++) {
-      let task = this.taskList[i];
-      if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
-        retVal.push({ name: task.title, url: task.infoPageUrl});
-      }
-    }
-    return retVal;
+  getAllTasks: function TPS_getAllTasks() {
+    return this.taskList;
   }
+
 };
 
 

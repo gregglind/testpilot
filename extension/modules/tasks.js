@@ -112,6 +112,27 @@ var TestPilotTask = {
     return undefined;
   },
 
+  onAppStartup: function TestPilotTask_onAppStartup() {
+    // Called by extension core when startup is complete.
+  },
+  // TODO there are really two events here - there's Firefox startup and
+  // there's task startup.  Amirite?
+
+  onAppShutdown: function TestPilotTask_onAppShutdown() {
+    // TODO: not implemented - should be called when firefox is ready to
+    // shut down.
+  },
+
+  onEnterPrivateBrowsing: function TestPilotTask_onEnterPrivate() {
+    // TODO: not implemented - should be called when firefox enters
+    // private browsing mode.
+  },
+
+  onExitPrivateBrowsing: function TestPilotTask_onExitPrivate() {
+    // TODO: not implemented - should be called when firefox returns from
+    // private browsing mode.
+  },
+
   onNewWindow: function TestPilotTask_onNewWindow(window) {
   },
 
@@ -158,14 +179,14 @@ var TestPilotTask = {
   }
 };
 
-function TestPilotExperiment(expInfo, dataStore, observer, webContent) {
-  // Note dataStore is an object, but observer is a constructor function
-  this._init(expInfo, dataStore, observer, webContent);
+function TestPilotExperiment(expInfo, dataStore, handlers, webContent) {
+  // All four of these are objects defined in the remoet experiment file
+  this._init(expInfo, dataStore, handlers, webContent);
 }
 TestPilotExperiment.prototype = {
   _init: function TestPilotExperiment__init(expInfo,
 					    dataStore,
-					    observer,
+					    handlers,
                                             webContent) {
     /* expInfo is a dictionary defined in the remote experiment code, which
      * should have the following properties:
@@ -207,16 +228,12 @@ TestPilotExperiment.prototype = {
     // Duration is specified in days:
     let duration = expInfo.duration || 7; // default 1 week
     this._endDate = this._startDate + duration * (24 * 60 * 60 * 1000);
-
     this.checkDate();
-    this._observersList = [];
-
     dump("Start date is " + this._startDate.toString() + "\n");
     dump("End date is " + this._endDate.toString() + "\n");
-    // Observer is a constructor.  Constructing one will install it in the
-    // window too.
-    this._observerConstructor = observer;
 
+    this._handlers = handlers;
+    this.onExperimentStartup();
     this._uploadRetryTimer = null;
   },
 
@@ -287,22 +304,70 @@ TestPilotExperiment.prototype = {
     return "";
   },
 
+  experimentIsRunning: function TestPilotExperiment_isRunning() {
+    // TODO the first time you run the experiment, does it get all the way
+    // up to STARTING by itself?  Or only if you look at it?  I.E. does
+    // experimentIsRunning never become true if you never look at the
+    // experiment?
+    return (this._status == TaskConstants.STATUS_STARTING ||
+            this._status == TaskConstants.STATUS_IN_PROGRESS );
+  },
+
+  // Pass events along to handlers:
   onNewWindow: function TestPilotExperiment_onNewWindow(window) {
-    /* TestPilotSetup will handle calling this method for each experiment
-     * for each window that was open on Firefox startup, as well as for
-     * each window that is opened from that point on. */
-    let Observer = this._observerConstructor;
-    // Only register observers if the test is in progress:
-    if (this._status <= TaskConstants.STATUS_FINISHED) {
-      this._observersList.push( new Observer(window, this._dataStore) );
+    dump("Experiment.onNewWindow called.\n");
+    if (this.experimentIsRunning()) {
+      this._handlers.onNewWindow(window);
     }
   },
 
   onWindowClosed: function TestPilotExperiment_onWindowClosed(window) {
-    for (let i=0; i < this._observersList.length; i++) {
-      if (this._observersList[i]._window == window) {
-        this._observersList[i].uninstall();
-      }
+    dump("Experiment.onWindowClosed called.\n");
+    if (this.experimentIsRunning()) {
+      this._handlers.onWindowClosed(window);
+    }
+  },
+
+  onAppStartup: function TestPilotExperiment_onAppStartup() {
+    dump("Experiment.onAppStartup called.\n");
+    if (this.experimentIsRunning()) {
+      this._handlers.onAppStartup();
+    }
+  },
+
+  onAppShutdown: function TestPilotExperiment_onAppShutdown() {
+    dump("Experiment.onAppShutdown called.\n");
+    // TODO the caller for this is not yet implemented
+    if (this.experimentIsRunning()) {
+      this._handlers.onAppShutdown();
+    }
+  },
+
+  onExperimentStartup: function TestPilotExperiment_onStartup() {
+    dump("Experiment.onExperimentStartup called.\n");
+    if (this.experimentIsRunning()) {
+      this._handlers.onExperimentStartup(this._dataStore);
+    }
+  },
+
+  onExperimentShutdown: function TestPilotExperiment_onShutdown() {
+    dump("Experiment.onExperimentShutdown called.\n");
+    if (this.experimentIsRunning()) {
+      this._handlers.onExperimentShutdown();
+    }
+  },
+
+  onEnterPrivateBrowsing: function TestPilotExperiment_onEnterPrivate() {
+    // TODO the caller for this is not yet implemented
+    if (this.experimentIsRunning()) {
+      this._handlers.onEnterPrivateBrowsing();
+    }
+  },
+
+  onExitPrivateBrowsing: function TestPilotExperiment_onExitPrivate() {
+    // TODO the caller for this is not yet implemented
+    if (this.experimentIsRunning()) {
+      this._handlers.onExitPrivateBrowsing();
     }
   },
 
@@ -312,10 +377,7 @@ TestPilotExperiment.prototype = {
 	currentDate >= this._endDate ) {
       dump("Switched to Finishing.\n");
       this.changeStatus( TaskConstants.STATUS_FINISHED );
-      // Unregister all observers now:
-      for (let i=0; i < this._observersList.length; i++) {
-        this._observersList[i].uninstall();
-      }
+      this._handlers.onExperimentShutdown();
     }
 
     if (this._status == TaskConstants.STATUS_SUBMITTED &&

@@ -131,13 +131,17 @@ let TestPilotSetup = {
 
     // Install tasks.
     this.checkForTasks(function() {
-                         /* Callback to complete startup after we finish
-                          * checking for tasks. */
-                         self.startupComplete = true;
-                         self._obs.notify("testpilot:startup:complete", "", null);
-                         /* onWindowLoad gets called once for each window,
-                          * but only after we fire this notification. */
-                         });
+      /* Callback to complete startup after we finish
+       * checking for tasks. */
+      self.startupComplete = true;
+      // Send startup message to each task:
+      for (let i = 0; i < this.taskList.length; i++) {
+        this.taskList[i].onAppStartup();
+      }
+      self._obs.notify("testpilot:startup:complete", "", null);
+      /* onWindowLoad gets called once for each window,
+       * but only after we fire this notification. */
+    });
     dump("Testpilot startup complete.\n");
     } catch(e) {
       dump("Error in testPilot startup: " + e +"\n");
@@ -421,7 +425,7 @@ let TestPilotSetup = {
               let webContent = experiments[filename].webContent;
               task = new TestPilotExperiment(expInfo,
                                              dataStore,
-                                             experiments[filename].Observer,
+                                             experiments[filename].handlers,
                                              webContent);
             }
             TestPilotSetup.addTask(task);
@@ -439,9 +443,8 @@ let TestPilotSetup = {
 
   reloadRemoteExperiments: function TPS_reloadRemoteExperiments(callback) {
     for (let i = 0; i < this.taskList.length; i++) {
-      // TODO is there anything that needs to be done on shutdown for either
-      // the TestPilotExperiment (the task) or the ExperimentDataStore
-      // instances?
+      this.taskList[i].onExperimentShutdown();
+      // TODO anything needed to shut down the experiment's data store?
     }
 
     this.taskList = [];

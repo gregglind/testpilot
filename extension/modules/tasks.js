@@ -112,11 +112,15 @@ var TestPilotTask = {
     return undefined;
   },
 
+  onExperimentStartup: function TestPilotTask_onExperimentStartup() {
+  },
+
+  onExperimentShutdown: function TestPilotTask_onExperimentShutdown() {
+  },
+
   onAppStartup: function TestPilotTask_onAppStartup() {
     // Called by extension core when startup is complete.
   },
-  // TODO there are really two events here - there's Firefox startup and
-  // there's task startup.  Amirite?
 
   onAppShutdown: function TestPilotTask_onAppShutdown() {
     // TODO: not implemented - should be called when firefox is ready to
@@ -205,7 +209,9 @@ TestPilotExperiment.prototype = {
     this._dataStore = dataStore;
     this._testResultsUrl = expInfo.testResultsUrl;
     this._versionNumber = expInfo.versionNumber;
-    // TODO implement expInfo.optInRequired, expInfo.recursAutomatically
+    this._optInRequired = expInfo.optInRequired;
+    // TODO implement opt-in interface for tests that require opt-in.
+    this._recursAutomatically = expInfo.recursAutomatically;
 
     let prefName = START_DATE_PREF_PREFIX + this._id;
     let startDateString = Application.prefs.getValue(prefName, false);
@@ -305,12 +311,14 @@ TestPilotExperiment.prototype = {
   },
 
   experimentIsRunning: function TestPilotExperiment_isRunning() {
-    // TODO the first time you run the experiment, does it get all the way
-    // up to STARTING by itself?  Or only if you look at it?  I.E. does
-    // experimentIsRunning never become true if you never look at the
-    // experiment?
-    return (this._status == TaskConstants.STATUS_STARTING ||
-            this._status == TaskConstants.STATUS_IN_PROGRESS );
+    if (this.optInRequired) {
+      return (this._status == TaskConstants.STATUS_STARTING ||
+              this._status == TaskConstants.STATUS_IN_PROGRESS );
+    } else {
+      // Tests that don't require extra opt-in should start running even
+      // if you haven't seen them yet.
+      return (this._status < TaskConstants.STATUS_FINISHED);
+    }
   },
 
   // Pass events along to handlers:
@@ -372,6 +380,8 @@ TestPilotExperiment.prototype = {
   },
 
   checkDate: function TestPilotExperiment_checkDate() {
+    // TODO implement automatically recurring tests.
+    // TODO if we pass the start date, start!
     let currentDate = Date.now();
     if (this._status < TaskConstants.STATUS_FINISHED &&
 	currentDate >= this._endDate ) {

@@ -134,9 +134,10 @@ let TestPilotSetup = {
       /* Callback to complete startup after we finish
        * checking for tasks. */
       self.startupComplete = true;
+      dump("I'm in the callback from checkForTasks!!!!\n");
       // Send startup message to each task:
-      for (let i = 0; i < this.taskList.length; i++) {
-        this.taskList[i].onAppStartup();
+      for (let i = 0; i < self.taskList.length; i++) {
+        self.taskList[i].onAppStartup();
       }
       self._obs.notify("testpilot:startup:complete", "", null);
       /* onWindowLoad gets called once for each window,
@@ -150,10 +151,14 @@ let TestPilotSetup = {
 
   globalShutdown: function TPS_globalShutdown() {
     dump("Global shutdown.  Unregistering everything.\n");
+    let self = this;
+    for (let i = 0; i < self.taskList.length; i++) {
+      self.taskList[i].onAppShutdown();
+      self.taskList[i].onExperimentShutdown();
+    }
     this._loader.unload();
     this._shortTimer.cancel();
     this._longTimer.cancel();
-    let self = this;
     this._obs.remove("testpilot:task:changed", this.onTaskStatusChanged,
                   self);
     this._obs.remove("quit-application", this.globalShutdown, self);

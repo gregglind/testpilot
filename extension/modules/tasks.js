@@ -420,7 +420,8 @@ TestPilotExperiment.prototype = {
         this._startDate += ms;
         this._endDate += ms;
         let prefName = START_DATE_PREF_PREFIX + this._id;
-        Application.prefs.setValue(prefName, this._startDate.toString());
+        Application.prefs.setValue(prefName,
+                                   (new Date(this._startDate)).toString());
         // TODO Is there any reason we might want to store a "restart date"?
       }
     }

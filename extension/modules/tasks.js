@@ -212,6 +212,7 @@ TestPilotExperiment.prototype = {
     this._optInRequired = expInfo.optInRequired;
     // TODO implement opt-in interface for tests that require opt-in.
     this._recursAutomatically = expInfo.recursAutomatically;
+    this._recurrenceInterval = expInfo.recurrenceInterval;
 
     let prefName = START_DATE_PREF_PREFIX + this._id;
     let startDateString = Application.prefs.getValue(prefName, false);
@@ -234,13 +235,19 @@ TestPilotExperiment.prototype = {
     // Duration is specified in days:
     let duration = expInfo.duration || 7; // default 1 week
     this._endDate = this._startDate + duration * (24 * 60 * 60 * 1000);
-    this.checkDate();
     dump("Start date is " + this._startDate.toString() + "\n");
     dump("End date is " + this._endDate.toString() + "\n");
 
     this._handlers = handlers;
-    this.onExperimentStartup();
     this._uploadRetryTimer = null;
+
+    // checkDate will see what our status is with regards to the start and
+    // end dates, and set status appropriately.
+    this.checkDate();
+
+    if (this.experimentIsRunning) {
+      this.onExperimentStartup();
+    }
   },
 
   get taskType() {
@@ -311,7 +318,7 @@ TestPilotExperiment.prototype = {
   },
 
   experimentIsRunning: function TestPilotExperiment_isRunning() {
-    if (this.optInRequired) {
+    if (this._optInRequired) {
       return (this._status == TaskConstants.STATUS_STARTING ||
               this._status == TaskConstants.STATUS_IN_PROGRESS );
     } else {
@@ -380,14 +387,42 @@ TestPilotExperiment.prototype = {
   },
 
   checkDate: function TestPilotExperiment_checkDate() {
-    // TODO implement automatically recurring tests.
-    // TODO if we pass the start date, start!
+    // This method should handle all date-related status changes.
     let currentDate = Date.now();
+
+    // Reset automatically recurring tests:
+    if (this._recursAutomatically &&
+        this._status >= TaskConstants.STATUS_FINISHED &&
+        currentDate >= this._startDate &&
+        currentDate <= this._endDate ) {
+      this.changeStatus(TaskConstants.STATUS_NEW);
+    }
+
+    // No-opt-in required tests skip PENDING and go straight to STARTING.
+    if (!this._optInRequired &&
+        this._status < TaskConstants.STATUS_STARTING &&
+        currentDate >= this._startDate &&
+        currentDate <= this._endDate){
+      this.changeStatus(TaskConstants.STATUS_STARTING);
+    }
+
     if (this._status < TaskConstants.STATUS_FINISHED &&
 	currentDate >= this._endDate ) {
-      dump("Switched to Finishing.\n");
+      dump("Passed End Date - Switched Task Status to Finished\n");
       this.changeStatus( TaskConstants.STATUS_FINISHED );
       this._handlers.onExperimentShutdown();
+
+      if (this._recursAutomatically) {
+        // Schedule next run of test:
+        // add recurrence interval to start date and strore!
+        let ms = this._recurrenceInterval * (24 * 60 * 60 * 1000);
+        // recurrenceInterval is in days, convert to milliseconds:
+        this._startDate += ms;
+        this._endDate += ms;
+        let prefName = START_DATE_PREF_PREFIX + this._id;
+        Application.prefs.setValue(prefName, this._startDate.toString());
+        // TODO Is there any reason we might want to store a "restart date"?
+      }
     }
 
     if (this._status == TaskConstants.STATUS_SUBMITTED &&

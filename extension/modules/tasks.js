@@ -373,14 +373,14 @@ TestPilotExperiment.prototype = {
   },
 
   onEnterPrivateBrowsing: function TestPilotExperiment_onEnterPrivate() {
-    // TODO the caller for this is not yet implemented
+    dump("Task is entering private browsing.\n");
     if (this.experimentIsRunning()) {
       this._handlers.onEnterPrivateBrowsing();
     }
   },
 
   onExitPrivateBrowsing: function TestPilotExperiment_onExitPrivate() {
-    // TODO the caller for this is not yet implemented
+    dump("Task is exiting private browsing.\n");
     if (this.experimentIsRunning()) {
       this._handlers.onExitPrivateBrowsing();
     }

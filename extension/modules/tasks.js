@@ -569,8 +569,6 @@ TestPilotExperiment.prototype = {
     // value is NEVER_SUBMIT, ALWAYS_SUBMIT, or ASK_EACH_TIME
     let prefName = RECUR_PREF_PREFIX + this._id;
     Application.prefs.setValue(prefName, value);
-    // TODO give user some notification of status change and what they
-    // can do if they change their mind.
   }
 };
 TestPilotExperiment.prototype.__proto__ = TestPilotTask;

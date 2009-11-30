@@ -98,13 +98,27 @@
     }
   }
 
-  function quitExperiment(experimentId) {
+  function onQuitPageLoad() {
     Components.utils.import("resource://testpilot/modules/setup.js");
-    var reason = document.getElementById("reason-for-quit").value;
-    var task = TestPilotSetup.getTaskById(experimentId);
+    let eid = parseInt(getUrlParam("eid"));
+    let task = TestPilotSetup.getTaskById(eid);
+    let span = document.getElementById("exp-name");
+    span.innerHTML = task.title;
+    // TODO also should the quit page have an "always quit" option that sets
+    // the recur pref additionally?
+  }
+
+  function quitExperiment() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    let eid = parseInt(getUrlParam("eid"));
+    let reason = document.getElementById("reason-for-quit").value;
+    let task = TestPilotSetup.getTaskById(eid);
     task.optOut(reason);
     // load the you-are-canceleed page.
-    window.location = "chrome://testpilot/content/status-cancelled.html";
+    let url = "chrome://testpilot/content/status-cancelled.html?eid=" + eid;
+    window.location = url;
+    // TODO should status-cancelled.html be folded into status.html?
+    // If not, it needs to have its own recur controls if it's a recurring test
   }
 
   function updateRecurSettings() {

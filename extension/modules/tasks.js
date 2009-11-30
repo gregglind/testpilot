@@ -574,11 +574,11 @@ TestPilotExperiment.prototype = {
 TestPilotExperiment.prototype.__proto__ = TestPilotTask;
 
 
-function TestPilotSurvey(id, title, url, resultsUrl) {
+function TestPilotWebSurvey(id, title, url, resultsUrl) {
   this._init(id, title, url, resultsUrl);
 }
-TestPilotSurvey.prototype = {
-  _init: function TestPilotSurvey__init(id, title, url, resultsUrl) {
+TestPilotWebSurvey.prototype = {
+  _init: function TestPilotWebSurvey__init(id, title, url, resultsUrl) {
     this._taskInit(id, title, url);
     this._resultsUrl = resultsUrl;
     dump("Initing survey.  This._status is " + this._status + "\n");
@@ -604,7 +604,7 @@ TestPilotSurvey.prototype = {
     return this._resultsUrl;
   },
 
-  checkForCompletion: function TestPilotSurvey_checkForCompletion() {
+  checkForCompletion: function TestPilotWebSurvey_checkForCompletion() {
     var self = this;
     dump("Checking for survey completion...\n");
     // Note, the following depends on SurveyMonkey and will break if
@@ -644,4 +644,35 @@ TestPilotSurvey.prototype = {
   }
 
 };
-TestPilotSurvey.prototype.__proto__ = TestPilotTask;
+TestPilotWebSurvey.prototype.__proto__ = TestPilotTask;
+
+
+function TestPilotBuiltinSurvey(id, title, questions, resultsUrl) {
+  this._init(id, title, questions, resultsUrl);
+}
+TestPilotBuiltinSurvey.prototype = {
+  _init: function TestPilotBuiltinSurvey__init(id, title, questions, resultsUrl) {
+    //TODO
+  },
+
+  get taskType() {
+    return TaskConstants.TYPE_SURVEY;
+  },
+
+  get infoPageUrl() {
+    // TODO - something like chrome/content/takesurvey.html?eid= myid
+  },
+
+  get resultsUrl() {
+    // TODO
+  },
+
+  checkForCompletion: function() {
+    // TODO
+  },
+
+  onUrlLoad: function() {
+    // TODO
+  }
+  // TODO upload, or store for upload along with associated study.
+};

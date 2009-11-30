@@ -429,7 +429,7 @@ let TestPilotSetup = {
             // Could be a survey: check if surveyInfo is exported:
             if (experiments[filename].surveyInfo != undefined) {
               let sInfo = experiments[filename].surveyInfo;
-              task = new TestPilotSurvey(sInfo.surveyId,
+              task = new TestPilotWebSurvey(sInfo.surveyId,
                                          sInfo.surveyName,
                                          sInfo.surveyUrl,
                                          sInfo.resultsUrl);

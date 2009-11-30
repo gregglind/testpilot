@@ -44,8 +44,10 @@ Components.utils.import("resource://testpilot/modules/metadata.js");
 
 const STATUS_PREF_PREFIX = "extensions.testpilot.taskstatus.";
 const START_DATE_PREF_PREFIX = "extensions.testpilot.startDate.";
+const REPEAT_SUBMIT_PREF_PREFIX = "extensions.testpilot.reSubmit.";
 const RETRY_INTERVAL_PREF = "extensions.testpilot.uploadRetryInterval";
 const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
+
 
 const TaskConstants = {
  STATUS_NEW: 0, // It's new and you haven't seen it yet.
@@ -59,7 +61,11 @@ const TaskConstants = {
  STATUS_ARCHIVED: 8, // You've seen the results; there's nothing more to do.
 
  TYPE_EXPERIMENT : 1,
- TYPE_SURVEY : 2
+ TYPE_SURVEY : 2,
+
+ ALWAYS_SUBMIT: 1,
+ NEVER_SUBMIT: -1,
+ ASK_EACH_TIME: 0
 };
 /* Note that experiments use all 9 status codes, but surveys don't have a
  * data collection period so they are never STARTING or IN_PROGRESS or
@@ -299,6 +305,11 @@ TestPilotExperiment.prototype = {
     return this._testResultsUrl;
   },
 
+  get repeatSubmitPref() {
+    let prefName = REPEAT_SUBMIT_PREF_PREFIX + this._id;
+    return Application.prefs.getValue(prefName, TaskConstants.ASK_EACH_TIME);
+  },
+
   getWebContent: function TestPilotExperiment_getWebContent() {
     switch (this._status) {
       case TaskConstants.STATUS_NEW:
@@ -386,8 +397,21 @@ TestPilotExperiment.prototype = {
     }
   },
 
+  _reschedule: function TestPilotExperiment_reschedule() {
+    // Schedule next run of test:
+    // add recurrence interval to start date and store!
+    let ms = this._recurrenceInterval * (24 * 60 * 60 * 1000);
+    // recurrenceInterval is in days, convert to milliseconds:
+    this._startDate += ms;
+    this._endDate += ms;
+    let prefName = START_DATE_PREF_PREFIX + this._id;
+    Application.prefs.setValue(prefName,
+                               (new Date(this._startDate)).toString());
+  },
+
   checkDate: function TestPilotExperiment_checkDate() {
-    // This method should handle all date-related status changes.
+    // This method handles all date-related status changes and should be
+    // called periodically.
     let currentDate = Date.now();
 
     // Reset automatically recurring tests:
@@ -395,7 +419,14 @@ TestPilotExperiment.prototype = {
         this._status >= TaskConstants.STATUS_FINISHED &&
         currentDate >= this._startDate &&
         currentDate <= this._endDate ) {
-      this.changeStatus(TaskConstants.STATUS_NEW);
+      // if we've done a permanent opt-out, then don't start over-
+      // just keep rescheduling.
+      if (this.repeatSubmitPref == TaskConstants.NEVER_SUBMIT) {
+        this._reschedule();
+      } else {
+        // Normal case is reset to new.
+        this.changeStatus(TaskConstants.STATUS_NEW);
+      }
     }
 
     // No-opt-in required tests skip PENDING and go straight to STARTING.
@@ -404,25 +435,33 @@ TestPilotExperiment.prototype = {
         currentDate >= this._startDate &&
         currentDate <= this._endDate){
       this.changeStatus(TaskConstants.STATUS_STARTING);
+      this._handlers.onExperimentStartup();
     }
 
+    // What happens when a test finishes:
     if (this._status < TaskConstants.STATUS_FINISHED &&
 	currentDate >= this._endDate ) {
       dump("Passed End Date - Switched Task Status to Finished\n");
+      /* User may have setthe test to always opt-out, i.e. don't bug me
+       about it:
+      if (this.repeatSubmitPref == TaskConstants.ALWAYS_QUIT) {
+      this.changeStatus(TaskConstants.STATUS_CANCELLED, true);
+       TODO actually, shouldn't ALWAYS_QUIT be more like NEVER_SCHEDULE?
+       ponder this.  If it is NEVER_SCHEDULE then turning it on must always
+       be accompanied by changing status to canceled... and turning it back on
+       must be accompanied by.... what?  But the alternative is to keep
+       rescheduling and then canceling as soon as it comes up?
+      */
       this.changeStatus( TaskConstants.STATUS_FINISHED );
       this._handlers.onExperimentShutdown();
 
       if (this._recursAutomatically) {
-        // Schedule next run of test:
-        // add recurrence interval to start date and strore!
-        let ms = this._recurrenceInterval * (24 * 60 * 60 * 1000);
-        // recurrenceInterval is in days, convert to milliseconds:
-        this._startDate += ms;
-        this._endDate += ms;
-        let prefName = START_DATE_PREF_PREFIX + this._id;
-        Application.prefs.setValue(prefName,
-                                   (new Date(this._startDate)).toString());
-        // TODO Is there any reason we might want to store a "restart date"?
+        this._reschedule();
+        // A recurring experiment may have been set to automatically submit. If
+        // so, submit now!
+        if (this.repeatSubmitPref == TaskConstants.ALWAYS_SUBMIT) {
+          this.upload( function() {} );
+        }
       }
     }
 
@@ -534,6 +573,14 @@ TestPilotExperiment.prototype = {
       dump("Sending quit reason.\n");
       req.send( params );
     }
+  },
+
+  setRepeatSubmitPref: function TPE_setRepeatSubmitPrefs(value) {
+    // value is NEVER_SUBMIT, ALWAYS_SUBMIT, or ASK_EACH_TIME
+    let prefName = REPEAT_SUBMIT_PREF_PREFIX + this._id;
+    Application.prefs.setValue(prefName, value);
+    // TODO give user some notification of status change and what they
+    // can do if they change their mind.
   }
 };
 TestPilotExperiment.prototype.__proto__ = TestPilotTask;

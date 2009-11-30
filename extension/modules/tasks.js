@@ -34,7 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-EXPORTED_SYMBOLS = ["TaskConstants", "TestPilotSurvey", "TestPilotExperiment"];
+EXPORTED_SYMBOLS = ["TaskConstants", "TestPilotWebSurvey",
+                    "TestPilotBuiltinSurvey", "TestPilotExperiment"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -682,3 +683,4 @@ TestPilotBuiltinSurvey.prototype = {
   }
   // TODO upload, or store for upload along with associated study.
 };
+TestPilotBuiltinSurvey.prototype.__proto__ = TestPilotTask;

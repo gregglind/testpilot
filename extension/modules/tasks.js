@@ -574,13 +574,15 @@ TestPilotExperiment.prototype = {
 TestPilotExperiment.prototype.__proto__ = TestPilotTask;
 
 
-function TestPilotWebSurvey(id, title, url, resultsUrl) {
-  this._init(id, title, url, resultsUrl);
+function TestPilotWebSurvey(surveyInfo) {
+  this._init(surveyInfo);
 }
 TestPilotWebSurvey.prototype = {
-  _init: function TestPilotWebSurvey__init(id, title, url, resultsUrl) {
-    this._taskInit(id, title, url);
-    this._resultsUrl = resultsUrl;
+  _init: function TestPilotWebSurvey__init(surveyInfo) {
+    this._taskInit(surveyInfo.surveyId,
+                   surveyInfo.surveyName,
+                   surveyInfo.surveyUrl);
+    this._resultsUrl = surveyInfo.resultsUrl;
     dump("Initing survey.  This._status is " + this._status + "\n");
     if (this._status < TaskConstants.STATUS_RESULTS) {
       this.checkForCompletion();
@@ -647,12 +649,19 @@ TestPilotWebSurvey.prototype = {
 TestPilotWebSurvey.prototype.__proto__ = TestPilotTask;
 
 
-function TestPilotBuiltinSurvey(id, title, questions, resultsUrl) {
-  this._init(id, title, questions, resultsUrl);
+function TestPilotBuiltinSurvey(surveyInfo) {
+  this._init(surveyInfo);
 }
 TestPilotBuiltinSurvey.prototype = {
-  _init: function TestPilotBuiltinSurvey__init(id, title, questions, resultsUrl) {
-    //TODO
+  _init: function TestPilotBuiltinSurvey__init(surveyInfo) {
+    let param = "?eid=" + surveyInfo.surveyId;
+    let url = "chrome://testpilot/content/take-survey.html" + param;
+
+    this._taskInit(surveyInfo.surveyId,
+                   surveyInfo.surveyName,
+                   url);
+    this._resultsUrl = surveyInfo.resultsUrl;
+    this._questions = surveyInfo.questions;
   },
 
   get taskType() {
@@ -660,19 +669,16 @@ TestPilotBuiltinSurvey.prototype = {
   },
 
   get infoPageUrl() {
-    // TODO - something like chrome/content/takesurvey.html?eid= myid
+  },
+
+  get surveyQuestions() {
+    return this._questions;
   },
 
   get resultsUrl() {
-    // TODO
-  },
-
-  checkForCompletion: function() {
-    // TODO
-  },
-
-  onUrlLoad: function() {
-    // TODO
+    return this._resultsUrl;
+    // TODO this should probably be moved to the base class since all types
+    // of tasks can have results urls.
   }
   // TODO upload, or store for upload along with associated study.
 };

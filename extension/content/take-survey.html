@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <title>Mozilla Labs Test Pilot</title>
+  <link rel="stylesheet" type="text/css" media="all"  
+         href="chrome://testpilot/skin/css/screen-standalone.css" />
+  <script src="experiment-page.js" type="application/javascript;version=1.8">
+  </script>
+  <script src="survey-generator.js" type="application/javascript;version=1.8">
+  </script>
+</head>
+<body onload="onBuiltinSurveyLoad();">
+  <div id="container">
+    <div id="content-standalone">
+      <div id="intro">
+        <h1 id="survey-title"></h1>
+        <div id="survey-contents"></div>
+        <button onclick="onBuiltinSurveySubmit();">Submit</button>
+      </div>
+     <div id="links">
+				
+        <p class="spacer">
+					
+          <div class="home_callout"><img class="homeIcon" src="chrome://testpilot/skin/images/home_comments.png"> <a href="http://groups.google.com/group/mozilla-labs-testpilot">Comments & Discussions &raquo;</a></div> <br>
+					
+          <div class="home_callout"><img class="homeIcon" src="chrome://testpilot/skin/images/home_results.png"><a href="https://wiki.mozilla.org/Labs/Test_Pilot">Propose a Test &raquo;</a></div> <br>
+					
+          <div class="home_callout"><img class="homeIcon" src="chrome://testpilot/skin/images/home_twitter.png"><a href="http://www.twitter.com/MozTestPilot">@MozTestPilot on Twitter &raquo;</a></div>
+      </div>
+     </div>
+    </div>
+</body>
+</html>

@@ -429,10 +429,13 @@ let TestPilotSetup = {
             // Could be a survey: check if surveyInfo is exported:
             if (experiments[filename].surveyInfo != undefined) {
               let sInfo = experiments[filename].surveyInfo;
-              task = new TestPilotWebSurvey(sInfo.surveyId,
-                                         sInfo.surveyName,
-                                         sInfo.surveyUrl,
-                                         sInfo.resultsUrl);
+              // survey is either a web survey (specifies a url) or
+              // a built-in survey (specifies surveyQuestions.)
+              if (sInfo.surveyQuestions != undefined) {
+                task = new TestPilotBuiltinSurvey(sInfo);
+              } else {
+                task = new TestPilotWebSurvey(sInfo);
+              }
             } else {
               // This one must be an experiment.
               let expInfo = experiments[filename].experimentInfo;
@@ -447,9 +450,9 @@ let TestPilotSetup = {
                                              webContent);
             }
             TestPilotSetup.addTask(task);
-            dump("Loaded experiment " + filename + "\n");
+            dump("Loaded task " + filename + "\n");
           } catch (e) {
-            dump("Failed to load experiment " + filename + ": " + e + "\n");
+            dump("Failed to load task " + filename + ": " + e + "\n");
           }
         }
         if (callback) {

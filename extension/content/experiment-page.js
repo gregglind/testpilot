@@ -107,9 +107,60 @@
     window.location = "chrome://testpilot/content/status-cancelled.html";
   }
 
+  function updateRecurSettings() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    let eid = parseInt(getUrlParam("eid"));
+    let experiment = TestPilotSetup.getTaskById(eid);
+    let recurSelector = document.getElementById("recur-selector");
+    let value = recurSelector.options[recurSelector.selectedIndex].value;
+    experiment.setRecurPref(value);
+  }
+
+  function showRecurControls(experiment) {
+    Components.utils.import("resource://testpilot/modules/tasks.js");
+    let recurPrefSpan = document.getElementById("recur-pref");
+    if (!recurPrefSpan) {
+      return;
+    }
+    let days = experiment._recurrenceInterval;
+    recurPrefSpan.innerHTML = "This test recurs every " + days +
+        " days.  Each time it completes: ";
+
+    let controls = document.getElementById("recur-controls");
+    let selector = document.createElement("select");
+    controls.appendChild(selector);
+    selector.setAttribute("onchange", "updateRecurSettings();");
+    selector.setAttribute("id", "recur-selector");
+
+    let option = document.createElement("option");
+    option.setAttribute("value", TaskConstants.ASK_EACH_TIME);
+    if (experiment.recurPref == TaskConstants.ASK_EACH_TIME) {
+      option.setAttribute("selected", "true");
+    }
+    option.innerHTML = "Ask me whether I want to submit my data.";
+    selector.appendChild(option);
+
+    option = document.createElement("option");
+    option.setAttribute("value", TaskConstants.ALWAYS_SUBMIT);
+    if (experiment.recurPref == TaskConstants.ALWAYS_SUBMIT) {
+      option.setAttribute("selected", "true");
+    }
+    option.innerHTML = "Always submit my data, and don't ask me about it.";
+    selector.appendChild(option);
+
+    option = document.createElement("option");
+    option.setAttribute("value", TaskConstants.NEVER_SUBMIT);
+    if (experiment.recurPref == TaskConstants.NEVER_SUBMIT) {
+      option.setAttribute("selected", "true");
+    }
+    option.innerHTML = "Never submit my data, and don't ask me about it.";
+    selector.appendChild(option);
+  }
+
   function loadExperimentPage() {
     Components.utils.import("resource://testpilot/modules/setup.js");
-    var contentDiv = document.getElementById("intro");
+    Components.utils.import("resource://testpilot/modules/tasks.js");
+    var contentDiv = document.getElementById("experiment-specific-text");
     // Get experimentID from the GET args of page
     var eid = parseInt(getUrlParam("eid"));
     var experiment = TestPilotSetup.getTaskById(eid);
@@ -126,6 +177,9 @@
     // Metadata and start/end date should be filled in for every experiment:
     showMetaData();
     getTestEndingDate(eid);
+    if (experiment._recursAutomatically) {
+      showRecurControls(experiment);
+    }
 
     // TODO have link back to menu (i.e. status.html with no eid)
 
@@ -136,7 +190,7 @@
   }
 
   function showStatusMenuPage() {
-    var contentDiv = document.getElementById("intro");
+    var contentDiv = document.getElementById("experiment-specific-text");
     contentDiv.innerHTML = "";
     Components.utils.import("resource://testpilot/modules/setup.js");
     Components.utils.import("resource://testpilot/modules/tasks.js");
@@ -235,8 +289,18 @@
           resultsLink.innerHTML = "See Analysis";
           listItem.appendChild(resultsLink);
         }
+
+        if (experiment.endDate) {
+          let dateSpan = document.createElement("span");
+          dateSpan.innerHTML = "<br/>Ending Date: ";
+          dateSpan.innerHTML += (new Date(experiment.endDate)).toDateString();
+          if (experiment._recursAutomatically) {
+            dateSpan.innerHTML += " (Recurs automatically.)";
+          }
+          listItem.appendChild(dateSpan);
+        }
       }
-      dump("Added submenu called " +  title + "\n");
+      // TODO: Show start dates too?
     }
     addSubMenu("Tests In Progress:", runningExperiments);
     addSubMenu("Current Surveys:", currentSurveys);
@@ -244,8 +308,6 @@
     addSubMenu("Completed Surveys:", completedSurveys);
     addSubMenu("Upcoming Tests:", upcomingExperiments);
     addSubMenu("Cancelled Tests:", quitExperiments);
-
-    // TODO: Show start and stop dates?
     // TODO: Link to proposals for future tests?
   }
 

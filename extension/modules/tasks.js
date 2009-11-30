@@ -44,7 +44,7 @@ Components.utils.import("resource://testpilot/modules/metadata.js");
 
 const STATUS_PREF_PREFIX = "extensions.testpilot.taskstatus.";
 const START_DATE_PREF_PREFIX = "extensions.testpilot.startDate.";
-const REPEAT_SUBMIT_PREF_PREFIX = "extensions.testpilot.reSubmit.";
+const RECUR_PREF_PREFIX = "extensions.testpilot.reSubmit.";
 const RETRY_INTERVAL_PREF = "extensions.testpilot.uploadRetryInterval";
 const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
 
@@ -305,8 +305,8 @@ TestPilotExperiment.prototype = {
     return this._testResultsUrl;
   },
 
-  get repeatSubmitPref() {
-    let prefName = REPEAT_SUBMIT_PREF_PREFIX + this._id;
+  get recurPref() {
+    let prefName = RECUR_PREF_PREFIX + this._id;
     return Application.prefs.getValue(prefName, TaskConstants.ASK_EACH_TIME);
   },
 
@@ -421,7 +421,7 @@ TestPilotExperiment.prototype = {
         currentDate <= this._endDate ) {
       // if we've done a permanent opt-out, then don't start over-
       // just keep rescheduling.
-      if (this.repeatSubmitPref == TaskConstants.NEVER_SUBMIT) {
+      if (this.recurPref == TaskConstants.NEVER_SUBMIT) {
         this._reschedule();
       } else {
         // Normal case is reset to new.
@@ -442,16 +442,6 @@ TestPilotExperiment.prototype = {
     if (this._status < TaskConstants.STATUS_FINISHED &&
 	currentDate >= this._endDate ) {
       dump("Passed End Date - Switched Task Status to Finished\n");
-      /* User may have setthe test to always opt-out, i.e. don't bug me
-       about it:
-      if (this.repeatSubmitPref == TaskConstants.ALWAYS_QUIT) {
-      this.changeStatus(TaskConstants.STATUS_CANCELLED, true);
-       TODO actually, shouldn't ALWAYS_QUIT be more like NEVER_SCHEDULE?
-       ponder this.  If it is NEVER_SCHEDULE then turning it on must always
-       be accompanied by changing status to canceled... and turning it back on
-       must be accompanied by.... what?  But the alternative is to keep
-       rescheduling and then canceling as soon as it comes up?
-      */
       this.changeStatus( TaskConstants.STATUS_FINISHED );
       this._handlers.onExperimentShutdown();
 
@@ -459,7 +449,7 @@ TestPilotExperiment.prototype = {
         this._reschedule();
         // A recurring experiment may have been set to automatically submit. If
         // so, submit now!
-        if (this.repeatSubmitPref == TaskConstants.ALWAYS_SUBMIT) {
+        if (this.recurPref == TaskConstants.ALWAYS_SUBMIT) {
           this.upload( function() {} );
         }
       }
@@ -575,9 +565,9 @@ TestPilotExperiment.prototype = {
     }
   },
 
-  setRepeatSubmitPref: function TPE_setRepeatSubmitPrefs(value) {
+  setRecurPref: function TPE_setRecurPrefs(value) {
     // value is NEVER_SUBMIT, ALWAYS_SUBMIT, or ASK_EACH_TIME
-    let prefName = REPEAT_SUBMIT_PREF_PREFIX + this._id;
+    let prefName = RECUR_PREF_PREFIX + this._id;
     Application.prefs.setValue(prefName, value);
     // TODO give user some notification of status change and what they
     // can do if they change their mind.

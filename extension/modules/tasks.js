@@ -662,14 +662,11 @@ TestPilotBuiltinSurvey.prototype = {
                    surveyInfo.surveyName,
                    url);
     this._resultsUrl = surveyInfo.resultsUrl;
-    this._questions = surveyInfo.questions;
+    this._questions = surveyInfo.surveyQuestions;
   },
 
   get taskType() {
     return TaskConstants.TYPE_SURVEY;
-  },
-
-  get infoPageUrl() {
   },
 
   get surveyQuestions() {

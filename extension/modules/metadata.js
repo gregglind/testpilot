@@ -108,9 +108,6 @@ let MetadataCollector = {
 
   getSurveyAnswers: function MetadataCollector_getSurveyAnswers() {
     return Application.prefs.getValue(SURVEY_ANS, "");
-    // Tricky part: this can have commas in it, which will screw up CSV...
-    // How to put this metadata into a csv file, anyway?  I can always just
-    // cram it in and solve it in parsing later...
   },
 
   getTestPilotVersion: function MetadataCollector_getTestPilotVersion() {

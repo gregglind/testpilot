@@ -6,6 +6,7 @@ const CHECK_BOXES = 4;
 
 function onBuiltinSurveyLoad() {
   Components.utils.import("resource://testpilot/modules/setup.js");
+  Components.utils.import("resource://testpilot/modules/tasks.js");
   let eid = getUrlParam("eid");
   let task = TestPilotSetup.getTaskById(eid);
   let contentDiv = document.getElementById("survey-contents");
@@ -19,9 +20,32 @@ function onBuiltinSurveyLoad() {
   let title = document.getElementById("survey-title");
   title.innerHTML = task.title;
 
+  if (task.status == TaskConstants.STATUS_SUBMITTED) {
+    contentDiv.innerHTML = "<p>Thank you for finishing this survey. Your " +
+    "answers will be uploaded along with the next set of experimental data.</p>" +
+    "<p>If you would like to review or change your answers, you can do so at " +
+    "any time using the button below.</p>";
+    let submitButton = document.getElementById("survey-submit");
+    submitButton.setAttribute("style", "display:none");
+    let changeButton = document.getElementById("change-answers");
+    changeButton.setAttribute("style", "");
+    changeButton.addEventListener("click", function() {
+                                    drawSurveyForm(task, contentDiv);},
+                                  false);
+  } else {
+    drawSurveyForm(task, contentDiv);
+  }
+}
+
+function drawSurveyForm(task, contentDiv) {
   let oldAnswers = task.oldAnswers;
   let surveyQuestions = task.surveyQuestions;
   let i;
+
+  let submitButton = document.getElementById("survey-submit");
+  submitButton.setAttribute("style", "");
+  let changeButton = document.getElementById("change-answers");
+  changeButton.setAttribute("style", "display:none");
   // Loop through questions and render html form input elements for each
   // one.
   for (i = 0; i < surveyQuestions.length; i++) {
@@ -146,10 +170,6 @@ function onBuiltinSurveySubmit() {
   dump("Answers is " + answers + "\n");
   dump("Answers as json is " + JSON.stringify(answers) + "\n");
   task.store(answers);
-  // change page to thank user for submitting.
-  let contentDiv = document.getElementById("survey-contents");
-  contentDiv.innerHTML = "Thank you for completing the survey. Your " +
-   "answers will be uploaded along with the next set of experimental data.";
-  // TODO warn about un-answered questions?
-  // TODO hide submit button
+  // Reload page to show submitted status:
+  onBuiltinSurveyLoad();
 }

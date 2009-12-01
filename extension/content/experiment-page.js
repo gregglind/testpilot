@@ -195,8 +195,6 @@
       showRecurControls(experiment);
     }
 
-    // TODO have link back to menu (i.e. status.html with no eid)
-
     // Do whatever the experiment's web content wants done on load:
     var graphUtils = {drawPieChart: drawPieChart,
                       drawTimeSeriesGraph: drawTimeSeriesGraph};

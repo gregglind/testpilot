@@ -41,6 +41,12 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 const LOCALE_PREF = "general.useragent.locale";
+const EXTENSION_ID = "testpilot@labs.mozilla.com";
+
+/* The following preference, if present, stores answers to the basic panel
+ * survey, which tell us user's general tech level, and so should be included
+ * with any upload.*/
+const SURVEY_ANS = "extensions.testpilot.surveyAnswers.basic_panel_survey";
 
 let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
@@ -100,14 +106,24 @@ let MetadataCollector = {
     return os + " " + oscpu;
   },
 
-  // Number of bookmarks?
-  // TODO if we make a GUID for the user, we keep it here.
+  getSurveyAnswers: function MetadataCollector_getSurveyAnswers() {
+    return Application.prefs.getValue(SURVEY_ANS, "");
+    // Tricky part: this can have commas in it, which will screw up CSV...
+    // How to put this metadata into a csv file, anyway?  I can always just
+    // cram it in and solve it in parsing later...
+  },
+
+  getTestPilotVersion: function MetadataCollector_getTestPilotVersion() {
+    return Application.extensions.get(EXTENSION_ID).version;
+  },
 
   getMetadata: function MetadataCollector_getMetadata() {
     return { extensions: MetadataCollector.getExtensions(),
 	     location: MetadataCollector.getLocation(),
-	     version: MetadataCollector.getVersion(),
-             operatingSystem: MetadataCollector.getOperatingSystem() };
+	     fxVersion: MetadataCollector.getVersion(),
+             operatingSystem: MetadataCollector.getOperatingSystem(),
+             tpVersion: MetadataCollector.getTestPilotVersion(),
+             surveyAnswers: MetadataCollector.getSurveyAnswers()};
   }
-
+  // TODO if we make a GUID for the user, we keep it here.
 };

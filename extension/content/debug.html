@@ -50,6 +50,13 @@
       document.getElementById("debug").innerHTML = "Success? " + success;});
   }
 
+  function showMetaData() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    let task = TestPilotSetup.getTaskById(2);
+    let csv = task._prependMetadataToCSV();
+    document.getElementById("debug").innerHTML = "<pre>" + csv + "</pre>";
+  }
+
 </script>
 
 <style type="text/css">
@@ -67,6 +74,7 @@
 <button onclick="runUnitTests();">Run Unit Tests</button>
 <button onclick="remindMe();">Remind Me</button>
 <input type="text" id="status-code"/><button onclick="setTaskStatus();">Set</button>
+<button onclick="showMetaData();">Show Metadata</button>
 </p>
 <p><span id="debug"></span></p>
 

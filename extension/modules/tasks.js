@@ -465,19 +465,20 @@ TestPilotExperiment.prototype = {
     }
   },
 
-  _appendMetadataToCSV: function TestPilotExperiment__appendMetadata() {
+  _prependMetadataToCSV: function TestPilotExperiment__prependMetadata() {
     let rows = this._dataStore.getAllDataAsCSV();
     let metadata = MetadataCollector.getMetadata();
-    rows[0] = rows[0] + ", extensions, location, fx_version, os, exp_version";
-    if (metadata.extensions.length > 0) {
-      rows[1] = rows[1] + ", " + metadata.extensions[0];
-    }
-    rows[1] = rows[1] + ", " + metadata.location + ", " + metadata.version + ", ";
-    rows[1] = rows[1] + metadata.operatingSystem + ", " + this._versionNumber;
-
-    for (let i = 1; i < metadata.extensions.length; i++) {
-      rows[i + 1] = rows[i + 1] + metadata.extensions[i];
-    }
+    let header = [];
+    header.push("fx_version, tp_version, exp_version, location, os");
+    header.push([metadata.fxVersion, metadata.tpVersion,
+                 this._versionNumber, metadata.location,
+                 metadata.operatingSystem].join(", "));
+    header.push("extensions");
+    header.push(metadata.extensions.join(", "));
+    header.push("survey_answers");
+    header.push(metadata.surveyAnswers);
+    header.push("experiment_data");
+    rows = header.concat(rows);
     return rows.join("\n");
   },
 
@@ -495,7 +496,7 @@ TestPilotExperiment.prototype = {
       return;
     }
 
-    let dataString = this._appendMetadataToCSV();
+    let dataString = this._prependMetadataToCSV();
 
     let params = "testid=" + this._id + "&data=" + encodeURI(dataString);
     // TODO note there is an 8MB max on POST data in PHP, so if we have a REALLY big
@@ -515,9 +516,7 @@ TestPilotExperiment.prototype = {
             self._uploadRetryTimer.cancel(); // Stop retrying - it worked!
           }
           self.changeStatus( TaskConstants.STATUS_SUBMITTED );
-	  dump("I did changeStatus, now wiping...\n");
 	  self._dataStore.wipeAllData();
-	  dump("I wiped, now doing callback...\n");
           callback(true);
 	} else {
 	  dump("ERROR POSTING DATA: " + req.responseText + "\n");

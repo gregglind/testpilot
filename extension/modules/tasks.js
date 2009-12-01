@@ -680,6 +680,26 @@ TestPilotBuiltinSurvey.prototype = {
     // of tasks can have results urls.
   },
 
+  onUrlLoad: function TPS_onUrlLoad(url) {
+    /* Viewing the appropriate URL makes survey status progress from
+     * NEW (havent' seen survey) to PENDING (seen it but not done it).
+     * So we can stop notifying people about the survey once they've seen it.*/
+    if (url == this._url && this._status == TaskConstants.STATUS_NEW) {
+      this.changeStatus( TaskConstants.STATUS_PENDING );
+    }
+  },
+
+  get oldAnswers() {
+    let prefName = SURVEY_ANSWER_PREFIX + this._id;
+    let answers = Application.prefs.getValue(prefName, null);
+    if (!answers) {
+      return null;
+    } else {
+      dump("Trying to json.parse this: " + answers + "\n");
+      return JSON.parse(answers);
+    }
+  },
+
   store: function( answers ) {
     // Store answers in appropriate data store...
     // such as preferences store?

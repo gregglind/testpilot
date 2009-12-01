@@ -8,10 +8,12 @@ function onBuiltinSurveyLoad() {
   Components.utils.import("resource://testpilot/modules/setup.js");
   let eid = getUrlParam("eid");
   let task = TestPilotSetup.getTaskById(eid);
+  // TODO delay and schedule reload if task is null.
   let title = document.getElementById("survey-title");
   title.innerHTML = task.title;
   let contentDiv = document.getElementById("survey-contents");
 
+  let oldAnswers = task.oldAnswers;
   let surveyQuestions = task.surveyQuestions;
   let i;
   for (i = 0; i < surveyQuestions.length; i++) {
@@ -31,6 +33,9 @@ function onBuiltinSurveyLoad() {
         newRadio.setAttribute("type", "radio");
         newRadio.setAttribute("name", "answer_to_" + i);
         newRadio.setAttribute("value", j);
+        if (oldAnswers && oldAnswers[i] == j) {
+          newRadio.setAttribute("checked", "true");
+        }
         let label = document.createElement("span");
         label.innerHTML = choices[j];
         contentDiv.appendChild(newRadio);
@@ -44,6 +49,14 @@ function onBuiltinSurveyLoad() {
         newCheck.setAttribute("type", "checkbox");
         newCheck.setAttribute("name", "answer_to_" + i);
         newCheck.setAttribute("value", j);
+        dump("OldAnswers for checkbox: " + oldAnswers[i] + "\n");
+        if (oldAnswers && oldAnswers[i]) {
+          for each (let an in oldAnswers[i]) {
+            if (an == j) {
+              newCheck.setAttribute("checked", "true");
+            }
+          }
+        }
         let label = document.createElement("span");
         label.innerHTML = choices[j];
         contentDiv.appendChild(newCheck);
@@ -58,6 +71,7 @@ function onBuiltinSurveyLoad() {
         inputBox.setAttribute("id", "freeform_" + i);
         inputBox.setAttribute("valign", "bottom");
         contentDiv.appendChild(inputBox);
+        // TODO fill text area with old answer, if there is one.
       }
       break;
     case SCALE:
@@ -71,6 +85,9 @@ function onBuiltinSurveyLoad() {
         newRadio.setAttribute("type", "radio");
         newRadio.setAttribute("name", "answer_to_" + i);
         newRadio.setAttribute("value", j);
+        if (oldAnswers && oldAnswers[i] == j) {
+          newRadio.setAttribute("checked", "true");
+        }
         contentDiv.appendChild(newRadio);
       }
       label = document.createElement("span");
@@ -114,6 +131,10 @@ function onBuiltinSurveySubmit() {
   dump("Answers is " + answers + "\n");
   dump("Answers as json is " + JSON.stringify(answers) + "\n");
   task.store(answers);
+  // change page to thank user for submitting.
+  let contentDiv = document.getElementById("survey-contents");
+  contentDiv.innerHTML = "Thank you for completing the survey. Your " +
+   "answers will be uploaded along with the next set of experimental data.";
   // TODO warn about un-answered questions?
-  // TODO change page to thank user for submitting.
+  // TODO hide submit button
 }

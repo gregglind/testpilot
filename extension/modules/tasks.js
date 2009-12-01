@@ -46,6 +46,7 @@ Components.utils.import("resource://testpilot/modules/metadata.js");
 const STATUS_PREF_PREFIX = "extensions.testpilot.taskstatus.";
 const START_DATE_PREF_PREFIX = "extensions.testpilot.startDate.";
 const RECUR_PREF_PREFIX = "extensions.testpilot.reSubmit.";
+const SURVEY_ANSWER_PREFIX = "extensions.testpilot.surveyAnswers.";
 const RETRY_INTERVAL_PREF = "extensions.testpilot.uploadRetryInterval";
 const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
 
@@ -677,7 +678,15 @@ TestPilotBuiltinSurvey.prototype = {
     return this._resultsUrl;
     // TODO this should probably be moved to the base class since all types
     // of tasks can have results urls.
+  },
+
+  store: function( answers ) {
+    // Store answers in appropriate data store...
+    // such as preferences store?
+    let prefName = SURVEY_ANSWER_PREFIX + this._id;
+    Application.prefs.setValue(prefName, JSON.stringify(answers));
+    this.changeStatus( TaskConstants.STATUS_SUBMITTED);
   }
-  // TODO upload, or store for upload along with associated study.
+
 };
 TestPilotBuiltinSurvey.prototype.__proto__ = TestPilotTask;

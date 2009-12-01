@@ -19,8 +19,9 @@ function onBuiltinSurveyLoad() {
     let elem = document.createElement("h3");
     elem.innerHTML = (i+1) + ". " + question;
     contentDiv.appendChild(elem);
-    // TODO create form controls depending on surveyQuestions[i].type and
-    // surveyQuestions[i].choices.
+    /* TODO If you've done this survey before (i.e. if there is a value
+     * for the pref SURVEY_ANSWER_PREFIX + eid) then we should really use
+     * that to prefill the answers... */
     let j;
     let choices = surveyQuestions[i].choices;
     switch (surveyQuestions[i].type) {
@@ -54,7 +55,7 @@ function onBuiltinSurveyLoad() {
         label.innerHTML = surveyQuestions[i].free_entry + "&nbsp";
         contentDiv.appendChild(label);
         let inputBox = document.createElement("textarea");
-        inputBox.setAttribute("name", i + "_free");
+        inputBox.setAttribute("id", "freeform_" + i);
         inputBox.setAttribute("valign", "bottom");
         contentDiv.appendChild(inputBox);
       }
@@ -97,13 +98,22 @@ function onBuiltinSurveySubmit() {
   let surveyQuestions = task.surveyQuestions;
   let i;
   for (i = 0; i < surveyQuestions.length; i++) {
-    dump("Answer to question " + i + ":\n");
     let elems = document.getElementsByName("answer_to_" + i);
+    let anAnswer = [];
     for each (let elem in elems) {
       if (elem.checked) {
-        dump(elem.value + "\n");
+        anAnswer.push(elem.value);
       }
     }
+    let freeEntry = document.getElementById("freeform_" + i);
+    if (freeEntry) {
+      anAnswer.push(freeEntry.value);
+    }
+    answers.push(anAnswer);
   }
-
+  dump("Answers is " + answers + "\n");
+  dump("Answers as json is " + JSON.stringify(answers) + "\n");
+  task.store(answers);
+  // TODO warn about un-answered questions?
+  // TODO change page to thank user for submitting.
 }

@@ -8,22 +8,28 @@ function onBuiltinSurveyLoad() {
   Components.utils.import("resource://testpilot/modules/setup.js");
   let eid = getUrlParam("eid");
   let task = TestPilotSetup.getTaskById(eid);
-  // TODO delay and schedule reload if task is null.
+  let contentDiv = document.getElementById("survey-contents");
+  if (!task) {
+    // Tasks haven't all loaded yet.  Try again in a few seconds.
+    contentDiv.innerHTML = "Loading, please wait a moment...";
+    window.setTimeout(function() {onBuiltinSurveyLoad();}, 2000);
+    return;
+  }
+
   let title = document.getElementById("survey-title");
   title.innerHTML = task.title;
-  let contentDiv = document.getElementById("survey-contents");
 
   let oldAnswers = task.oldAnswers;
   let surveyQuestions = task.surveyQuestions;
   let i;
+  // Loop through questions and render html form input elements for each
+  // one.
   for (i = 0; i < surveyQuestions.length; i++) {
     let question = surveyQuestions[i].question;
     let elem = document.createElement("h3");
     elem.innerHTML = (i+1) + ". " + question;
     contentDiv.appendChild(elem);
-    /* TODO If you've done this survey before (i.e. if there is a value
-     * for the pref SURVEY_ANSWER_PREFIX + eid) then we should really use
-     * that to prefill the answers... */
+    // If you've done this survey before, preset all inputs using old answers
     let j;
     let choices = surveyQuestions[i].choices;
     switch (surveyQuestions[i].type) {
@@ -44,12 +50,12 @@ function onBuiltinSurveyLoad() {
       }
       break;
     case CHECK_BOXES_WITH_FREE_ENTRY:
+      // Check boxes:
       for (j = 0; j < choices.length; j++) {
         let newCheck = document.createElement("input");
         newCheck.setAttribute("type", "checkbox");
         newCheck.setAttribute("name", "answer_to_" + i);
         newCheck.setAttribute("value", j);
-        dump("OldAnswers for checkbox: " + oldAnswers[i] + "\n");
         if (oldAnswers && oldAnswers[i]) {
           for each (let an in oldAnswers[i]) {
             if (an == j) {
@@ -63,15 +69,22 @@ function onBuiltinSurveyLoad() {
         contentDiv.appendChild(label);
         contentDiv.appendChild(document.createElement("br"));
       }
+      // Text area:
       if (surveyQuestions[i].free_entry) {
         let label = document.createElement("span");
         label.innerHTML = surveyQuestions[i].free_entry + "&nbsp";
         contentDiv.appendChild(label);
         let inputBox = document.createElement("textarea");
         inputBox.setAttribute("id", "freeform_" + i);
-        inputBox.setAttribute("valign", "bottom");
         contentDiv.appendChild(inputBox);
-        // TODO fill text area with old answer, if there is one.
+        if (oldAnswers && oldAnswers[i]) {
+          for each (let an in oldAnswers[i]) {
+            if (isNaN(parseInt(an))) {
+              inputBox.innerHTML = an;
+            } else {
+            }
+          }
+        }
       }
       break;
     case SCALE:
@@ -95,10 +108,12 @@ function onBuiltinSurveyLoad() {
       contentDiv.appendChild(label);
       break;
     case FREE_ENTRY:
-      // TODO LATER
+      // TODO LATER - kind of redundant since it's just the
+      // check-box-plus-free-entry case with zero check boxes.
       break;
     case CHECK_BOXES:
-      // TODO LATER
+      // TODO LATER - kind of redundant since it's just the
+      // check-box-plus-free-entry case without the free entry.
       break;
     }
   }

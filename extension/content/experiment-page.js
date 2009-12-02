@@ -26,7 +26,6 @@
     if (task._recursAutomatically) {
       let checkBox = document.getElementById("always-submit-checkbox");
       if (checkBox && checkBox.checked) {
-        dump("Check box is checked; opting in forever!\n");
         task.setRecurPref(TaskConstants.ALWAYS_SUBMIT);
       }
     }
@@ -120,7 +119,6 @@
     if (task._recursAutomatically) {
       let checkBox = document.getElementById("opt-out-forever");
       if (checkBox.checked) {
-        dump("Check box is checked; opting out forever!\n");
         task.setRecurPref(TaskConstants.NEVER_SUBMIT);
       }
     }
@@ -221,7 +219,6 @@
     document.getElementById("menu-link-span").setAttribute("style",
                                                            "display:none");
 
-    dump("Making links to all experiments...\n");
     let experiments = TestPilotSetup.getAllTasks();
     let runningExperiments = [];
     let completedExperiments = [];
@@ -238,7 +235,6 @@
       return;
     }
 
-    dump("There are " + experiments.length + " experiments.\n");
     for (let i = 0; i < experiments.length; i++) {
       if (experiments[i].taskType == TaskConstants.TYPE_EXPERIMENT) {
         switch (experiments[i].status) {
@@ -312,13 +308,11 @@
       if (experiments.length == 0) {
         return;
       }
-      dump("Adding submenu called " + title + "\n");
       let titleElem = document.createElement("h2");
       titleElem.innerHTML = title;
       contentDiv.appendChild(titleElem);
       let list = document.createElement("ul");
       contentDiv.appendChild(list);
-      dump("There are " + experiments.length + " experiments.\n");
       for each (let task in experiments) {
         let listItem = document.createElement("li");
         list.appendChild(listItem);

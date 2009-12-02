@@ -35,7 +35,7 @@
     uploadStatus.innerHTML = "Now uploading data...";
     task.upload( function(success) {
       if (success) {
-        window.location = "chrome://testpilot/content/status-thanks.html"
+        window.location = "chrome://testpilot/content/status.html"
                             + "?eid=" + eid;
       } else {
         uploadStatus.innerHTML = "<p>Oops!  There was an error connecting to "
@@ -125,10 +125,8 @@
       }
     }
     // load the you-are-canceleed page.
-    let url = "chrome://testpilot/content/status-cancelled.html?eid=" + eid;
+    let url = "chrome://testpilot/content/status.html?eid=" + eid;
     window.location = url;
-    // TODO should status-cancelled.html be folded into status.html?
-    // If not, it needs to have its own recur controls if it's a recurring test
   }
 
   function updateRecurSettings() {

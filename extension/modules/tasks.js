@@ -284,24 +284,7 @@ TestPilotExperiment.prototype = {
 
   get currentStatusUrl() {
     let param = "?eid=" + this._id;
-    switch (this._status) {
-      case TaskConstants.STATUS_NEW:
-      case TaskConstants.STATUS_PENDING:
-      case TaskConstants.STATUS_STARTING:
-      case TaskConstants.STATUS_IN_PROGRESS:
-      case TaskConstants.STATUS_FINISHED:
-        return "chrome://testpilot/content/status.html" + param;
-      break;
-      case TaskConstants.STATUS_CANCELLED:
-        return "chrome://testpilot/content/status-cancelled.html" + param;
-      break;
-      case TaskConstants.STATUS_SUBMITTED:
-      case TaskConstants.STATUS_RESULTS:
-      case TaskConstants.STATUS_ARCHIVED:
-        return "chrome://testpilot/content/status-thanks.html" + param;
-      break;
-    }
-    return this._url;
+    return "chrome://testpilot/content/status.html" + param;
   },
 
   get defaultUrl() {
@@ -330,6 +313,20 @@ TestPilotExperiment.prototype = {
       break;
       case TaskConstants.STATUS_FINISHED:
         return this.webContent.completedHtml;
+      break;
+      case TaskConstants.STATUS_CANCELLED:
+        return '<h2>You have quit the <a href="' + this.infoPageUrl +
+        '">&quot;' + this.title + '&quot;</a> study.</h2>' +
+	'<p>All data related to this study has been deleted from your computer.</p>' +
+	'<p>Test Pilot will offer you new studies and surveys as they become available.</p>';
+      break;
+      case TaskConstants.STATUS_SUBMITTED:
+        return '<h2>Thank you for submitting your ' +
+        '<a href="' + this.infoPageUrl + '">&quot;' + this.title +
+        '&quot;</a> study data!</h2>' +
+	'<h3>More tests are coming soon.  Stay tuned.</h3>' +
+	'<p>Test Pilot is no longer collecting data.  All the data that was collected has been transmitted to Mozilla and deleted from your computer.</p>' +
+	'<p>The results of the study will be available soon.  When they are ready to view, Test Pilot will let you know.</p>';
       break;
     }
     // TODO what to do if status is cancelled, submitted, results, or archived?

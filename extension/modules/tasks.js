@@ -257,7 +257,7 @@ TestPilotExperiment.prototype = {
     this._handlers = handlers;
     this._uploadRetryTimer = null;
     this._startedUpHandlers = false;
-    
+
     // checkDate will see what our status is with regards to the start and
     // end dates, and set status appropriately.
     this.checkDate();
@@ -463,6 +463,10 @@ TestPilotExperiment.prototype = {
         if (this.recurPref == TaskConstants.ALWAYS_SUBMIT) {
           dump("Automatically Uploading Data\n");
           this.upload( function() {} );
+        }
+        if (this.recurPref == TaskConstants.NEVER_SUBMIT) {
+          dump("Automatically opting out of uploading data\n");
+          this.changeStatus( TaskConstants.STATUS_CANCELLED, true);
         }
       }
     }

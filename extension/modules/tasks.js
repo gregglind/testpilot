@@ -256,7 +256,8 @@ TestPilotExperiment.prototype = {
 
     this._handlers = handlers;
     this._uploadRetryTimer = null;
-
+    this._startedUpHandlers = false;
+    
     // checkDate will see what our status is with regards to the start and
     // end dates, and set status appropriately.
     this.checkDate();
@@ -376,15 +377,19 @@ TestPilotExperiment.prototype = {
 
   onExperimentStartup: function TestPilotExperiment_onStartup() {
     dump("Experiment.onExperimentStartup called.\n");
-    if (this.experimentIsRunning()) {
+    // Make sure not to call this if it's already been called:
+    if (this.experimentIsRunning() && !this._startedUpHandlers) {
+      dump("  ... starting up handlers!\n");
       this._handlers.onExperimentStartup(this._dataStore);
+      this._startedUpHandlers = true;
     }
   },
 
   onExperimentShutdown: function TestPilotExperiment_onShutdown() {
     dump("Experiment.onExperimentShutdown called.\n");
-    if (this.experimentIsRunning()) {
+    if (this.experimentIsRunning() && this._startedUpHandlers) {
       this._handlers.onExperimentShutdown();
+      this._startedUpHandlers = false;
     }
   },
 
@@ -427,6 +432,7 @@ TestPilotExperiment.prototype = {
       // if we've done a permanent opt-out, then don't start over-
       // just keep rescheduling.
       if (this.recurPref == TaskConstants.NEVER_SUBMIT) {
+        dump("recurPref is never submit, so I'm rescheduling.\n");
         this._reschedule();
       } else {
         // Normal case is reset to new.
@@ -440,7 +446,7 @@ TestPilotExperiment.prototype = {
         currentDate >= this._startDate &&
         currentDate <= this._endDate){
       this.changeStatus(TaskConstants.STATUS_STARTING);
-      this._handlers.onExperimentStartup();
+      this.onExperimentStartup();
     }
 
     // What happens when a test finishes:
@@ -448,13 +454,14 @@ TestPilotExperiment.prototype = {
 	currentDate >= this._endDate ) {
       dump("Passed End Date - Switched Task Status to Finished\n");
       this.changeStatus( TaskConstants.STATUS_FINISHED );
-      this._handlers.onExperimentShutdown();
+      this.onExperimentShutdown();
 
       if (this._recursAutomatically) {
         this._reschedule();
         // A recurring experiment may have been set to automatically submit. If
         // so, submit now!
         if (this.recurPref == TaskConstants.ALWAYS_SUBMIT) {
+          dump("Automatically Uploading Data\n");
           this.upload( function() {} );
         }
       }

@@ -19,12 +19,24 @@
 
   function uploadData() {
     Components.utils.import("resource://testpilot/modules/setup.js");
-    var task = TestPilotSetup.getTaskById(1);
+    let eid = parseInt(getUrlParam("eid"));
+    var task = TestPilotSetup.getTaskById(eid);
+
+    // If always-submit-checkbox is checked, set the pref
+    if (task._recursAutomatically) {
+      let checkBox = document.getElementById("always-submit-checkbox");
+      if (checkBox && checkBox.checked) {
+        dump("Check box is checked; opting in forever!\n");
+        updateRecurSettings(TaskConstants.ALWAYS_SUBMIT);
+      }
+    }
+
     var uploadStatus = document.getElementById("upload-status");
     uploadStatus.innerHTML = "Now uploading data...";
     task.upload( function(success) {
       if (success) {
-        window.location = "chrome://testpilot/content/status-thanks.html";
+        window.location = "chrome://testpilot/content/status-thanks.html"
+                            + "?eid=" + eid;
       } else {
         uploadStatus.innerHTML = "<p>Oops!  There was an error connecting to "
           + "the Mozilla servers.  Maybe your network connection is down?</p>"
@@ -195,7 +207,8 @@
     // Metadata and start/end date should be filled in for every experiment:
     showMetaData();
     getTestEndingDate(eid);
-    if (experiment._recursAutomatically) {
+    if (experiment._recursAutomatically &&
+        experiment.status != TaskConstants.STATUS_FINISHED) {
       showRecurControls(experiment);
     }
 

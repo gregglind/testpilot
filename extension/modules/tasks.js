@@ -575,6 +575,7 @@ TestPilotExperiment.prototype = {
   setRecurPref: function TPE_setRecurPrefs(value) {
     // value is NEVER_SUBMIT, ALWAYS_SUBMIT, or ASK_EACH_TIME
     let prefName = RECUR_PREF_PREFIX + this._id;
+    dump("Setting recur pref for task " + this._id + " to " + value + "\n");
     Application.prefs.setValue(prefName, value);
   }
 };

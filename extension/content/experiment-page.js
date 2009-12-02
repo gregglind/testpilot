@@ -27,7 +27,7 @@
       let checkBox = document.getElementById("always-submit-checkbox");
       if (checkBox && checkBox.checked) {
         dump("Check box is checked; opting in forever!\n");
-        updateRecurSettings(TaskConstants.ALWAYS_SUBMIT);
+        task.setRecurPref(TaskConstants.ALWAYS_SUBMIT);
       }
     }
 
@@ -121,7 +121,7 @@
       let checkBox = document.getElementById("opt-out-forever");
       if (checkBox.checked) {
         dump("Check box is checked; opting out forever!\n");
-        updateRecurSettings(TaskConstants.NEVER_SUBMIT);
+        task.setRecurPref(TaskConstants.NEVER_SUBMIT);
       }
     }
     // load the you-are-canceleed page.
@@ -131,19 +131,13 @@
     // If not, it needs to have its own recur controls if it's a recurring test
   }
 
-  function updateRecurSettings(newValue) {
+  function updateRecurSettings() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     let eid = parseInt(getUrlParam("eid"));
     let experiment = TestPilotSetup.getTaskById(eid);
-    // Value can be provided or not; if not provided, look for select control
-    // on the page to provide it.
-    if (newValue == undefined) {
-      dump("Reading recur settings from selector...\n");
-      let recurSelector = document.getElementById("recur-selector");
-      newValue = recurSelector.options[recurSelector.selectedIndex].value;
-    }
-    dump("Set recur settings to " + newValue + "\n");
-    experiment.setRecurPref(newValue);
+    let recurSelector = document.getElementById("recur-selector");
+    let newValue = recurSelector.options[recurSelector.selectedIndex].value;
+    experiment.setRecurPref(parseInt(newValue));
   }
 
   function showRecurControls(experiment) {

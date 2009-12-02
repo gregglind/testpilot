@@ -57,6 +57,20 @@
     document.getElementById("debug").innerHTML = "<pre>" + csv + "</pre>";
   }
 
+  function makeThereBeAPopup() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    var task = TestPilotSetup.getTaskById(1);
+    var text = "Results are now available for " + task.title;
+    TestPilotSetup._showNotification(text, task);
+  }
+
+  function wipeDb() {
+    Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
+    TabsExperimentDataStore.wipeAllData();
+    var debug = document.getElementById("debug");
+    debug.innerHTML = "Wiped!";
+  }
+
 </script>
 
 <style type="text/css">

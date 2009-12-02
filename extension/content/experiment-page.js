@@ -17,21 +17,6 @@
       return results[1];
   }
 
-  function wipeDb() {
-    Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
-    TabsExperimentDataStore.wipeAllData();
-    var debug = document.getElementById("debug");
-    debug.innerHTML = "Wiped!";
-  }
-
-  // For Debug Purposes Only
-  function makeThereBeAPopup() {
-    Components.utils.import("resource://testpilot/modules/setup.js");
-    var task = TestPilotSetup.getTaskById(1);
-    var text = "Results are now available for " + task.title;
-    TestPilotSetup._showNotification(text, task);
-  }
-
   function uploadData() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     var task = TestPilotSetup.getTaskById(1);
@@ -104,16 +89,29 @@
     let task = TestPilotSetup.getTaskById(eid);
     let span = document.getElementById("exp-name");
     span.innerHTML = task.title;
-    // TODO also should the quit page have an "always quit" option that sets
-    // the recur pref additionally?
+
+    if (task._recursAutomatically) {
+      let recurOptions = document.getElementById("recur-options");
+      recurOptions.setAttribute("style", "");
+    }
   }
 
   function quitExperiment() {
     Components.utils.import("resource://testpilot/modules/setup.js");
+    Components.utils.import("resource://testpilot/modules/tasks.js");
     let eid = parseInt(getUrlParam("eid"));
     let reason = document.getElementById("reason-for-quit").value;
     let task = TestPilotSetup.getTaskById(eid);
     task.optOut(reason);
+
+    // If opt-out-forever checkbox is checked, opt out forever!
+    if (task._recursAutomatically) {
+      let checkBox = document.getElementById("opt-out-forever");
+      if (checkBox.checked) {
+        dump("Check box is checked; opting out forever!\n");
+        updateRecurSettings(TaskConstants.NEVER_SUBMIT);
+      }
+    }
     // load the you-are-canceleed page.
     let url = "chrome://testpilot/content/status-cancelled.html?eid=" + eid;
     window.location = url;
@@ -121,13 +119,19 @@
     // If not, it needs to have its own recur controls if it's a recurring test
   }
 
-  function updateRecurSettings() {
+  function updateRecurSettings(newValue) {
     Components.utils.import("resource://testpilot/modules/setup.js");
     let eid = parseInt(getUrlParam("eid"));
     let experiment = TestPilotSetup.getTaskById(eid);
-    let recurSelector = document.getElementById("recur-selector");
-    let value = recurSelector.options[recurSelector.selectedIndex].value;
-    experiment.setRecurPref(value);
+    // Value can be provided or not; if not provided, look for select control
+    // on the page to provide it.
+    if (newValue == undefined) {
+      dump("Reading recur settings from selector...\n");
+      let recurSelector = document.getElementById("recur-selector");
+      newValue = recurSelector.options[recurSelector.selectedIndex].value;
+    }
+    dump("Set recur settings to " + newValue + "\n");
+    experiment.setRecurPref(newValue);
   }
 
   function showRecurControls(experiment) {
@@ -208,6 +212,10 @@
     Components.utils.import("resource://testpilot/modules/tasks.js");
     // Get all tasks, sort them by status.
 
+    // Hide menu link (because it links to the page we're on!)
+    document.getElementById("menu-link-span").setAttribute("style",
+                                                           "display:none");
+
     dump("Making links to all experiments...\n");
     let experiments = TestPilotSetup.getAllTasks();
     let runningExperiments = [];
@@ -265,6 +273,35 @@
       }
     }
 
+    function makeMainLink(task) {
+      let url = null;
+      // TODO logically there's three urls a task can have:
+      // the static web content one, the results one, and the
+      // current status one....
+      if (task.status <= TaskConstants.STATUS_FINISHED) {
+        url = task.currentStatusUrl;
+      } else {
+        if (task.taskType == TaskConstants.TYPE_SURVEY) {
+          if (task.surveyQuestions) {
+            url = task.currentStatusUrl;
+          }
+        } else {
+          if (task._recursAutomatically) {
+            url = task.currentStatusUrl;
+          } else {
+            url = task.infoPageUrl;
+          }
+        }
+      }
+      if (url) {
+        let link = document.createElement("a");
+        link.setAttribute("href", url);
+        return link;
+      } else {
+        return document.createElement("span");
+      }
+    }
+
     function addSubMenu( title, experiments ) {
       // Don't add the submenu if it would be empty:
       if (experiments.length == 0) {
@@ -277,21 +314,20 @@
       let list = document.createElement("ul");
       contentDiv.appendChild(list);
       dump("There are " + experiments.length + " experiments.\n");
-      for each (let experiment in experiments) {
+      for each (let task in experiments) {
         let listItem = document.createElement("li");
         list.appendChild(listItem);
-        let link = document.createElement("a");
-        link.setAttribute("href", experiment.infoPageUrl);
-        link.innerHTML = experiment.title;
+        let link = makeMainLink(task);
+        link.innerHTML = task.title;
         listItem.appendChild(link);
 
-        if (experiment.status == TaskConstants.STATUS_FINISHED) {
+        if (task.status == TaskConstants.STATUS_FINISHED) {
           let span = document.createElement("span");
           span.innerHTML = " &mdash; Finished and ready to submit data!";
           listItem.appendChild(span);
         }
 
-        let resultsUrl = experiment.resultsUrl;
+        let resultsUrl = task.resultsUrl;
         if (resultsUrl) {
           let span = document.createElement("span");
           span.innerHTML = " &mdash; Study Complete: ";
@@ -302,11 +338,11 @@
           listItem.appendChild(resultsLink);
         }
 
-        if (experiment.endDate) {
+        if (task.endDate) {
           let dateSpan = document.createElement("span");
           dateSpan.innerHTML = "<br/>Ending Date: ";
-          dateSpan.innerHTML += (new Date(experiment.endDate)).toDateString();
-          if (experiment._recursAutomatically) {
+          dateSpan.innerHTML += (new Date(task.endDate)).toDateString();
+          if (task._recursAutomatically) {
             dateSpan.innerHTML += " (Recurs automatically.)";
           }
           listItem.appendChild(dateSpan);

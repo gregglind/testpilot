@@ -83,13 +83,13 @@ var TestPilotTask = {
   _status: null,
   _url: null,
 
-  _taskInit: function TestPilotTask__taskInit(id, title, infoPageUrl, webContent) {
+  _taskInit: function TestPilotTask__taskInit(id, title, infoPageUrl, resultsUrl) {
     this._id = id;
     this._title = title;
     this._status = Application.prefs.getValue(STATUS_PREF_PREFIX + this._id,
                                               TaskConstants.STATUS_NEW);
     this._url = infoPageUrl;
-    this._webContent = webContent;
+    this._resultsUrl = resultsUrl;
   },
 
   get title() {
@@ -108,17 +108,29 @@ var TestPilotTask = {
     return this._status;
   },
 
-  get infoPageUrl() {
-    return this._url;
-  },
-
   get webContent() {
     return this._webContent;
   },
 
-  get resultsUrl() {
-    return undefined;
+  // urls:
+
+  get infoPageUrl() {
+    return this._url;
   },
+
+  get resultsUrl() {
+    return this._resultsUrl;
+  },
+
+  get currentStatusUrl() {
+    return this._url;
+  },
+
+  get defaultUrl() {
+    return this.infoPageUrl;
+  },
+
+  // event handlers:
 
   onExperimentStartup: function TestPilotTask_onExperimentStartup() {
   },
@@ -136,13 +148,9 @@ var TestPilotTask = {
   },
 
   onEnterPrivateBrowsing: function TestPilotTask_onEnterPrivate() {
-    // TODO: not implemented - should be called when firefox enters
-    // private browsing mode.
   },
 
   onExitPrivateBrowsing: function TestPilotTask_onExitPrivate() {
-    // TODO: not implemented - should be called when firefox returns from
-    // private browsing mode.
   },
 
   onNewWindow: function TestPilotTask_onNewWindow(window) {
@@ -176,7 +184,7 @@ var TestPilotTask = {
     // TODO Is "most recent" the same as "front"?
     let window = wm.getMostRecentWindow("navigator:browser");
     let browser = window.getBrowser();
-    let tab = browser.addTab(this.infoPageUrl);
+    let tab = browser.addTab(this.defaultUrl);
     browser.selectedTab = tab;
     /* Advance the status when the user sees the page, so that we can stop
      * notifying them about stuff they've seen. */
@@ -213,9 +221,9 @@ TestPilotExperiment.prototype = {
      * recurrenceInterval (number of days)
      * versionNumber (int) */
     this._taskInit(expInfo.testId, expInfo.testName,
-                   expInfo.testInfoUrl, webContent);
+                   expInfo.testInfoUrl, expInfo.resultsUrl);
+    this._webContent = webContent;
     this._dataStore = dataStore;
-    this._testResultsUrl = expInfo.testResultsUrl;
     this._versionNumber = expInfo.versionNumber;
     this._optInRequired = expInfo.optInRequired;
     // TODO implement opt-in interface for tests that require opt-in.
@@ -274,7 +282,7 @@ TestPilotExperiment.prototype = {
     return this._dataStore.getAllDataAsJSON();
   },
 
-  get infoPageUrl() {
+  get currentStatusUrl() {
     let param = "?eid=" + this._id;
     switch (this._status) {
       case TaskConstants.STATUS_NEW:
@@ -288,23 +296,21 @@ TestPilotExperiment.prototype = {
         return "chrome://testpilot/content/status-cancelled.html" + param;
       break;
       case TaskConstants.STATUS_SUBMITTED:
-        return "chrome://testpilot/content/status-thanks.html" + param;
-      break;
       case TaskConstants.STATUS_RESULTS:
       case TaskConstants.STATUS_ARCHIVED:
-        // Return the results page, if we have one...
-      if (this._testResultsUrl != undefined) {
-        return this._testResultsUrl;
-      } else {
         return "chrome://testpilot/content/status-thanks.html" + param;
-      }
       break;
     }
     return this._url;
   },
 
-  get resultsUrl() {
-    return this._testResultsUrl;
+  get defaultUrl() {
+    if (this._status >= TaskConstants.STATUS_RESULTS &&
+        this.resultsUrl) {
+      return this.resultsUrl;
+    } else {
+      return this.currentStatusUrl;
+    }
   },
 
   get recurPref() {
@@ -582,8 +588,8 @@ TestPilotWebSurvey.prototype = {
   _init: function TestPilotWebSurvey__init(surveyInfo) {
     this._taskInit(surveyInfo.surveyId,
                    surveyInfo.surveyName,
-                   surveyInfo.surveyUrl);
-    this._resultsUrl = surveyInfo.resultsUrl;
+                   surveyInfo.surveyUrl,
+                   surveyInfo.resultsUrl);
     dump("Initing survey.  This._status is " + this._status + "\n");
     if (this._status < TaskConstants.STATUS_RESULTS) {
       this.checkForCompletion();
@@ -594,17 +600,13 @@ TestPilotWebSurvey.prototype = {
     return TaskConstants.TYPE_SURVEY;
   },
 
-  get infoPageUrl() {
+  get defaultUrl() {
     if (this._status >= TaskConstants.STATUS_RESULTS &&
         this._resultsUrl != undefined) {
-      return this._resultsUrl;
+      return this.resultsUrl;
     } else {
-      return this._url;
+      return this.infoPageUrl;
     }
-  },
-
-  get resultsUrl() {
-    return this._resultsUrl;
   },
 
   checkForCompletion: function TestPilotWebSurvey_checkForCompletion() {
@@ -655,13 +657,10 @@ function TestPilotBuiltinSurvey(surveyInfo) {
 }
 TestPilotBuiltinSurvey.prototype = {
   _init: function TestPilotBuiltinSurvey__init(surveyInfo) {
-    let param = "?eid=" + surveyInfo.surveyId;
-    let url = "chrome://testpilot/content/take-survey.html" + param;
-
     this._taskInit(surveyInfo.surveyId,
                    surveyInfo.surveyName,
-                   url);
-    this._resultsUrl = surveyInfo.resultsUrl;
+                   surveyInfo.surveyUrl,
+                   surveyInfo.resultsUrl);
     this._questions = surveyInfo.surveyQuestions;
   },
 
@@ -673,10 +672,18 @@ TestPilotBuiltinSurvey.prototype = {
     return this._questions;
   },
 
-  get resultsUrl() {
-    return this._resultsUrl;
-    // TODO this should probably be moved to the base class since all types
-    // of tasks can have results urls.
+  get currentStatusUrl() {
+    let param = "?eid=" + this._id;
+    return "chrome://testpilot/content/take-survey.html" + param;
+  },
+
+  get defaultUrl() {
+    if (this._status >= TaskConstants.STATUS_RESULTS &&
+        this._resultsUrl != undefined) {
+      return this.resultsUrl;
+    } else {
+      return this.currentStatusUrl;
+    }
   },
 
   onUrlLoad: function TPS_onUrlLoad(url) {

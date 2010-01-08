@@ -41,11 +41,19 @@ Cu.import("resource://testpilot/modules/setup.js");
 function showdbcontents() {
   // experimentId is passed in through window.openDialog.  Access it like so:
   var experimentId = window.arguments[0];
-  var dataStore = TestPilotSetup.getTaskById(experimentId).dataStore;
+  var experiment = TestPilotSetup.getTaskById(experimentId);
+  var dataStore = experiment.dataStore;
+  var experimentTitle = experiment.title;
   var rawData = dataStore.getAllDataAsJSON(true);
   var listbox = document.getElementById("raw-data-listbox");
   var columnNames = dataStore.getHumanReadableColumnNames();
   var propertyNames = dataStore.getPropertyNames();
+
+  // Set title of dialog box to match title of experiment:
+  var dialog = document.getElementById("raw-data-dialog");
+  var dialogTitle = dialog.getAttribute("title");
+  dialogTitle = dialogTitle + ": " + experimentTitle;
+  dialog.setAttribute("title", dialogTitle);
 
   var i,j;
   // Create the listcols and listheaders in the xul listbox to match the human

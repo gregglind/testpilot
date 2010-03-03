@@ -107,6 +107,7 @@ exports.RemoteExperimentLoader = function( fileGetterFunction ) {
 
 exports.RemoteExperimentLoader.prototype = {
   _init: function(fileGetterFunction) {
+    this._experimentFilenames = [];
     if (fileGetterFunction != undefined) {
       this._fileGetter = fileGetterFunction;
     } else {
@@ -138,35 +139,6 @@ exports.RemoteExperimentLoader.prototype = {
       });
   },
 
-  _recursiveUpdate: function(experimentList, finalCallback) {
-    if (experimentList.length == 0) {
-      // If there are no more files to download, call the final callback to report
-      // success:
-      finalCallback(true);
-      return;
-    }
-
-    // Split off the array: load the first one now, and load the rest (recursively)
-    // when the callback is finished.
-    let first = experimentList[0];
-    let rest = experimentList.slice(1);
-    let self = this;
-    let filename = first.filename;
-    let modificationDate = this._codeStorage.getFileModifiedDate(filename);
-    self._fileGetter( resolveUrl(BASE_URL, filename),
-      function onDone(code) {
-        // code will be non-null if there is actually new code to download.
-        if (code) {
-          console.info("Downloaded new code for " + filename);
-          self._codeStorage.setFile(filename, code);
-          console.warn("Saved code for: " + filename);
-        }
-        // Now do the next file load...
-        self._recursiveUpdate(rest, finalCallback);
-      },
-      modificationDate);
-  },
-
   checkForUpdates: function(callback) {
     /* Callback will be called with true or false
      * to let us know whether there are any updates, so that client code can
@@ -192,7 +164,35 @@ exports.RemoteExperimentLoader.prototype = {
         /* Go through each file indicated in index.json, attempt to load it into
          * codeStorage (replacing any older version there)
          */
-        self._recursiveUpdate(data.experiments, callback);
+
+        let libNames = [ x.filename for each (x in data.libraries)];
+        let expNames = [ x.filename for each (x in data.experiments)];
+        console.info("Libraries: " + libNames);
+        console.info("Experiments: " + expNames);
+        let filenames = libNames.concat(expNames);
+        self._experimentFilenames = expNames;
+        let numFilesToDload = filenames.length;
+        for each (let f in filenames) {
+          let filename = f;
+          console.info("I'm gonna go try to get the code for " + filename);
+          let modDate = self._codeStorage.getFileModifiedDate(filename);
+          self._fileGetter( resolveUrl(BASE_URL, filename),
+            function onDone(code) {
+              // code will be non-null if there is actually new code to download.
+              if (code) {
+                console.info("Downloaded new code for " + filename);
+                self._codeStorage.setFile(filename, code);
+                console.warn("Saved code for: " + filename);
+              } else {
+                console.info("Nothing to download for " + filename);
+              }
+              numFilesToDload --;
+              if (numFilesToDload == 0) {
+                console.info("Calling callback.");
+                callback(true);
+              }
+            }, modDate);
+        }
       } else {
         console.warn("Could not download index.json from test pilot server.");
         callback(false);
@@ -203,20 +203,21 @@ exports.RemoteExperimentLoader.prototype = {
   // Filename might be something like "bookmarks01/experiment.js"
 
   getExperiments: function() {
-    // Load up anything already stored in codeStorage...
-    console.info("About to call codeStorage.get.");
-    let experimentsJson = this._codeStorage.get();
-    console.info("About to iterate filenames in json.");
+    // Load up and return all experiments (not libraries)
+    // already stored in codeStorage
+    console.info("GetExperiments called.");
     let remoteExperiments = {};
-    for (let filename in experimentsJson.fs) {
+    console.info("Size of this._experimentFilenames is " + this._experimentFilenames.length);
+    for each (let filename in this._experimentFilenames) {
+      console.info("GetExperiments is loading " + filename);
       try {
         remoteExperiments[filename] = this._loader.require(filename);
+        console.info("Loaded " + filename + " OK.");
       } catch(e) {
         console.warn("Error loading " + filename);
         console.warn(e);
       }
     }
-
     return remoteExperiments;
   }
 };

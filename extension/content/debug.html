@@ -3,11 +3,16 @@
 <title>Test Pilot Debug Page</title>
 <script src="experiment-page.js" type="application/javascript;version=1.8"></script>
 <script type="application/javascript;version=1.8">
+
+  function getEid() {
+    return parseInt(document.getElementById("eid-input").value);
+  }
+
   function setTaskStatus() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     var newStatus = document.getElementById("status-code").value;
     newStatus = parseInt(newStatus);
-    var task = TestPilotSetup.getTaskById(1);
+    var task = TestPilotSetup.getTaskById(getEid());
     task.changeStatus(newStatus, false);
   }
 
@@ -34,7 +39,7 @@
   }
 
   function loadExperimentCode() {
-    var filename = "a-week-life/a_week_life.js";
+    var filename = "dependency-experiment/ghost-study.js"
     var textArea = document.getElementById("experiment-code-area");
     prefStore = getCodeStorage();
     code = prefStore.getFile(filename).contents;
@@ -42,7 +47,8 @@
   }
 
   function saveAndRun() {
-    var filename = "a-week-life/a_week_life.js";
+
+    var filename = "dependency-experiment/ghost-study.js";
     var textArea = document.getElementById("experiment-code-area");
     prefStore = getCodeStorage();
     code = prefStore.setFile(filename, textArea.value);
@@ -52,21 +58,22 @@
 
   function showMetaData() {
     Components.utils.import("resource://testpilot/modules/setup.js");
-    let task = TestPilotSetup.getTaskById(2);
+    let task = TestPilotSetup.getTaskById(getEid());
     let csv = task._prependMetadataToCSV();
     document.getElementById("debug").innerHTML = "<pre>" + csv + "</pre>";
   }
 
   function makeThereBeAPopup() {
     Components.utils.import("resource://testpilot/modules/setup.js");
-    var task = TestPilotSetup.getTaskById(1);
+    var task = TestPilotSetup.getTaskById(getEid());
     var text = "Results are now available for " + task.title;
     TestPilotSetup._showNotification(text, task);
   }
 
   function wipeDb() {
-    Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
-    TabsExperimentDataStore.wipeAllData();
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    var task = TestPilotSetup.getTaskById(getEid());
+    task.dataStore.wipeAllData();
     var debug = document.getElementById("debug");
     debug.innerHTML = "Wiped!";
   }
@@ -80,6 +87,7 @@
 </head>
 
 <body>
+<p>Experiment number <input type="text" id="eid-input" value="1"></input></p>
 <p><button onclick="showRawData(1);">Show Raw Data</button>
 <button onclick="wipeDb();">Wipe My Data</button>
 <button onclick="uploadData();">Upload My Data</button>

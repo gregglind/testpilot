@@ -402,6 +402,17 @@ let TestPilotSetup = {
     return Application.extensions.get(EXTENSION_ID).version;
   },
 
+  _isNewerThanMe: function TPS__isNewerThanMe(versionString) {
+    let result = Cc["@mozilla.org/xpcom/version-comparator;1"]
+                   .getService(Ci.nsIVersionComparator)
+                   .compare(this.version, versionString);
+    if (result < 0) {
+      return true; // versionString is newer than my version
+    } else {
+      return false; // versionString is the same as or older than my version
+    }
+  },
+
   checkForTasks: function TPS_checkForTasks(callback) {
     if (! this._remoteExperimentLoader ) {
       dump("Now requiring remote experiment loader:\n");
@@ -420,6 +431,17 @@ let TestPilotSetup = {
         let experiments = self._remoteExperimentLoader.getExperiments();
 
         for (let filename in experiments) {
+          /* If the experiment specifies a minimum version, and if that
+           * minimum version is higher than our version, don't try to
+           * load the experiment: */
+          let minVer = experiments[filename].experimentInfo.minTPVersion;
+          if (minVer && self._isNewerThanMe(minVer)) {
+            dump("Not loading " + filename + "\n");
+            dump("Because it requires version " + minVer + "\n");
+            // TODO If this happens, we should tell user to update
+            // their extension.
+            continue;
+          }
           try {
             // The try-catch ensures that if something goes wrong in loading one
             // experiment, the other experiments after that one still get loaded.

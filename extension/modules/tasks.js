@@ -46,6 +46,7 @@ Components.utils.import("resource://testpilot/modules/metadata.js");
 const STATUS_PREF_PREFIX = "extensions.testpilot.taskstatus.";
 const START_DATE_PREF_PREFIX = "extensions.testpilot.startDate.";
 const RECUR_PREF_PREFIX = "extensions.testpilot.reSubmit.";
+const RECUR_TIMES_PREF_PREFIX = "extensions.testpilot.recurCount.";
 const SURVEY_ANSWER_PREFIX = "extensions.testpilot.surveyAnswers.";
 const RETRY_INTERVAL_PREF = "extensions.testpilot.uploadRetryInterval";
 const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
@@ -419,6 +420,18 @@ TestPilotExperiment.prototype = {
                                (new Date(this._startDate)).toString());
   },
 
+  get _numTimesRun() {
+    // For automatically recurring tests, this is the number of times it
+    // has recurred - it will be 1 on the first run, 2 on the second run,
+    // etc.
+    if (this._recursAutomatically) {
+      return Application.prefs.getValue(RECUR_TIMES_PREF_PREFIX + this._id,
+                                        1);
+    } else {
+      return 0;
+    }
+  },
+
   checkDate: function TestPilotExperiment_checkDate() {
     // This method handles all date-related status changes and should be
     // called periodically.
@@ -437,6 +450,14 @@ TestPilotExperiment.prototype = {
       } else {
         // Normal case is reset to new.
         this.changeStatus(TaskConstants.STATUS_NEW);
+
+        // increment count of how many times this recurring test has run
+        let numTimesRun = this._numTimesRun;
+        numTimesRun++;
+        dump("Test recurring... incrementing " + RECUR_TIMES_PREF_PREFIX + this._id + " to " + numTimesRun +"\n");
+        Application.prefs.setValue( RECUR_TIMES_PREF_PREFIX + this._id,
+                                    numTimesRun );
+        dump("Incremented it.\n");
       }
     }
 
@@ -483,10 +504,10 @@ TestPilotExperiment.prototype = {
     let rows = this._dataStore.getAllDataAsCSV();
     let metadata = MetadataCollector.getMetadata();
     let header = [];
-    header.push("fx_version, tp_version, exp_version, location, os");
+    header.push("fx_version, tp_version, exp_version, location, os, recurCount");
     header.push([metadata.fxVersion, metadata.tpVersion,
                  this._versionNumber, metadata.location,
-                 metadata.operatingSystem].join(", "));
+                 metadata.operatingSystem, this._numTimesRun].join(", "));
     header.push("extensions");
     header.push(metadata.extensions.join(", "));
     header.push("survey_answers");

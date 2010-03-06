@@ -203,9 +203,7 @@
     }
 
     // Do whatever the experiment's web content wants done on load:
-    var graphUtils = {drawPieChart: drawPieChart,
-                      drawTimeSeriesGraph: drawTimeSeriesGraph};
-    experiment.webContent.onPageLoad(experiment, document, graphUtils);
+    experiment.webContent.onPageLoad(experiment, document, jQuery);
   }
 
   function showStatusMenuPage() {

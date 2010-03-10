@@ -28,7 +28,8 @@
 
   function remindMe() {
     Components.utils.import("resource://testpilot/modules/setup.js");
-    TestPilotSetup._doHousekeeping();
+    TestPilotSetup._notifyUserOfTasks(3);
+    //TestPilotSetup._doHousekeeping();
   }
 
   function getCodeStorage() {

@@ -49,6 +49,9 @@ Components.utils.import("resource://testpilot/modules/tasks.js");
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
 const VERSION_PREF ="extensions.testpilot.lastversion";
 const FIRST_RUN_PREF ="extensions.testpilot.firstRunUrl";
+const POPUP_SHOW_ON_NEW = "extensions.testpilot.popup.showOnNewStudy";
+const POPUP_SHOW_ON_FINISH = "extensions.testpilot.popup.showOnStudyFinished";
+const POPUP_SHOW_ON_RESULTS = "extensions.testpilot.popup.showOnNewResults";
 const POPUP_CHECK_INTERVAL = "extensions.testpilot.popup.delayAfterStartup";
 const POPUP_REMINDER_INTERVAL = "extensions.testpilot.popup.timeBetweenChecks";
 
@@ -61,11 +64,6 @@ const TEST_PILOT_HOME_PAGE = "http://testpilot.mozillalabs.com";
 
 let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
-
-/* TODO observe for private browsing start and stop:  this is done with the observer notifications
- * topic = "private-browsing" data = "enter"
- * and topic = "private-browsing" data = "exit"
- */
 
 let TestPilotSetup = {
   isNewlyInstalledOrUpgraded: false,
@@ -306,19 +304,22 @@ let TestPilotSetup = {
   },
 
   _notifyUserOfTasks: function TPS__notifyUser(priority) {
-    // Show door-hanger thingy if there are new tasks.
+    // Check whether there are tasks needing attention, and if any are
+    // found, show the popup door-hanger thingy.
     let i, task, text;
 
     // Highest priority is if there is a finished test (needs a decision)
-    for (i = 0; i < this.taskList.length; i++) {
-      task = this.taskList[i];
-      if (task.status == TaskConstants.STATUS_FINISHED) {
-        let text = "A Test Pilot study has completed: "
-                   + task.title + " needs your attention.";
-	this._showNotification(text, task);
-        // We return after showing something, because it only makes sense
-        // to show one notification at a time!
-	return;
+    if (Application.prefs.getValue(POPUP_SHOW_ON_FINISH, false)) {
+      for (i = 0; i < this.taskList.length; i++) {
+        task = this.taskList[i];
+        if (task.status == TaskConstants.STATUS_FINISHED) {
+          let text = "A Test Pilot study has completed: "
+                       + task.title + " needs your attention.";
+	  this._showNotification(text, task);
+          // We return after showing something, because it only makes
+          // sense to show one notification at a time!
+	  return;
+        }
       }
     }
 
@@ -329,37 +330,41 @@ let TestPilotSetup = {
 
     // If there's no finished test, next highest priority is tests that
     // have started since last time...
-    for (i = 0; i < this.taskList.length; i++) {
-      task = this.taskList[i];
-      if (task.status == TaskConstants.STATUS_STARTING) {
-	text = "A study is now in progress: " + task.title;
-	this._showNotification(text, task);
-	return;
+    if (Application.prefs.getValue(POPUP_SHOW_ON_NEW, false)) {
+      for (i = 0; i < this.taskList.length; i++) {
+        task = this.taskList[i];
+        if (task.status == TaskConstants.STATUS_STARTING) {
+          text = "A study is now in progress: " + task.title;
+	  this._showNotification(text, task);
+	  return;
+        }
       }
-    }
 
-    // Then new tests and surveys...
-    for (i = 0; i < this.taskList.length; i++) {
-      task = this.taskList[i];
-      if (task.status == TaskConstants.STATUS_NEW) {
-	if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
-	  text = "A new study has been scheduled: " + task.title;
-	} else {
-	  text = "There is a new survey for you: " + task.title;
-	}
-	this._showNotification(text, task);
-	return;
+      // Then new tests and surveys...
+      for (i = 0; i < this.taskList.length; i++) {
+        task = this.taskList[i];
+        if (task.status == TaskConstants.STATUS_NEW) {
+          if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
+	    text = "A new study has been scheduled: " + task.title;
+	  } else {
+	    text = "There is a new survey for you: " + task.title;
+          }
+	  this._showNotification(text, task);
+	  return;
+        }
       }
     }
 
     // And finally, new experiment results:
-    for (i = 0; i < this.taskList.length; i++) {
-      task = this.taskList[i];
-      if (task.status == TaskConstants.STATUS_RESULTS) {
-	text = "Results are now available for " + task.title;
-	this._showNotification(text, task);
+    if (Application.prefs.getValue(POPUP_SHOW_ON_RESULTS, false)) {
+      for (i = 0; i < this.taskList.length; i++) {
+        task = this.taskList[i];
+        if (task.status == TaskConstants.STATUS_RESULTS) {
+          text = "Results are now available for " + task.title;
+	  this._showNotification(text, task);
+        }
+        return;
       }
-      return;
     }
 
     // High and medium priority stuff ends here.

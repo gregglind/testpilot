@@ -44,9 +44,26 @@ function openPage(url) {
   browser.selectedTab = tab;
 }
 
-/* For support of taskbar-button menu: */
-function doPopup(event) {
-  TestPilotSetup.populateMenu(window);
+// Menu handling code
+
+function updateNotificationSubmenu() {
+  var ntfyMenuFin = document.getElementById("notify-menu-finished");
+  var ntfyMenuNew = document.getElementById("notify-menu-new");
+  var ntfyMenuResults = document.getElementById("notify-menu-results");
+  var Application = Cc["@mozilla.org/fuel/application;1"]
+                  .getService(Ci.fuelIApplication);
+  ntfyMenuFin.setAttribute("checked", Application.prefs.getValue(
+                             POPUP_SHOW_ON_FINISH, false));
+  ntfyMenuNew.setAttribute("checked", Application.prefs.getValue(
+                             POPUP_SHOW_ON_NEW, false));
+  ntfyMenuResults.setAttribute("checked", Application.prefs.getValue(
+                             POPUP_SHOW_ON_RESULTS, false));
+}
+
+function toggleNotificationPref(id) {
+  var prefName = "extensions.testpilot.popup." + id;
+  var oldVal = Application.prefs.getValue(prefName, false);
+  Application.prefs.setValue( prefName, !oldVal);
 }
 
 function onMenuPopupHiding() {

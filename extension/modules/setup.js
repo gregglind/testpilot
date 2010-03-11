@@ -35,7 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-EXPORTED_SYMBOLS = ["TestPilotSetup"];
+EXPORTED_SYMBOLS = ["TestPilotSetup", "POPUP_SHOW_ON_NEW",
+                    "POPUP_SHOW_ON_FINISH", "POPUP_SHOW_ON_RESULTS"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -195,10 +196,6 @@ let TestPilotSetup = {
     // Run this stuff once per window...
     let self = this;
 
-    // TODO can this next line happen in the overlay instead of here?
-    let menu = window.document.getElementById("pilot-menu-popup");
-    menu.addEventListener("command", this.onMenuSelection, false);
-
     // Register listener for URL loads, that will notify all tasks about
     // new page:
     let appcontent = window.document.getElementById("appcontent");
@@ -221,60 +218,6 @@ let TestPilotSetup = {
     this.taskList.push(testPilotTask);
   },
 
-  populateMenu: function TPS_populateMenu(window) {
-    // This is called from an onPopup handler, so it is called right before the menu
-    // is drawn.
-    let menu = window.document.getElementById("pilot-menu-popup");
-    // Create a menu entry for each task:
-    for (let i=0; i<this.taskList.length; i++) {
-      let task = this.taskList[i];
-
-      // First remove any existing menu item for this task, to prevent duplicate entries.
-      // TODO is there a less inefficient way of doing this?
-      for (let j = 0; j < menu.childNodes.length; j++) {
-	let childNode = menu.childNodes[j];
-        if (childNode.taskObject) {
-          if (childNode.taskObject.id == task.id) {
-	    menu.removeChild(childNode);
-	    break;
-          }
-	}
-      }
-
-      let newMenuItem = window.document.createElement("menuitem");
-      newMenuItem.setAttribute("label", "  " + task.title);
-      switch (task.status) {
-      case TaskConstants.STATUS_NEW:
-        // Give it a new icon
-        newMenuItem.setAttribute("class", "menuitem-iconic");
-        newMenuItem.setAttribute("image", "chrome://testpilot/skin/new.png");
-        break;
-      case TaskConstants.STATUS_FINISHED:
-        newMenuItem.setAttribute("label", "  " + task.title + " (Finished - Ready To Submit)");
-        break;
-      case TaskConstants.STATUS_RESULTS:
-        newMenuItem.setAttribute("label",
-                                 "  " + task.title + " (Finished - Results Available)");
-        break;
-      case TaskConstants.STATUS_SUBMITTED:
-      case TaskConstants.STATUS_CANCELLED:
-      case TaskConstants.STATUS_ARCHIVED:
-        // Do not include these in the menu.
-        continue;
-      }
-
-      // TODO other variations of icon and label for other statuses?
-
-      newMenuItem.taskObject = task;
-      let refElement = null;
-      if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
-        refElement = window.document.getElementById("test-menu-separator");
-      } else if (task.taskType == TaskConstants.TYPE_SURVEY) {
-        refElement = window.document.getElementById("survey-menu-separator");
-      }
-      menu.insertBefore(newMenuItem, refElement);
-    }
-  },
 
   _showNotification: function TPS__showNotification(text, task) {
     // If there are multiple windows, show notifications in the frontmost
@@ -394,13 +337,6 @@ let TestPilotSetup = {
 
   onTaskStatusChanged: function TPS_onTaskStatusChanged() {
     this._notifyUserOfTasks(ANY_PRIORITY);
-  },
-
-  onMenuSelection: function TPS_onMenuSelection(event) {
-    let label = event.target.getAttribute("label");
-    if (event.target.taskObject) {
-      event.target.taskObject.loadPage();
-    }
   },
 
   get version() {

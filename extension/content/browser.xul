@@ -9,15 +9,22 @@
 
 <menu id="pilot-menu" class="menu-iconic" label="Test Pilot" insertafter="addonsManager"
       image="chrome://testpilot/skin/testpilot_16x16.png">
-  <menupopup id="pilot-menu-popup" onpopupshowing="if (event.target == this ) doPopup(event);"
-                             onpopuphiding="onMenuPopupHiding();">
-    <menuitem label="Current Surveys" disabled="true" id="menu-item-surveys"/>
-    <menuseparator id="survey-menu-separator"/>
-    <menuitem label="Current Tests" disabled="true" id="menu-item-tests"/>
-    <menuseparator id="test-menu-separator"/>
-    <menuitem label="Upcoming Tests"
-              oncommand="openPage('https://wiki.mozilla.org/Labs/Test_Pilot');"/>
-    <menuitem label="All Tests"
+  <menupopup id="pilot-menu-popup" onpopuphiding="onMenuPopupHiding();">
+    <menu id="pilot-notification-settings" label="Notification Settings...">
+      <menupopup id="new-popup" onpopupshowing="updateNotificationSubmenu();">
+        <menuitem label="Notify me when..." disabled="true"/>
+        <menuitem id="notify-menu-finished"
+                  label="A study is ready to submit" type="checkbox"
+                  oncommand="toggleNotificationPref('showOnStudyFinished');"/>
+        <menuitem id="notify-menu-new"
+                  label="There's a new study" type="checkbox"
+                  oncommand="toggleNotificationPref('showOnNewStudy');"/>
+        <menuitem id="notify-menu-results"
+                  label="A study has new results" type="checkbox"
+                  oncommand="toggleNotificationPref('showOnNewResults');"/>
+      </menupopup>
+    </menu>
+    <menuitem label="All Your Studies"
               oncommand="openPage('chrome://testpilot/content/status.html');"/>
     <menuitem label="About Test Pilot"
               oncommand="openPage('http://testpilot.mozillalabs.com');"/>

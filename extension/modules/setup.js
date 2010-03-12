@@ -218,24 +218,51 @@ let TestPilotSetup = {
     this.taskList.push(testPilotTask);
   },
 
-
-  _showNotification: function TPS__showNotification(text, task) {
+  _showNotification: function TPS__showNotification(task, fragile, text, title,
+                                                    iconSrc, showSubmit,
+                                                    showClose, linkText,
+                                                    linkUrl) {
     // If there are multiple windows, show notifications in the frontmost
     // window.
-    let window = this._getFrontBrowserWindow();
-    let popup = window.document.getElementById("pilot-notification-popup");
-    let button = window.document.getElementById("pilot-notifications-button");
+
+    // If fragile is true, a click anywhere dismisses the popup.  If
+    // fragile is false, only a click on the close box dismisses it.
+    let doc = this._getFrontBrowserWindow().document;
+
+    let popup = doc.getElementById("pilot-notification-popup");
+    let taskbarIcon = doc.getElementById("pilot-notifications-button");
+    let textLabel = doc.getElementById("pilot-notification-text");
+    let titleLabel = doc.getElementById("pilot-notification-title");
+    let icon = doc.getElementById("pilot-notification-icon");
+    let closeBtn = doc.getElementById("pilot-notification-close");
+    let submitBtn = doc.getElementById("pilot-notification-submit");
     var self = this;
+
+    // Set all appropriate attributes on popup:
+    popup.setAttribute("noautohide", !fragile);
+    textLabel.setAttribute("value", text);
+    titleLabel.setAttribute("value", title);
+    icon.setAttribute("src", iconSrc);
+    closeBtn.setAttribute("hidden", !showClose);
+    submitBtn.setAttribute("hidden", !showSubmit);
+
+    if (fragile) {
+      popup.onclick = function() {
+        self._hideNotification();
+        if (task) {
+          task.loadPage();
+        }
+      };
+    } else {
+      closeBtn.onclick = function() {
+        self._hideNotification();
+      };
+    }
+
+    // Show the popup:
     popup.hidden = false;
     popup.setAttribute("open", "true");
-    popup.getElementsByTagName("label")[0].setAttribute("value", text);
-    popup.onclick = function() {
-      self._hideNotification();
-      if (task) {
-        task.loadPage();
-      }
-    };
-    popup.openPopup( button, "after_end");
+    popup.openPopup( taskbarIcon, "after_end");
   },
 
   _hideNotification: function TPS__hideNotification(text) {
@@ -249,16 +276,19 @@ let TestPilotSetup = {
   _notifyUserOfTasks: function TPS__notifyUser(priority) {
     // Check whether there are tasks needing attention, and if any are
     // found, show the popup door-hanger thingy.
-    let i, task, text;
+    let i, task, title, text;
 
     // Highest priority is if there is a finished test (needs a decision)
     if (Application.prefs.getValue(POPUP_SHOW_ON_FINISH, false)) {
       for (i = 0; i < this.taskList.length; i++) {
         task = this.taskList[i];
         if (task.status == TaskConstants.STATUS_FINISHED) {
-          let text = "A Test Pilot study has completed: "
-                       + task.title + " needs your attention.";
-	  this._showNotification(text, task);
+          title = "Ready to Submit";
+          text = "The Test Pilot " + task.title + " study is finished " +
+                       "gathering data and is ready to submit.";
+	  this._showNotification(task, false, text, title,
+                                 "chrome://testpilot/skin/ready_submit_48x48.png",
+                                 true, "linkText", "linkUrl");
           // We return after showing something, because it only makes
           // sense to show one notification at a time!
 	  return;
@@ -271,28 +301,18 @@ let TestPilotSetup = {
       return;
     }
 
-    // If there's no finished test, next highest priority is tests that
-    // have started since last time...
+    // If there's no finished test, next highest priority is new tests that
+    // are starting...
     if (Application.prefs.getValue(POPUP_SHOW_ON_NEW, false)) {
       for (i = 0; i < this.taskList.length; i++) {
         task = this.taskList[i];
-        if (task.status == TaskConstants.STATUS_STARTING) {
-          text = "A study is now in progress: " + task.title;
-	  this._showNotification(text, task);
-	  return;
-        }
-      }
-
-      // Then new tests and surveys...
-      for (i = 0; i < this.taskList.length; i++) {
-        task = this.taskList[i];
-        if (task.status == TaskConstants.STATUS_NEW) {
-          if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
-	    text = "A new study has been scheduled: " + task.title;
-	  } else {
-	    text = "There is a new survey for you: " + task.title;
-          }
-	  this._showNotification(text, task);
+        if (task.status == TaskConstants.STATUS_STARTING ||
+            task.status == TaskConstants.STATUS_NEW) {
+          title = "New Test Pilot Study";
+          text = "The Test Pilot " + task.title + " study is now beginning.";
+	  this._showNotification(task, true, text, title,
+                                 "chrome://testpilot/skin/new_study_48x48.png",
+                                 false, false, "linkText", "linkUrl");
 	  return;
         }
       }
@@ -303,8 +323,12 @@ let TestPilotSetup = {
       for (i = 0; i < this.taskList.length; i++) {
         task = this.taskList[i];
         if (task.status == TaskConstants.STATUS_RESULTS) {
-          text = "Results are now available for " + task.title;
-	  this._showNotification(text, task);
+          title = "New Test Pilot Results";
+          text = "New results are now available for the Test Pilot " +
+            task.title + " study.";
+	  this._showNotification(task, true, text, title,
+                                 "chrome://testpilot/skin/new_results_48x48.png",
+                                 false, false, "linkText", "linkUrl");
         }
         return;
       }

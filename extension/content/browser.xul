@@ -38,11 +38,22 @@
                   onmousedown="event.preventDefault(); onMenuButtonMouseDown();"
                   image="chrome://testpilot/skin/testpilot_16x16.png"/>
 
-  <panel id="pilot-notification-popup" hidden="true" noautofocus="true" level="top"
-         position="after_start">
-    <hbox id="pilot-notification-popup-container" align="top">
-      <label id="pilot-notification-text" value="Test Pilot wants your attention."/>
-    </hbox>
+  <panel id="pilot-notification-popup" hidden="true" noautofocus="true"
+         level="top" position="after_start">
+    <vbox id="pilot-notification-popup-container" align="center">
+      <hbox align="left" id="pilot-notification-toprow">
+        <image id="pilot-notification-icon"/>
+        <label id="pilot-notification-title"/>
+        <image id="pilot-notification-close"
+               src="chrome://testpilot/skin/close_button_16x16.png"/>
+      </hbox>
+      <label id="pilot-notification-text"
+             value="Test Pilot wants your attention."/>
+      <hbox align="left" id="pilot-notification-bottomrow">
+        <label id="pilot-notification-link" value="link goes here"/>
+        <button id="pilot-notification-submit" label="Submit"/>
+      </hbox>
+    </vbox>
   </panel>
 
 </statusbar>

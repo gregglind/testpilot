@@ -67,8 +67,9 @@
   function makeThereBeAPopup() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     var task = TestPilotSetup.getTaskById(getEid());
-    var text = "Results are now available for " + task.title;
-    TestPilotSetup._showNotification(text, task);
+    var text = "Sample popup for " + task.title;
+    TestPilotSetup._showNotification(task, false, text, "This is Title",
+                                     "", true, true, "Linktext", "");
   }
 
   function wipeDb() {

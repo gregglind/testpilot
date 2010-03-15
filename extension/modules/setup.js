@@ -329,8 +329,8 @@ let TestPilotSetup = {
 	  this._showNotification(task, true, text, title,
                                  "chrome://testpilot/skin/new_results_48x48.png",
                                  false, false, "linkText", "linkUrl");
+          return;
         }
-        return;
       }
     }
 

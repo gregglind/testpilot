@@ -476,7 +476,7 @@ TestPilotExperiment.prototype = {
 
     // What happens when a test finishes:
     if (this._status < TaskConstants.STATUS_FINISHED &&
-	currentDate >= this._endDate ) {
+	currentDate > this._endDate ) {
       dump("Passed End Date - Switched Task Status to Finished\n");
       this.changeStatus( TaskConstants.STATUS_FINISHED );
       this.onExperimentShutdown();

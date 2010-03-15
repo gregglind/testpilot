@@ -399,14 +399,19 @@ let TestPilotSetup = {
           /* If the experiment specifies a minimum version, and if that
            * minimum version is higher than our version, don't try to
            * load the experiment: */
-          let minVer = experiments[filename].experimentInfo.minTPVersion;
-          if (minVer && self._isNewerThanMe(minVer)) {
-            dump("Not loading " + filename + "\n");
-            dump("Because it requires version " + minVer + "\n");
-            // TODO If this happens, we should tell user to update
-            // their extension.
-            continue;
-          }
+	  try {
+            let minVer = experiments[filename].experimentInfo.minTPVersion;
+            if (minVer && self._isNewerThanMe(minVer)) {
+              dump("Not loading " + filename + "\n");
+              dump("Because it requires version " + minVer + "\n");
+              // TODO If this happens, we should tell user to update
+              // their extension.
+              continue;
+            }
+	  } catch (e) {
+            dump("Min Test Pilot Version is not found " + filename + ": " +
+		 e + "\n");
+	  }
           try {
             // The try-catch ensures that if something goes wrong in loading one
             // experiment, the other experiments after that one still get loaded.
@@ -476,6 +481,3 @@ let TestPilotSetup = {
   }
 
 };
-
-
-

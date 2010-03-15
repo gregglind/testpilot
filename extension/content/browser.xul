@@ -25,7 +25,7 @@
       </menupopup>
     </menu>
     <menuitem label="All Your Studies"
-              oncommand="openPage('chrome://testpilot/content/status.html');"/>
+              oncommand="openAllStudiesWindow();"/>
     <menuitem label="About Test Pilot"
               oncommand="openPage('http://testpilot.mozillalabs.com');"/>
   </menupopup>
@@ -43,7 +43,7 @@
     <vbox id="pilot-notification-popup-container" align="center">
       <hbox align="left" id="pilot-notification-toprow">
         <image id="pilot-notification-icon"/>
-        <label id="pilot-notification-title"/>
+        <label id="pilot-notification-title" class="pilot-title"/>
         <image id="pilot-notification-close"
                src="chrome://testpilot/skin/close_button_16x16.png"/>
       </hbox>

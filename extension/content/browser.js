@@ -35,7 +35,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Components.utils.import("resource://testpilot/modules/setup.js");
+const ALL_STUDIES_WINDOW_NAME = "theTestPilotAllStudiesWindow";
+
+Cu.import("resource://testpilot/modules/setup.js");
 
 function openPage(url) {
   // TODO if already open in a tab, go to that tab rather than re-opening
@@ -82,6 +84,17 @@ function onMenuButtonMouseDown() {
 
   menuPopup.openPopup(menuButton, "before_start", 0, 0, true);
 }
+
+function openAllStudiesWindow() {
+  // TODO if it's already open, bring it to front but don't open a new one
+  // TODO studies shouldn't get window open notification when this one opens!
+  var allStudiesWindow = window.open(
+    "chrome://testpilot/content/all-studies-window.xul",
+    ALL_STUDIES_WINDOW_NAME,
+    "chrome,centerscreen,resizable=no,scrollbars=yes,status=no,width=500,height=500"
+  );
+}
+
 
 function window_onLoad() {
   /* "Hold" window load events for TestPilotSetup, passing them along only

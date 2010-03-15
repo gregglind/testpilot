@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://testpilot/content/browser.css" type="text/css"?>
+
+<window id="test-pilot-all-studies-window" title="Your Test Pilot Studies"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="onLoadAllStudiesWindow();">
+
+  <script src="chrome://testpilot/content/all-studies-window.js"
+          type="application/javascript;version=1.8"/>
+
+  <tabbox>
+    <tabs>
+      <tab label="Current Studies"/>
+      <tab label="Upcoming Studies"/>
+      <tab label="Finished Studies"/>
+    </tabs>
+    <tabpanels>
+
+      <tabpanel id="current-studies-tab">
+        <grid flex="1">
+          <columns>
+            <column/> <!-- study icon column -->
+            <column/> <!-- study text column -->
+            <column/> <!-- study actions column -->
+          </columns>
+          <rows id="current-studies-rowset">
+          </rows>
+        </grid>
+      </tabpanel>
+
+      <tabpanel id="upcoming-studies-tab">
+        <grid flex="1">
+          <columns>
+            <column/>
+            <column/>
+          </columns>
+          <rows id="upcoming-studies-rowset">
+          </rows>
+        </grid>
+      </tabpanel>
+
+      <tabpanel id="finished-studies-tab">
+        <grid flex="1">
+          <columns>
+            <column/>
+            <column/>
+          </columns>
+          <rows id="finished-studies-rowset">
+          </rows>
+        </grid>
+      </tabpanel>
+
+    </tabpanels>
+  </tabbox>
+
+  <vbox>
+  </vbox>
+</window>

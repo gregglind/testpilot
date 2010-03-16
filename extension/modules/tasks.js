@@ -48,9 +48,11 @@ const START_DATE_PREF_PREFIX = "extensions.testpilot.startDate.";
 const RECUR_PREF_PREFIX = "extensions.testpilot.reSubmit.";
 const RECUR_TIMES_PREF_PREFIX = "extensions.testpilot.recurCount.";
 const SURVEY_ANSWER_PREFIX = "extensions.testpilot.surveyAnswers.";
+const EXPIRATION_DATE_FOR_DATA_SUBMISSION_PREFIX =
+  "extensions.testpilot.expirationDateForDataSubmission.";
 const RETRY_INTERVAL_PREF = "extensions.testpilot.uploadRetryInterval";
 const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
-
+const EXPIRATION_TIME_FOR_DATA_SUBMISSION = 7 * (24 * 60 * 60 * 1000); // 7 days
 
 const TaskConstants = {
  STATUS_NEW: 0, // It's new and you haven't seen it yet.
@@ -436,6 +438,20 @@ TestPilotExperiment.prototype = {
     }
   },
 
+  set _expirationDateForDataSubmission(date) {
+    Application.prefs.setValue(
+      EXPIRATION_DATE_FOR_DATA_SUBMISSION_PREFIX + this._id,
+      (new Date(date)).toString());
+  },
+
+  get _expirationDateForDataSubmission() {
+    let expirationDate = Date.now() + EXPIRATION_TIME_FOR_DATA_SUBMISSION;
+
+    return Application.prefs.getValue(
+      EXPIRATION_DATE_FOR_DATA_SUBMISSION_PREFIX + this._id,
+      (new Date(expirationDate)).toString());
+  },
+
   checkDate: function TestPilotExperiment_checkDate() {
     // This method handles all date-related status changes and should be
     // called periodically.
@@ -488,11 +504,27 @@ TestPilotExperiment.prototype = {
         if (this.recurPref == TaskConstants.ALWAYS_SUBMIT) {
           dump("Automatically Uploading Data\n");
           this.upload( function() {} );
-        }
-        if (this.recurPref == TaskConstants.NEVER_SUBMIT) {
+        } else if (this.recurPref == TaskConstants.NEVER_SUBMIT) {
           dump("Automatically opting out of uploading data\n");
           this.changeStatus( TaskConstants.STATUS_CANCELLED, true);
-        }
+        } else {
+          // set the expiration date for date submission
+	  this._expirationDateForDataSubmission =
+	    currentDate + EXPIRATION_TIME_FOR_DATA_SUBMISSION;
+	}
+      } else {
+        // set the expiration date for date submission
+	this._expirationDateForDataSubmission =
+	  currentDate + EXPIRATION_TIME_FOR_DATA_SUBMISSION;
+      }
+    } else {
+      // only do this if the state is already finished.
+      if (this._status == TaskConstants.STATUS_FINISHED) {
+	let expirationDate = Date.parse(this._expirationDateForDataSubmission);
+	if (currentDate > expirationDate) {
+          this.changeStatus(TaskConstants.STATUS_CANCELLED, true);
+          this._dataStore.wipeAllData();
+	}
       }
     }
 

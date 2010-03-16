@@ -610,7 +610,7 @@ TestPilotExperiment.prototype = {
     req.send( params );
   },
 
-  optOut: function TestPilotExperiment_optOut(reason) {
+  optOut: function TestPilotExperiment_optOut(reason, callback) {
     this.changeStatus(TaskConstants.STATUS_CANCELLED);
     this._dataStore.wipeAllData();
     dump("Opting out of test with reason " + reason + "\n");
@@ -627,8 +627,10 @@ TestPilotExperiment.prototype = {
         if (req.readyState == 4) {
           if (req.status == 200) {
 	    dump("Quit reason posted successfully " + req.responseText + "\n");
+    	    callback(true);
 	  } else {
 	    dump(req.status + " posting error " + req.responseText +"\n");
+	    callback(false);
 	  }
 	}
       };

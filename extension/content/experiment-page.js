@@ -113,7 +113,10 @@
     let eid = parseInt(getUrlParam("eid"));
     let reason = document.getElementById("reason-for-quit").value;
     let task = TestPilotSetup.getTaskById(eid);
-    task.optOut(reason);
+    task.optOut(reason, function(success) {
+      // load the you-are-canceleed page.
+      window.location = "chrome://testpilot/content/status.html?eid=" + eid;
+    });
 
     // If opt-out-forever checkbox is checked, opt out forever!
     if (task._recursAutomatically) {
@@ -122,9 +125,6 @@
         task.setRecurPref(TaskConstants.NEVER_SUBMIT);
       }
     }
-    // load the you-are-canceleed page.
-    let url = "chrome://testpilot/content/status.html?eid=" + eid;
-    window.location = url;
   }
 
   function updateRecurSettings() {

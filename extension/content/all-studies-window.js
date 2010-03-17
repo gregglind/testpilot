@@ -2,10 +2,54 @@
 // TODO make sure this works when there are a lot of items (i.e. does scroll
 // bar appear?)
 
+/* TODO layout:
+ * 1. don't scale images - fix their dimensions
+ * 2. Word-wrap title if it's too long, instead of pushing stuff out
+ * 3. Fix width of the left and right columns
+ * 4. Background colors depending on status?
+ * 5. Adjust window size?
+ */
+
+// TODO more better links
+
+// TODO insert text (a new blurb, to be specified in task.webContent?)
+
+// TODO Make the submit button in the notification work, too
+// TODO fix layout in notification
+// TODO add links to notification
+
+
+// TODO Make click on the "more info" link open detail view on study...
+// which is also a XUL window?  Or what?
+
 var TestPilotXulWindow = {
-  onSubmitButton: function(experimentID) {
-    // TODO implement
-    dump("You clicked the XUL submit button for study id " + experimentID + "!\n");
+  onSubmitButton: function(experimentId) {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    let task = TestPilotSetup.getTaskById(experimentId);
+    let button = document.getElementById("submit-button-" + task.id);
+
+    // Hide the upload button so it doesn't get clicked again...
+    let parent = button.parentNode;
+    while (parent.firstChild) {
+      parent.removeChild(parent.firstChild);
+    }
+    // Replace it with a message:
+    this.addLabel(parent, "Now uploading, one moment please...");
+    let self = this;
+
+    task.upload( function(success) {
+      while (parent.firstChild) {
+        parent.removeChild(parent.firstChild);
+      }
+      if (success) {
+        self.addImg(parent, "ready_submit_48x48.png");
+        self.addLabel(parent, "Thank you for submitting!");
+      } else {
+        // The retry case...?
+        self.addLabel(parent, ":-(");
+      }
+    });
+
   },
 
   addXulLink: function (container, text, url) {
@@ -76,6 +120,7 @@ var TestPilotXulWindow = {
         submitButton.setAttribute("label", "Submit");
         submitButton.setAttribute("oncommand",
           "TestPilotXulWindow.onSubmitButton(" + task.id + ");");
+        submitButton.setAttribute("id", "submit-button-" + task.id);
         statusVbox.appendChild(submitButton);
       }
       if (task.status == TaskConstants.STATUS_IN_PROGRESS ||
@@ -140,6 +185,8 @@ var TestPilotXulWindow = {
 
   // If there are no experiments here, it must be because we're
   // not done loading yet... try again in a few seconds.
+  // (YES this can still happen!  If you pick the menu item during startup!)
+
   /*  if (experiments.length == 0 ) {
       contentDiv.innerHTML = "Loading, please wait a moment...";
       window.setTimeout(function() { showStatusMenuPage();}, 2000);

@@ -42,6 +42,8 @@ const Ci = Components.interfaces;
 
 const LOCALE_PREF = "general.useragent.locale";
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
+const PREFIX_NS_EM = "http://www.mozilla.org/2004/em-rdf#";
+const PREFIX_ITEM_URI = "urn:mozilla:item:";
 
 /* The following preference, if present, stores answers to the basic panel
  * survey, which tell us user's general tech level, and so should be included
@@ -78,15 +80,55 @@ let MetadataCollector = {
   getExtensions: function MetadataCollector_getExtensions() {
     //http://lxr.mozilla.org/aviarybranch/source/toolkit/mozapps/extensions/public/nsIExtensionManager.idl
     //http://lxr.mozilla.org/aviarybranch/source/toolkit/mozapps/update/public/nsIUpdateService.idl#45
-    var ExtManager = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);
-    var nsIUpdateItem = Ci.nsIUpdateItem;
-    var items = [];
-    var names = [];
-    items = ExtManager.getItemList(nsIUpdateItem.TYPE_EXTENSION,{});
+    let extManager = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);
+    let rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
+    let datasource = extManager.datasource;
+    let nsIUpdateItem = Ci.nsIUpdateItem;
+    let items = [];
+    let extensions = [];
+    let itemResource;
+    let itemProperty;
+    let itemValue;
+    let isEnabled;
+
+    items = extManager.getItemList(nsIUpdateItem.TYPE_EXTENSION,{});
     for (var i = 0; i < items.length; ++i) {
-      names.push(Weave_sha1( items[i].id ));
+      id = items[i].id;
+
+      itemResource = rdf.GetResource(PREFIX_ITEM_URI + id);
+      itemProperty = rdf.GetResource(PREFIX_NS_EM + "isDisabled");
+      itemTarget = datasource.GetTarget(itemResource, itemProperty, true);
+
+      if (itemTarget) {
+	itemValue = itemTarget.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+	isEnabled = (itemValue != "true");
+      } else {
+	isEnabled = true;
+      }
+
+      extensions.push({ id: Weave_sha1(id), isEnabled: isEnabled  });
     }
-    return names;
+    return extensions;
+  },
+
+  getAccessibilities : function MetadataCollector_getLocation () {
+    let prefs =
+      Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
+    let branch = prefs.getBranch("accessibility.");
+    let accessibilities = [];
+    let children = branch.getChildList("", {});
+    let length = children.length;
+    let prefName;
+    let prefValue;
+
+    for (let i = 0; i < length; i++) {
+      prefName = "accessibility." + children[i];
+      prefValue =
+        Application.prefs.getValue(prefName, "");
+      accessibilities.push({ name: prefName, value: prefValue });
+    }
+
+    return accessibilities;
   },
 
   getLocation: function MetadataCollector_getLocation() {
@@ -116,6 +158,7 @@ let MetadataCollector = {
 
   getMetadata: function MetadataCollector_getMetadata() {
     return { extensions: MetadataCollector.getExtensions(),
+             accessibilities: MetadataCollector.getAccessibilities(),
 	     location: MetadataCollector.getLocation(),
 	     fxVersion: MetadataCollector.getVersion(),
              operatingSystem: MetadataCollector.getOperatingSystem(),

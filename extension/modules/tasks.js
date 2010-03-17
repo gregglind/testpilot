@@ -539,13 +539,36 @@ TestPilotExperiment.prototype = {
   _prependMetadataToCSV: function TestPilotExperiment__prependMetadata() {
     let rows = this._dataStore.getAllDataAsCSV();
     let metadata = MetadataCollector.getMetadata();
+    let extLength = metadata.extensions.length;
+    let accLength = metadata.accessibilities.length;
     let header = [];
+    let extensionIds = [];
+    let accessibilityNames = [];
+    let isExtEnabled = [];
+    let isAccEnabled = [];
+    let extension;
+    let accessibility;
+
+    for (let i = 0; i < extLength; i++) {
+      extension = metadata.extensions[i];
+      extensionIds.push(extension.id);
+      isExtEnabled.push(extension.isEnabled? "enabled" : "disabled");
+    }
+    for (let i = 0; i < accLength; i++) {
+      accessibility = metadata.accessibilities[i];
+      accessibilityNames.push(accessibility.name);
+      isAccEnabled.push(accessibility.value);
+    }
     header.push("fx_version, tp_version, exp_version, location, os, recurCount");
     header.push([metadata.fxVersion, metadata.tpVersion,
                  this._versionNumber, metadata.location,
                  metadata.operatingSystem, this._numTimesRun].join(", "));
     header.push("extensions");
-    header.push(metadata.extensions.join(", "));
+    header.push(extensionIds.join(", "));
+    header.push(isExtEnabled.join(", "));
+    header.push("accessibilities");
+    header.push(accessibilityNames.join(", "));
+    header.push(isAccEnabled.join(", "));
     header.push("survey_answers");
     header.push(metadata.surveyAnswers);
     header.push("experiment_data");

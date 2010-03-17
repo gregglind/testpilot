@@ -32,6 +32,13 @@ var TestPilotXulWindow = {
     container.appendChild(newImg);
   },
 
+  addProgressBar: function(container, percent) {
+    let progBar = document.createElement("progressmeter");
+    progBar.setAttribute("mode", "determined");
+    progBar.setAttribute("value", Math.ceil(percent).toString());
+    container.appendChild(progBar);
+  },
+
   openURL: function(url) {
     let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                         .getService(Components.interfaces.nsIWindowMediator);
@@ -74,13 +81,11 @@ var TestPilotXulWindow = {
       if (task.status == TaskConstants.STATUS_IN_PROGRESS ||
           task.status == TaskConstants.STATUS_STARTING ) {
 
-        this.addLabel(statusVbox, "Started on " +
-                                 (new Date(task.startDate)).toDateString());
-
-       /* let progressBar = document.createElement();
-        vbox.appendChild(progressBar);*/
-
-        this.addLabel(statusVbox, "Will end on " +
+        this.addLabel(statusVbox, "Currently Gathering Data.");
+        let now = (new Date()).getTime();
+        let progress = 100* (now - task.startDate) / (task.endDate - task.startDate);
+        this.addProgressBar(statusVbox, progress);
+        this.addLabel(statusVbox, "Will finish " +
                                  (new Date(task.endDate)).toDateString());
       }
       if (task.status == TaskConstants.STATUS_SUBMITTED ||

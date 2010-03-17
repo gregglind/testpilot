@@ -3,6 +3,7 @@
 <?xml-stylesheet href="chrome://testpilot/content/browser.css" type="text/css"?>
 
 <window id="test-pilot-all-studies-window" title="Your Test Pilot Studies"
+        windowtype="extensions:testpilot:all_studies_window"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="TestPilotXulWindow.onLoad();">
 

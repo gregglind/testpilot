@@ -45,8 +45,8 @@ var TestPilotXulWindow = {
         self.addImg(parent, "ready_submit_48x48.png");
         self.addLabel(parent, "Thank you for submitting!");
       } else {
-        // The retry case...?
-        self.addLabel(parent, ":-(");
+        // TODO a better error message?
+        self.addLabel(parent, "Unable to reach Mozilla; try again later.");
       }
     });
 

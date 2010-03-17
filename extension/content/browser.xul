@@ -9,25 +9,27 @@
 
 <menu id="pilot-menu" class="menu-iconic" label="Test Pilot" insertafter="addonsManager"
       image="chrome://testpilot/skin/testpilot_16x16.png">
-  <menupopup id="pilot-menu-popup" onpopuphiding="onMenuPopupHiding();">
+  <menupopup id="pilot-menu-popup"
+             onpopuphiding="TestPilotMenuUtils.onPopupHiding();">
     <menu id="pilot-notification-settings" label="Notification Settings...">
-      <menupopup id="new-popup" onpopupshowing="updateNotificationSubmenu();">
+      <menupopup id="new-popup"
+                 onpopupshowing="TestPilotMenuUtils.updateSubmenu();">
         <menuitem label="Notify me when..." disabled="true"/>
         <menuitem id="notify-menu-finished"
                   label="A study is ready to submit" type="checkbox"
-                  oncommand="toggleNotificationPref('showOnStudyFinished');"/>
+                  oncommand="TestPilotMenuUtils.toggleNotiPref('showOnStudyFinished');"/>
         <menuitem id="notify-menu-new"
                   label="There's a new study" type="checkbox"
-                  oncommand="toggleNotificationPref('showOnNewStudy');"/>
+                  oncommand="TestPilotMenuUtils.toggleNotiPref('showOnNewStudy');"/>
         <menuitem id="notify-menu-results"
                   label="A study has new results" type="checkbox"
-                  oncommand="toggleNotificationPref('showOnNewResults');"/>
+                  oncommand="TestPilotMenuUtils.toggleNotiPref('showOnNewResults');"/>
       </menupopup>
     </menu>
     <menuitem label="All Your Studies"
-              oncommand="openAllStudiesWindow();"/>
+              oncommand="TestPilotMenuUtils.openAllStudiesWindow();"/>
     <menuitem label="About Test Pilot"
-              oncommand="openPage('http://testpilot.mozillalabs.com');"/>
+              oncommand="TestPilotMenuUtils.openPage('http://testpilot.mozillalabs.com');"/>
   </menupopup>
 </menu>
 
@@ -35,7 +37,7 @@
   <statusbarpanel id="pilot-notifications-button"
                   class="statusbarpanel-iconic"
                   insertbefore="security-button"
-                  onmousedown="event.preventDefault(); onMenuButtonMouseDown();"
+                  onmousedown="event.preventDefault(); TestPilotMenuUtils.onMenuButtonMouseDown();"
                   image="chrome://testpilot/skin/testpilot_16x16.png"/>
 
   <panel id="pilot-notification-popup" hidden="true" noautofocus="true"

@@ -39,88 +39,92 @@ const ALL_STUDIES_WINDOW_NAME = "theTestPilotAllStudiesWindow";
 
 Cu.import("resource://testpilot/modules/setup.js");
 
-function openPage(url) {
-  // TODO if already open in a tab, go to that tab rather than re-opening
-  var browser = window.getBrowser();
-  var tab = browser.addTab(url);
-  browser.selectedTab = tab;
-}
 
-// Menu handling code
+// Namespace object
+var TestPilotMenuUtils = {
+  openPage: function(url) {
+    // TODO if already open in a tab, go to that tab rather than re-opening
+    var browser = window.getBrowser();
+    var tab = browser.addTab(url);
+    browser.selectedTab = tab;
+  },
 
-function updateNotificationSubmenu() {
-  var ntfyMenuFin = document.getElementById("notify-menu-finished");
-  var ntfyMenuNew = document.getElementById("notify-menu-new");
-  var ntfyMenuResults = document.getElementById("notify-menu-results");
-  var Application = Cc["@mozilla.org/fuel/application;1"]
-                  .getService(Ci.fuelIApplication);
-  ntfyMenuFin.setAttribute("checked", Application.prefs.getValue(
-                             POPUP_SHOW_ON_FINISH, false));
-  ntfyMenuNew.setAttribute("checked", Application.prefs.getValue(
-                             POPUP_SHOW_ON_NEW, false));
-  ntfyMenuResults.setAttribute("checked", Application.prefs.getValue(
-                             POPUP_SHOW_ON_RESULTS, false));
-}
+  updateSubmenu: function() {
+    var ntfyMenuFin = document.getElementById("notify-menu-finished");
+    var ntfyMenuNew = document.getElementById("notify-menu-new");
+    var ntfyMenuResults = document.getElementById("notify-menu-results");
+    var Application = Cc["@mozilla.org/fuel/application;1"]
+                    .getService(Ci.fuelIApplication);
+    ntfyMenuFin.setAttribute("checked", Application.prefs.getValue(
+                               POPUP_SHOW_ON_FINISH, false));
+    ntfyMenuNew.setAttribute("checked", Application.prefs.getValue(
+                               POPUP_SHOW_ON_NEW, false));
+    ntfyMenuResults.setAttribute("checked", Application.prefs.getValue(
+                               POPUP_SHOW_ON_RESULTS, false));
+  },
 
-function toggleNotificationPref(id) {
-  var prefName = "extensions.testpilot.popup." + id;
-  var oldVal = Application.prefs.getValue(prefName, false);
-  Application.prefs.setValue( prefName, !oldVal);
-}
+  toggleNotiPref: function(id) {
+    var prefName = "extensions.testpilot.popup." + id;
+    var oldVal = Application.prefs.getValue(prefName, false);
+    Application.prefs.setValue( prefName, !oldVal);
+  },
 
-function onMenuPopupHiding() {
-  var menuPopup = document.getElementById('pilot-menu-popup');
-  var menu = document.getElementById('pilot-menu');
-  if (menuPopup.parentNode != menu)
-    menu.appendChild(menuPopup);
-}
+  onPopupHiding: function() {
+    var menuPopup = document.getElementById('pilot-menu-popup');
+    var menu = document.getElementById('pilot-menu');
+    if (menuPopup.parentNode != menu)
+      menu.appendChild(menuPopup);
+  },
 
-function onMenuButtonMouseDown() {
-  var menuPopup = document.getElementById('pilot-menu-popup');
-  var menuButton = document.getElementById("pilot-notifications-button");
+  onMenuButtonMouseDown: function() {
+    var menuPopup = document.getElementById('pilot-menu-popup');
+    var menuButton = document.getElementById("pilot-notifications-button");
 
-  if (menuPopup.parentNode != menuButton)
-    menuButton.appendChild(menuPopup);
+    if (menuPopup.parentNode != menuButton)
+      menuButton.appendChild(menuPopup);
 
-  menuPopup.openPopup(menuButton, "before_start", 0, 0, true);
-}
+    menuPopup.openPopup(menuButton, "before_start", 0, 0, true);
+  },
 
-function openAllStudiesWindow() {
-  // TODO if it's already open, bring it to front but don't open a new one
-  // TODO studies shouldn't get window open notification when this one opens!
-  var allStudiesWindow = window.open(
-    "chrome://testpilot/content/all-studies-window.xul",
-    ALL_STUDIES_WINDOW_NAME,
-    "chrome,centerscreen,resizable=no,scrollbars=yes,status=no,width=500,height=500"
-  );
-}
-
-
-function window_onLoad() {
-  /* "Hold" window load events for TestPilotSetup, passing them along only
-   * after startup is complete.  It's hacky, but the benefit is that
-   * TestPilotSetup.onWindowLoad can treat all windows the same no matter
-   * whether they opened with Firefox on startup or were opened later. */
-  if (TestPilotSetup.startupComplete) {
-    TestPilotSetup.onWindowLoad(window);
-  } else {
-    var observerSvc = Cc["@mozilla.org/observer-service;1"]
-                         .getService(Ci.nsIObserverService);
-    var observer = {
-      observe: function(subject, topic, data) {
-        dump("Oh hey, startup is done, now I can tell test pilot about my window.\n");
-        observerSvc.removeObserver(this, "testpilot:startup:complete");
-        TestPilotSetup.onWindowLoad(window);
-      }
-    };
-    dump("We're still starting up so I can't tell test pilot about my window yet.\n");
-    observerSvc.addObserver(observer, "testpilot:startup:complete", false);
+  openAllStudiesWindow: function() {
+    // TODO if it's already open, bring it to front but don't open a new one
+    // TODO studies shouldn't get window open notification when this one opens!
+    var allStudiesWindow = window.open(
+      "chrome://testpilot/content/all-studies-window.xul",
+      ALL_STUDIES_WINDOW_NAME,
+      "chrome,centerscreen,resizable=no,scrollbars=yes,status=no,width=500,height=500"
+    );
   }
-}
+};
 
-function window_onUnload() {
-  TestPilotSetup.onWindowUnload(window);
-}
 
-window.addEventListener("load", window_onLoad, false);
-window.addEventListener("unload", window_onUnload, false);
+var TestPilotWindowHandlers = {
+  onWindowLoad: function() {
+    /* "Hold" window load events for TestPilotSetup, passing them along only
+     * after startup is complete.  It's hacky, but the benefit is that
+     * TestPilotSetup.onWindowLoad can treat all windows the same no matter
+     * whether they opened with Firefox on startup or were opened later. */
+    if (TestPilotSetup.startupComplete) {
+      TestPilotSetup.onWindowLoad(window);
+    } else {
+      var observerSvc = Cc["@mozilla.org/observer-service;1"]
+                           .getService(Ci.nsIObserverService);
+      var observer = {
+        observe: function(subject, topic, data) {
+          dump("Oh hey, startup is done, now I can tell test pilot about my window.\n");
+          observerSvc.removeObserver(this, "testpilot:startup:complete");
+          TestPilotSetup.onWindowLoad(window);
+        }
+      };
+      dump("We're still starting up so I can't tell test pilot about my window yet.\n");
+      observerSvc.addObserver(observer, "testpilot:startup:complete", false);
+    }
+  },
+
+  onWindowUnload: function() {
+    TestPilotSetup.onWindowUnload(window);
+  }
+};
+
+window.addEventListener("load", TestPilotWindowHandlers.onWindowLoad, false);
+window.addEventListener("unload", TestPilotWindowHandlers.onWindowUnload, false);

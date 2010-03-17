@@ -4,7 +4,7 @@
 
 <window id="test-pilot-all-studies-window" title="Your Test Pilot Studies"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="onLoadAllStudiesWindow();">
+        onload="TestPilotXulWindow.onLoad();">
 
   <script src="chrome://testpilot/content/all-studies-window.js"
           type="application/javascript;version=1.8"/>

@@ -224,9 +224,6 @@ let TestPilotSetup = {
                                                     linkUrl) {
     // If there are multiple windows, show notifications in the frontmost
     // window.
-
-    // If fragile is true, a click anywhere dismisses the popup.  If
-    // fragile is false, only a click on the close box dismisses it.
     let doc = this._getFrontBrowserWindow().document;
 
     let popup = doc.getElementById("pilot-notification-popup");
@@ -245,7 +242,25 @@ let TestPilotSetup = {
     icon.setAttribute("src", iconSrc);
     closeBtn.setAttribute("hidden", !showClose);
     submitBtn.setAttribute("hidden", !showSubmit);
+    if (showSubmit) {
+      // Functionality for submit button:
+      submitBtn.onclick = function() {
+        self._hideNotification();
+        task.upload( function(success) {
+          if (success) {
+            self._showNotification(task, true, "Thank you for uploading your data.",
+                                   "Thanks!",
+                                   "chrome://testpilot/skin/ready_submit_48x48.png",
+                                   false, false, "", "");
+          } else {
+            // TODO any point in showing an error message here?
+          }
+        });
+      };
+    }
 
+    // If fragile is true, a click anywhere dismisses the popup.  If
+    // fragile is false, only a click on the close box dismisses it.
     if (fragile) {
       popup.onclick = function() {
         self._hideNotification();

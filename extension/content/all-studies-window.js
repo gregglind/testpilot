@@ -14,7 +14,6 @@
 
 // TODO insert text (a new blurb, to be specified in task.webContent?)
 
-// TODO Make the submit button in the notification work, too
 // TODO fix layout in notification
 // TODO add links to notification
 

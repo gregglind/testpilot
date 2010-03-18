@@ -542,19 +542,23 @@ TestPilotExperiment.prototype = {
     let extLength = metadata.extensions.length;
     let accLength = metadata.accessibilities.length;
     let header = [];
-    let extensionIds = [];
+    let enabledExtensions = [];
+    let disabledExtensions = [];
     let accessibilityNames = [];
-    let isExtEnabled = [];
     let isAccEnabled = [];
     let extension;
     let accessibility;
+    let i;
 
-    for (let i = 0; i < extLength; i++) {
+    for (i = 0; i < extLength; i++) {
       extension = metadata.extensions[i];
-      extensionIds.push(extension.id);
-      isExtEnabled.push(extension.isEnabled? "enabled" : "disabled");
+      if (extension.isEnabled) {
+        enabledExtensions.push(extension.id);
+      } else {
+        disabledExtensions.push(extension.id);
+      }
     }
-    for (let i = 0; i < accLength; i++) {
+    for (i = 0; i < accLength; i++) {
       accessibility = metadata.accessibilities[i];
       accessibilityNames.push(accessibility.name);
       isAccEnabled.push(accessibility.value);
@@ -563,9 +567,10 @@ TestPilotExperiment.prototype = {
     header.push([metadata.fxVersion, metadata.tpVersion,
                  this._versionNumber, metadata.location,
                  metadata.operatingSystem, this._numTimesRun].join(", "));
-    header.push("extensions");
-    header.push(extensionIds.join(", "));
-    header.push(isExtEnabled.join(", "));
+    header.push("enabled_extensions");
+    header.push(enabledExtensions.join(", "));
+    header.push("disabled_extensions");
+    header.push(disabledExtensions.join(", "));
     header.push("accessibilities");
     header.push(accessibilityNames.join(", "));
     header.push(isAccEnabled.join(", "));

@@ -92,12 +92,12 @@ let MetadataCollector = {
     let isEnabled;
 
     items = extManager.getItemList(nsIUpdateItem.TYPE_EXTENSION,{});
-    for (var i = 0; i < items.length; ++i) {
-      id = items[i].id;
+    for (let i = 0; i < items.length; ++i) {
+      let id = items[i].id;
 
       itemResource = rdf.GetResource(PREFIX_ITEM_URI + id);
       itemProperty = rdf.GetResource(PREFIX_NS_EM + "isDisabled");
-      itemTarget = datasource.GetTarget(itemResource, itemProperty, true);
+      let itemTarget = datasource.GetTarget(itemResource, itemProperty, true);
 
       if (itemTarget) {
 	itemValue = itemTarget.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;

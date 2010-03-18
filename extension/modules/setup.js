@@ -219,7 +219,7 @@ let TestPilotSetup = {
   },
 
   _showNotification: function TPS__showNotification(task, fragile, text, title,
-                                                    iconSrc, showSubmit,
+                                                    iconClass, showSubmit,
                                                     showClose, linkText,
                                                     linkUrl) {
     // If there are multiple windows, show notifications in the frontmost
@@ -239,7 +239,10 @@ let TestPilotSetup = {
     popup.setAttribute("noautohide", !fragile);
     textLabel.setAttribute("value", text);
     titleLabel.setAttribute("value", title);
-    icon.setAttribute("src", iconSrc);
+    if (iconClass) {
+      // css will set the image url based on the class.
+      icon.setAttribute("class", iconClass);
+    }
     closeBtn.setAttribute("hidden", !showClose);
     submitBtn.setAttribute("hidden", !showSubmit);
     if (showSubmit) {
@@ -248,9 +251,9 @@ let TestPilotSetup = {
         self._hideNotification();
         task.upload( function(success) {
           if (success) {
-            self._showNotification(task, true, "Thank you for uploading your data.",
-                                   "Thanks!",
-                                   "chrome://testpilot/skin/ready_submit_48x48.png",
+            self._showNotification(task, true,
+                                   "Thank you for uploading your data.",
+                                   "Thanks!", "study-submitted",
                                    false, false, "", "");
           } else {
             // TODO any point in showing an error message here?
@@ -301,8 +304,7 @@ let TestPilotSetup = {
           title = "Ready to Submit";
           text = "The Test Pilot " + task.title + " study is finished " +
                        "gathering data and is ready to submit.";
-	  this._showNotification(task, false, text, title,
-                                 "chrome://testpilot/skin/ready_submit_48x48.png",
+	  this._showNotification(task, false, text, title, "study-finished",
                                  true, "linkText", "linkUrl");
           // We return after showing something, because it only makes
           // sense to show one notification at a time!
@@ -325,8 +327,7 @@ let TestPilotSetup = {
             task.status == TaskConstants.STATUS_NEW) {
           title = "New Test Pilot Study";
           text = "The Test Pilot " + task.title + " study is now beginning.";
-	  this._showNotification(task, true, text, title,
-                                 "chrome://testpilot/skin/new_study_48x48.png",
+	  this._showNotification(task, true, text, title, "new-study",
                                  false, false, "linkText", "linkUrl");
 	  return;
         }
@@ -341,8 +342,7 @@ let TestPilotSetup = {
           title = "New Test Pilot Results";
           text = "New results are now available for the Test Pilot " +
             task.title + " study.";
-	  this._showNotification(task, true, text, title,
-                                 "chrome://testpilot/skin/new_results_48x48.png",
+	  this._showNotification(task, true, text, title, "new-results",
                                  false, false, "linkText", "linkUrl");
           return;
         }

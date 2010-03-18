@@ -41,7 +41,7 @@ var TestPilotXulWindow = {
         parent.removeChild(parent.firstChild);
       }
       if (success) {
-        self.addImg(parent, "ready_submit_48x48.png");
+        self.addImg(parent, "study-submitted");
         self.addLabel(parent, "Thank you for submitting!");
       } else {
         // TODO a better error message?
@@ -69,9 +69,9 @@ var TestPilotXulWindow = {
     container.appendChild(label);
   },
 
-  addImg: function(container, src) {
+  addImg: function(container, iconClass) {
     let newImg = document.createElement("image");
-    newImg.setAttribute("src", "chrome://testpilot/skin/" + src);
+    newImg.setAttribute("class", iconClass);
     container.appendChild(newImg);
   },
 
@@ -101,7 +101,7 @@ var TestPilotXulWindow = {
       let task = experiments[i];
       let newRow = document.createElement("row");
 
-      this.addImg(newRow, "new_study_48x48.png");
+      this.addImg(newRow, "new-study");
 
       let textVbox = document.createElement("vbox");
       newRow.appendChild(textVbox);
@@ -136,7 +136,7 @@ var TestPilotXulWindow = {
           task.status == TaskConstants.STATUS_RESULTS ||
           task.status == TaskConstants.STATUS_ARCHIVED) {
 
-        this.addImg(statusVbox, "ready_submit_48x48.png");
+        this.addImg(statusVbox, "study-finished");
         this.addLabel(statusVbox, "Thank you for submitting!");
       }
 
@@ -171,16 +171,6 @@ var TestPilotXulWindow = {
     // task.infoPageUrl
     // task.resultsUrl // may not exist
     // task.defaultUrl points to one of these!
-    // Links in add-ons manager are just
-    // <label class="text-link" onclick="if (event.button ==0) {
-    // openURL(this.getAttribute('homepageURL'));}"
-    // homepageURL = "http://whatever"/>
-    // styles for text-link are defined in skin/classic/global/console.css
-    // and skin/classic/global/global.css
-    //
-    // (I think we can just link to href="chrome://global/skin/" type="text/css"
-    //if (experiments[i].taskType == TaskConstants.TYPE_EXPERIMENT)
-
 
   // If there are no experiments here, it must be because we're
   // not done loading yet... try again in a few seconds.

@@ -290,18 +290,6 @@ src: url('chrome://testpilot/skin//DroidSans-Bold.ttf') format('truetype');
 .menuOn a {color: #666666; text-decoration: none;}
 .menuOn a:hover {color: #666666; text-decoration: none;}
 
-#survey-explanation {
-    float: left;
-    width: 45%;
-    margin: 20px 0px;
-}
-
-#icon-explanation {
-    float: right;
-    width: 45%;
-    margin: 20px 0px;
-}
-
 canvas {
     border: 1px solid black;
 }
@@ -312,4 +300,13 @@ a {
 
 a:hover {
     color: #9f423b; text-decoration: underline; cursor: pointer;
+}
+
+#survey-explanation {
+  color: #787878;
+  font-size: 14px;
+}
+
+.survey-question-explanation {
+  color: #787878;
 }

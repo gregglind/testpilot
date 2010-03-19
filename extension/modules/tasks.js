@@ -758,10 +758,15 @@ TestPilotBuiltinSurvey.prototype = {
                    surveyInfo.surveyUrl,
                    surveyInfo.resultsUrl);
     this._questions = surveyInfo.surveyQuestions;
+    this._explanation = surveyInfo.surveyExplanation;
   },
 
   get taskType() {
     return TaskConstants.TYPE_SURVEY;
+  },
+
+  get surveyExplanation() {
+    return this._explanation;
   },
 
   get surveyQuestions() {

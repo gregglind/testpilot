@@ -3,6 +3,7 @@ const CHECK_BOXES_WITH_FREE_ENTRY = 1;
 const SCALE = 2;
 const FREE_ENTRY = 3;
 const CHECK_BOXES = 4;
+const MULTIPLE_CHOICE_WITH_FREE_ENTRY = 5;
 
 function onBuiltinSurveyLoad() {
   Components.utils.import("resource://testpilot/modules/setup.js");
@@ -13,12 +14,18 @@ function onBuiltinSurveyLoad() {
   if (!task) {
     // Tasks haven't all loaded yet.  Try again in a few seconds.
     contentDiv.innerHTML = "Loading, please wait a moment...";
-    window.setTimeout(function() {onBuiltinSurveyLoad();}, 2000);
+     window.setTimeout(function() { onBuiltinSurveyLoad(); }, 2000);
     return;
+  } else {
+    contentDiv.innerHTML = "";
   }
 
   let title = document.getElementById("survey-title");
   title.innerHTML = task.title;
+  let explanation = document.getElementById("survey-explanation");
+  if (task.surveyExplanation) {
+    explanation.innerHTML = task.surveyExplanation;
+  }
 
   if (task.status == TaskConstants.STATUS_SUBMITTED) {
     contentDiv.innerHTML = "<p>Thank you for finishing this survey. Your " +
@@ -29,9 +36,6 @@ function onBuiltinSurveyLoad() {
     submitButton.setAttribute("style", "display:none");
     let changeButton = document.getElementById("change-answers");
     changeButton.setAttribute("style", "");
-    changeButton.addEventListener("click", function() {
-                                    drawSurveyForm(task, contentDiv);},
-                                  false);
   } else {
     drawSurveyForm(task, contentDiv);
   }
@@ -40,7 +44,6 @@ function onBuiltinSurveyLoad() {
 function drawSurveyForm(task, contentDiv) {
   let oldAnswers = task.oldAnswers;
   let surveyQuestions = task.surveyQuestions;
-  let i;
 
   let submitButton = document.getElementById("survey-submit");
   submitButton.setAttribute("style", "");
@@ -48,11 +51,20 @@ function drawSurveyForm(task, contentDiv) {
   changeButton.setAttribute("style", "display:none");
   // Loop through questions and render html form input elements for each
   // one.
-  for (i = 0; i < surveyQuestions.length; i++) {
+  for (let i = 0; i < surveyQuestions.length; i++) {
     let question = surveyQuestions[i].question;
-    let elem = document.createElement("h3");
+    let explanation = surveyQuestions[i].explanation;
+    let elem;
+
+    elem = document.createElement("h3");
     elem.innerHTML = (i+1) + ". " + question;
     contentDiv.appendChild(elem);
+    if (explanation) {
+      elem = document.createElement("p");
+      elem.setAttribute("class", "survey-question-explanation")
+      elem.innerHTML = explanation;
+      contentDiv.appendChild(elem);
+    }
     // If you've done this survey before, preset all inputs using old answers
     let j;
     let choices = surveyQuestions[i].choices;
@@ -63,7 +75,7 @@ function drawSurveyForm(task, contentDiv) {
         newRadio.setAttribute("type", "radio");
         newRadio.setAttribute("name", "answer_to_" + i);
         newRadio.setAttribute("value", j);
-        if (oldAnswers && oldAnswers[i] == j) {
+        if (oldAnswers && oldAnswers[i] == String(j)) {
           newRadio.setAttribute("checked", "true");
         }
         let label = document.createElement("span");
@@ -82,7 +94,7 @@ function drawSurveyForm(task, contentDiv) {
         newCheck.setAttribute("value", j);
         if (oldAnswers && oldAnswers[i]) {
           for each (let an in oldAnswers[i]) {
-            if (an == j) {
+            if (an == String(j)) {
               newCheck.setAttribute("checked", "true");
             }
           }
@@ -104,8 +116,8 @@ function drawSurveyForm(task, contentDiv) {
         if (oldAnswers && oldAnswers[i]) {
           for each (let an in oldAnswers[i]) {
             if (isNaN(parseInt(an))) {
-              inputBox.innerHTML = an;
-            } else {
+              inputBox.value = an;
+              break;
             }
           }
         }
@@ -122,7 +134,7 @@ function drawSurveyForm(task, contentDiv) {
         newRadio.setAttribute("type", "radio");
         newRadio.setAttribute("name", "answer_to_" + i);
         newRadio.setAttribute("value", j);
-        if (oldAnswers && oldAnswers[i] == j) {
+        if (oldAnswers && oldAnswers[i] == String(j)) {
           newRadio.setAttribute("checked", "true");
         }
         contentDiv.appendChild(newRadio);
@@ -138,6 +150,66 @@ function drawSurveyForm(task, contentDiv) {
     case CHECK_BOXES:
       // TODO LATER - kind of redundant since it's just the
       // check-box-plus-free-entry case without the free entry.
+      break;
+    case MULTIPLE_CHOICE_WITH_FREE_ENTRY:
+      let checked = false;
+      let freeformId = "freeform_" + i;
+
+      for (j = 0; j < choices.length; j++) {
+        let newRadio = document.createElement("input");
+        newRadio.setAttribute("type", "radio");
+        newRadio.setAttribute("name", "answer_to_" + i);
+        newRadio.setAttribute("value", j);
+        newRadio.addEventListener(
+          "click", function() {
+            let inputBox = document.getElementById(freeformId);
+            if (inputBox) {
+              inputBox.value = "";
+            }
+          }, false);
+        let label = document.createElement("span");
+        label.innerHTML = choices[j];
+        if (oldAnswers && oldAnswers[i] == String(j)) {
+          newRadio.setAttribute("checked", "true");
+          checked = true;
+        }
+        contentDiv.appendChild(newRadio);
+        contentDiv.appendChild(label);
+        contentDiv.appendChild(document.createElement("br"));
+      }
+
+      // Text area:
+      if (surveyQuestions[i].free_entry) {
+        let radioName = "answer_to_" + i;
+        let newRadio = document.createElement("input");
+        newRadio.setAttribute("type", "radio");
+        newRadio.setAttribute("name", radioName);
+        newRadio.setAttribute("value", freeformId);
+        let label = document.createElement("span");
+        label.innerHTML = surveyQuestions[i].free_entry + "&nbsp:&nbsp";
+        let inputBox = document.createElement("input");
+        inputBox.setAttribute("type", "text");
+        inputBox.setAttribute("id", freeformId);
+        inputBox.addEventListener(
+          "keypress", function() {
+            let elements = document.getElementsByName(radioName);
+            for (let k = 0; k < elements.length; k++) {
+              if (elements[k].value == freeformId) {
+                elements[k].checked = true;
+              } else {
+                elements[k].checked = false;
+              }
+            }
+          }, false);
+       if (oldAnswers && oldAnswers[i] && (oldAnswers[i].length > 0) &&
+            !checked) {
+          newRadio.setAttribute("checked", "true");
+          inputBox.value = oldAnswers[i];
+        }
+        contentDiv.appendChild(newRadio);
+        contentDiv.appendChild(label);
+        contentDiv.appendChild(inputBox);
+      }
       break;
     }
   }
@@ -157,12 +229,12 @@ function onBuiltinSurveySubmit() {
     let elems = document.getElementsByName("answer_to_" + i);
     let anAnswer = [];
     for each (let elem in elems) {
-      if (elem.checked) {
+      if (elem.checked && elem.value != ("freeform_" + i)) {
         anAnswer.push(elem.value);
       }
     }
     let freeEntry = document.getElementById("freeform_" + i);
-    if (freeEntry) {
+    if (freeEntry && freeEntry.value) {
       anAnswer.push(freeEntry.value);
     }
     answers.push(anAnswer);
@@ -172,4 +244,12 @@ function onBuiltinSurveySubmit() {
   task.store(answers);
   // Reload page to show submitted status:
   onBuiltinSurveyLoad();
+}
+
+function onBuiltinSurveyChangeAnswers() {
+  let eid = getUrlParam("eid");
+  let task = TestPilotSetup.getTaskById(eid);
+  let contentDiv = document.getElementById("survey-contents");
+
+  drawSurveyForm(task, contentDiv);
 }

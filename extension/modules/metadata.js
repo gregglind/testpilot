@@ -111,7 +111,7 @@ let MetadataCollector = {
     return extensions;
   },
 
-  getAccessibilities : function MetadataCollector_getLocation () {
+  getAccessibilities : function MetadataCollector_getAccessibilities() {
     let prefs =
       Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefService);
     let branch = prefs.getBranch("accessibility.");

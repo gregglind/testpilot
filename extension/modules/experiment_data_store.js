@@ -194,6 +194,16 @@ ExperimentDataStore.prototype = {
     dump("ExperimentDataStore.wipeAllData complete.\n");
   },
 
+  haveData: function EDS_haveData() {
+    let countSql = "SELECT * FROM "  + this._tableName;
+    let countStmt = this._createStatement(countSql);
+    let haveData = false;
+    if (countStmt.executeStep()) {
+      haveData = true;
+    }
+    return haveData;
+  },
+
   getHumanReadableColumnNames: function EDS_getHumanReadableColumnNames() {
     let i;
     return [ this._columns[i].displayName for (i in this._columns) ];

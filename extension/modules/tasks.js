@@ -310,6 +310,8 @@ TestPilotExperiment.prototype = {
   },
 
   getWebContent: function TestPilotExperiment_getWebContent() {
+    let content;
+
     switch (this._status) {
       case TaskConstants.STATUS_NEW:
       case TaskConstants.STATUS_PENDING:
@@ -323,18 +325,27 @@ TestPilotExperiment.prototype = {
         return this.webContent.completedHtml;
       break;
       case TaskConstants.STATUS_CANCELLED:
-        return '<h2>You have quit the <a href="' + this.infoPageUrl +
-        '">&quot;' + this.title + '&quot;</a> study.</h2>' +
-	'<p>All data related to this study has been deleted from your computer.</p>' +
-	'<p>Test Pilot will offer you new studies and surveys as they become available.</p>';
+        content = '<h2>You have quit the <a href="' + this.infoPageUrl +
+          '">&quot;' + this.title + '&quot;</a> study.</h2>';
+	if (this._dataStore.haveData() && this.webContent.remainDataHtml) {
+          content += this.webContent.remainDataHtml;
+	} else {
+	  content += '<p>All data related to this study has been deleted from your computer.</p>';
+	}
+	content += '<p>Test Pilot will offer you new studies and surveys as they become available.</p>';
+        return content;
       break;
       case TaskConstants.STATUS_SUBMITTED:
-        return '<h2>Thank you for submitting your ' +
-        '<a href="' + this.infoPageUrl + '">&quot;' + this.title +
-        '&quot;</a> study data!</h2>' +
-	'<h3>More tests are coming soon.  Stay tuned.</h3>' +
-	'<p>Test Pilot is no longer collecting data.  All the data that was collected has been transmitted to Mozilla and deleted from your computer.</p>' +
-	'<p>The results of the study will be available soon.  When they are ready to view, Test Pilot will let you know.</p>';
+        content = '<h2>Thank you for submitting your ' +
+          '<a href="' + this.infoPageUrl + '">&quot;' + this.title +
+          '&quot;</a> study data!</h2>';
+	if (this._dataStore.haveData() && this.webContent.remainDataHtml) {
+          content += this.webContent.remainDataHtml;
+	}
+	content += '<h3>More tests are coming soon.  Stay tuned.</h3>' +
+	  '<p>Test Pilot is no longer collecting data.  All the data that was collected has been transmitted to Mozilla and deleted from your computer.</p>' +
+	  '<p>The results of the study will be available soon.  When they are ready to view, Test Pilot will let you know.</p>';
+        return content;
       break;
     }
     // TODO what to do if status is cancelled, submitted, results, or archived?
@@ -461,7 +472,7 @@ TestPilotExperiment.prototype = {
     if (this._recursAutomatically &&
         this._status >= TaskConstants.STATUS_FINISHED &&
         currentDate >= this._startDate &&
-        currentDate <= this._endDate ) {
+	currentDate <= this._endDate) {
       // if we've done a permanent opt-out, then don't start over-
       // just keep rescheduling.
       if (this.recurPref == TaskConstants.NEVER_SUBMIT) {
@@ -485,14 +496,16 @@ TestPilotExperiment.prototype = {
     if (!this._optInRequired &&
         this._status < TaskConstants.STATUS_STARTING &&
         currentDate >= this._startDate &&
-        currentDate <= this._endDate){
+        currentDate <= this._endDate) {
+      // clear the data before starting.
+      this._dataStore.wipeAllData();
       this.changeStatus(TaskConstants.STATUS_STARTING);
       this.onExperimentStartup();
     }
 
     // What happens when a test finishes:
     if (this._status < TaskConstants.STATUS_FINISHED &&
-	currentDate > this._endDate ) {
+	currentDate > this._endDate) {
       dump("Passed End Date - Switched Task Status to Finished\n");
       this.changeStatus( TaskConstants.STATUS_FINISHED );
       this.onExperimentShutdown();
@@ -523,7 +536,6 @@ TestPilotExperiment.prototype = {
 	let expirationDate = Date.parse(this._expirationDateForDataSubmission);
 	if (currentDate > expirationDate) {
           this.changeStatus(TaskConstants.STATUS_CANCELLED, true);
-          this._dataStore.wipeAllData();
 	}
       }
     }
@@ -615,7 +627,7 @@ TestPilotExperiment.prototype = {
             self._uploadRetryTimer.cancel(); // Stop retrying - it worked!
           }
           self.changeStatus( TaskConstants.STATUS_SUBMITTED );
-	  self._dataStore.wipeAllData();
+	  // self._dataStore.wipeAllData();
           callback(true);
 	} else {
 	  dump("ERROR POSTING DATA: " + req.responseText + "\n");
@@ -640,7 +652,6 @@ TestPilotExperiment.prototype = {
 
   optOut: function TestPilotExperiment_optOut(reason, callback) {
     this.changeStatus(TaskConstants.STATUS_CANCELLED);
-    this._dataStore.wipeAllData();
     dump("Opting out of test with reason " + reason + "\n");
     if (reason) {
       // Send us the reason...
@@ -664,6 +675,8 @@ TestPilotExperiment.prototype = {
       };
       dump("Sending quit reason.\n");
       req.send( params );
+    } else {
+      callback(false);
     }
   },
 

@@ -45,6 +45,58 @@
     });
   }
 
+  function deleteData() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    Components.utils.import("resource://testpilot/modules/tasks.js");
+    let eid = parseInt(getUrlParam("eid"));
+    let task = TestPilotSetup.getTaskById(eid);
+    task.dataStore.wipeAllData();
+    // reload the URL after wiping all data.
+    window.location = "chrome://testpilot/content/status.html?eid=" + eid;
+  }
+
+  function saveCanvas(canvas) {
+    const nsIFilePicker = Components.interfaces.nsIFilePicker;
+    let filePicker = Components.classes["@mozilla.org/filepicker;1"].
+      createInstance(nsIFilePicker);
+    filePicker.init(window, null, nsIFilePicker.modeSave);
+    filePicker.appendFilters(
+	nsIFilePicker.filterImages | nsIFilePicker.filterAll);
+    filePicker.defaultString = "canvas.png";
+
+    let response = filePicker.show();
+    if (response == nsIFilePicker.returnOK ||
+	response == nsIFilePicker.returnReplace) {
+      const nsIWebBrowserPersist = Components.interfaces.nsIWebBrowserPersist;
+      let file = filePicker.file;
+
+      // create a data url from the canvas and then create URIs of the source
+      // and targets
+      let io = Components.classes["@mozilla.org/network/io-service;1"].
+	getService(Components.interfaces.nsIIOService);
+      let source = io.newURI(canvas.toDataURL("image/png", ""), "UTF8", null);
+      let target = io.newFileURI(file)
+
+      // prepare to save the canvas data
+      let persist = Components.classes[
+	"@mozilla.org/embedding/browser/nsWebBrowserPersist;1"].
+	  createInstance(nsIWebBrowserPersist);
+      persist.persistFlags = nsIWebBrowserPersist.
+	PERSIST_FLAGS_REPLACE_EXISTING_FILES;
+      persist.persistFlags |= nsIWebBrowserPersist.
+        PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+
+      // displays a download dialog (remove these 3 lines for silent download)
+      let xfer = Components.classes["@mozilla.org/transfer;1"].
+	createInstance(Components.interfaces.nsITransfer);
+      xfer.init(source, target, "", null, null, null, persist);
+      persist.progressListener = xfer;
+
+      // save the canvas data to the file
+      persist.saveURI(source, null, null, null, null, file);
+    }
+  }
+
   function getTestEndingDate(experimentId) {
     Components.utils.import("resource://testpilot/modules/setup.js");
     var task = TestPilotSetup.getTaskById(experimentId);
@@ -124,6 +176,8 @@
       if (checkBox.checked) {
         task.setRecurPref(TaskConstants.NEVER_SUBMIT);
       }
+      // quit test so rescheduling
+      task._reschedule();
     }
   }
 

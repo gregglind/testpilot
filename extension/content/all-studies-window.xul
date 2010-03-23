@@ -18,38 +18,19 @@
     </tabs>
     <tabpanels>
 
-      <tabpanel id="current-studies-tab">
-        <grid flex="1">
-          <columns>
-            <column/> <!-- study icon column -->
-            <column/> <!-- study text column -->
-            <column/> <!-- study actions column -->
-          </columns>
-          <rows id="current-studies-rowset">
-          </rows>
-        </grid>
+      <tabpanel id="current-studies-tab" >
+        <richlistbox id="current-studies-listbox" rows="3" style="overflow: auto">
+        </richlistbox>
       </tabpanel>
 
       <tabpanel id="upcoming-studies-tab">
-        <grid flex="1">
-          <columns>
-            <column/>
-            <column/>
-          </columns>
-          <rows id="upcoming-studies-rowset">
-          </rows>
-        </grid>
+        <richlistbox id="upcoming-studies-listbox" rows="3" style="overflow: auto">
+        </richlistbox>
       </tabpanel>
 
       <tabpanel id="finished-studies-tab">
-        <grid flex="1">
-          <columns>
-            <column/>
-            <column/>
-          </columns>
-          <rows id="finished-studies-rowset">
-          </rows>
-        </grid>
+        <richlistbox id="finished-studies-listbox" rows="3" style="overflow: auto">
+        </richlistbox>
       </tabpanel>
 
     </tabpanels>

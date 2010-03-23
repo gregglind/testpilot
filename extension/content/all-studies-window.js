@@ -10,6 +10,10 @@
  * 5. Adjust window size?
  */
 
+// Addons manager doesn't use a grid, it uses a richlistbox id=extensionsView
+// containing a xul:scrollbox containing richlistitems...
+
+
 // TODO more better links
 
 // TODO insert text (a new blurb, to be specified in task.webContent?)
@@ -99,7 +103,7 @@ var TestPilotXulWindow = {
 
     for (let i = 0; i < experiments.length; i++) {
       let task = experiments[i];
-      let newRow = document.createElement("row");
+      let newRow = document.createElement("richlistitem");
 
       this.addImg(newRow, "new-study");
 
@@ -144,21 +148,22 @@ var TestPilotXulWindow = {
 
       // Use status to decide which panel to add this to:
       let rowset;
+      dump("Datatype of status is " + typeof(task.status) + "\n");
       switch (task.status) {
       case TaskConstants.STATUS_NEW:
       case TaskConstants.STATUS_PENDING:
-        rowset = document.getElementById("upcoming-studies-rowset");
+        rowset = document.getElementById("upcoming-studies-listbox");
       break;
       case TaskConstants.STATUS_STARTING:
       case TaskConstants.STATUS_IN_PROGRESS:
       case TaskConstants.STATUS_FINISHED:
-        rowset = document.getElementById("current-studies-rowset");
+        rowset = document.getElementById("current-studies-listbox");
       break;
       case TaskConstants.STATUS_SUBMITTED:
       case TaskConstants.STATUS_RESULTS:
       case TaskConstants.STATUS_ARCHIVED:
       case TaskConstants.STATUS_CANCELLED:
-        rowset = document.getElementById("finished-studies-rowset");
+        rowset = document.getElementById("finished-studies-listbox");
       break;
       }
       rowset.appendChild(newRow);

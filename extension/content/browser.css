@@ -21,18 +21,26 @@
 
 image.study-finished {
     list-style-image: url("chrome://testpilot/skin/ready_submit_48x48.png");
+    max-height: 48px;
+    max-width: 48px;
 }
 
 image.study-submitted {
     list-style-image: url("chrome://testpilot/skin/ready_submit_48x48.png");
+    max-height: 48px;
+    max-width: 48px;
 }
 
 image.new-study {
     list-style-image: url("chrome://testpilot/skin/new_study_48x48.png");
+    max-height: 48px;
+    max-width: 48px;
 }
 
 image.new-results {
     list-style-image: url("chrome://testpilot/skin/new_results_48x48.png");
+    max-height: 48px;
+    max-width: 48px;
 }
 
 richlistbox.tp-study-list {

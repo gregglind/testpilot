@@ -75,7 +75,7 @@
       let io = Components.classes["@mozilla.org/network/io-service;1"].
 	getService(Components.interfaces.nsIIOService);
       let source = io.newURI(canvas.toDataURL("image/png", ""), "UTF8", null);
-      let target = io.newFileURI(file)
+      let target = io.newFileURI(file);
 
       // prepare to save the canvas data
       let persist = Components.classes[

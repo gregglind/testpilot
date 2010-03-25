@@ -1,6 +1,5 @@
 
 /* TODO layout:
- * 1. don't scale images - fix their dimensions
  * 2. Word-wrap title if it's too long, instead of pushing stuff out
  * 3. Fix width of the left and right columns
  * 4. Background colors depending on status?

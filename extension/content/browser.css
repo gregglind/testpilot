@@ -34,3 +34,9 @@ image.new-study {
 image.new-results {
     list-style-image: url("chrome://testpilot/skin/new_results_48x48.png");
 }
+
+richlistbox.tp-study-list {
+ height: 100px;
+ width: 450px; 
+ overflow: auto;
+}

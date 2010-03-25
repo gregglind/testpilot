@@ -19,17 +19,17 @@
     <tabpanels>
 
       <tabpanel id="current-studies-tab" >
-        <richlistbox id="current-studies-listbox" rows="3" style="overflow: auto">
+        <richlistbox id="current-studies-listbox" class="tp-study-list">
         </richlistbox>
       </tabpanel>
 
       <tabpanel id="upcoming-studies-tab">
-        <richlistbox id="upcoming-studies-listbox" rows="3" style="overflow: auto">
+        <richlistbox id="upcoming-studies-listbox" class="tp-study-list">
         </richlistbox>
       </tabpanel>
 
       <tabpanel id="finished-studies-tab">
-        <richlistbox id="finished-studies-listbox" rows="3" style="overflow: auto">
+        <richlistbox id="finished-studies-listbox" class="tp-study-list">
         </richlistbox>
       </tabpanel>
 

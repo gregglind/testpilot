@@ -1,29 +1,35 @@
 
-// TODO make sure this works when there are a lot of items (i.e. does scroll
-// bar appear?)
-
 /* TODO layout:
  * 1. don't scale images - fix their dimensions
  * 2. Word-wrap title if it's too long, instead of pushing stuff out
  * 3. Fix width of the left and right columns
  * 4. Background colors depending on status?
  * 5. Adjust window size?
+ * 6. Make richlistbox take up whole window, no horizontal scroll bar
+ * 7. Style tabs like they're styled in preferences dialog box.
+ *    (This is actually a <radiogroup anonid="selector"
+ *   orient="horizontal" role="listbox" class="paneSelector chromeclass-toolbar">
+ * <radio pane="" label=""><image class="paneButtonIcon"/>
+ * <label class="paneButtonLabel"/></radio>
+ * </radio>)
+ *
+ *   The actual panes are <prefpane id="" label="" src=""> inside a
+ *    xul <deck anonid="paneDeck">
  */
 
-// Addons manager doesn't use a grid, it uses a richlistbox id=extensionsView
-// containing a xul:scrollbox containing richlistitems...
-
-
 // TODO more better links
-
 // TODO insert text (a new blurb, to be specified in task.webContent?)
+// TODO specify study-specific icon in task.webContent too
 
 // TODO fix layout in notification
 // TODO add links to notification
-
+// TODO make notification for "new survey"
 
 // TODO Make click on the "more info" link open detail view on study...
-// which is also a XUL window?  Or what?
+// TODO Show individual status page in new chromeless window as html with
+// background color set to "moz-dialog".
+
+
 
 var TestPilotXulWindow = {
   onSubmitButton: function(experimentId) {

@@ -81,12 +81,18 @@ var TestPilotXulWindow = {
   },
 
   openURL: function(url) {
-    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                        .getService(Components.interfaces.nsIWindowMediator);
-    let win = wm.getMostRecentWindow("navigator:browser");
-    var browser = win.getBrowser();
-    var tab = browser.addTab(url);
-    browser.selectedTab = tab;
+    //TODO... repeated calls to this should open the new URLs in the
+    //same window, not open new windows!
+
+    // Window title should just be "Mozilla Labs Test Pilot" not
+    // chrome://testpilot - Mozilla Labs Test Pilot.
+
+    // Make the window smaller and dialog-boxier
+    // Links to discussion group, twitter, etc should open in new
+    // tab in main browser window, if we have these links here at all!!
+    // Maybe just one link to the main Test Pilot website.
+    let win = window.open(url, "TestPilotStudyDetailWindow",
+                         "resizable=yes,scrollbars=yes,status=no");
   },
 
   onLoad: function () {

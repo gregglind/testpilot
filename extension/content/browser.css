@@ -44,7 +44,12 @@ image.new-results {
 }
 
 richlistbox.tp-study-list {
- height: 100px;
- width: 450px; 
+ height: 500px;
+ width: 500px; 
  overflow: auto;
+    margin: 0px;
+}
+
+.tp-tab-panel {
+    padding: 0px;
 }

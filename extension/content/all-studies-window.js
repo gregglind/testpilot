@@ -4,16 +4,6 @@
  * 3. Fix width of the left and right columns
  * 4. Background colors depending on status?
  * 5. Adjust window size?
- * 6. Make richlistbox take up whole window, no horizontal scroll bar
- * 7. Style tabs like they're styled in preferences dialog box.
- *    (This is actually a <radiogroup anonid="selector"
- *   orient="horizontal" role="listbox" class="paneSelector chromeclass-toolbar">
- * <radio pane="" label=""><image class="paneButtonIcon"/>
- * <label class="paneButtonLabel"/></radio>
- * </radio>)
- *
- *   The actual panes are <prefpane id="" label="" src=""> inside a
- *    xul <deck anonid="paneDeck">
  */
 
 // TODO more better links
@@ -173,8 +163,12 @@ var TestPilotXulWindow = {
       }
       rowset.appendChild(newRow);
     }
+  },
+
+  focusPane: function(paneIndex) {
+    document.getElementById("tp-xulwindow-deck").selectedIndex = paneIndex;
   }
-}
+};
 
     // Show links for:
    // task.currentStatusUrl

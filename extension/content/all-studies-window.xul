@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/preferences.css" type="text/css"?>
 <?xml-stylesheet href="chrome://testpilot/content/browser.css" type="text/css"?>
 
 <window id="test-pilot-all-studies-window" title="Your Test Pilot Studies"
@@ -10,32 +11,42 @@
   <script src="chrome://testpilot/content/all-studies-window.js"
           type="application/javascript;version=1.8"/>
 
-  <tabbox>
-    <tabs>
-      <tab label="Current Studies"/>
-      <tab label="Upcoming Studies"/>
-      <tab label="Finished Studies"/>
-    </tabs>
-    <tabpanels>
+  <windowdragbox orient="vertical">
+    <radiogroup id="tp-radiogroup" orient="horizontal" role="listbox" 
+                class="paneSelector">
+      <radio pane="true" id="current-studies-rb" orient="vertical"
+             onclick="TestPilotXulWindow.focusPane(0);">
+        <image class="new-study"/>
+        <label value="Current Studies"/>
+      </radio>
+      <radio pane="true" id="upcoming-studies-rb" orient="vertical"
+             onclick="TestPilotXulWindow.focusPane(1);">
+        <image class="new-study"/>
+        <label value="Upcoming Studies"/>
+      </radio>
+      <radio pane="true" id="finished-studies-rb" orient="vertical"
+             onclick="TestPilotXulWindow.focusPane(2);">
+         <image class="study-finished"/>
+         <label value="Finished Studies"/>
+      </radio>
+    </radiogroup>
+  </windowdragbox>
+  <deck id="tp-xulwindow-deck">
 
-      <tabpanel id="current-studies-tab" >
-        <richlistbox id="current-studies-listbox" class="tp-study-list">
-        </richlistbox>
-      </tabpanel>
+    <prefpane id="current-studies-tab" class="tp-tab-panel">
+      <richlistbox id="current-studies-listbox" class="tp-study-list">
+      </richlistbox>
+    </prefpane>
 
-      <tabpanel id="upcoming-studies-tab">
-        <richlistbox id="upcoming-studies-listbox" class="tp-study-list">
-        </richlistbox>
-      </tabpanel>
+    <prefpane id="upcoming-studies-tab" class="tp-tab-panel">
+      <richlistbox id="upcoming-studies-listbox" class="tp-study-list">
+      </richlistbox>
+    </prefpane>
 
-      <tabpanel id="finished-studies-tab">
-        <richlistbox id="finished-studies-listbox" class="tp-study-list">
-        </richlistbox>
-      </tabpanel>
+    <prefpane id="finished-studies-tab" class="tp-tab-panel">
+      <richlistbox id="finished-studies-listbox" class="tp-study-list">
+      </richlistbox>
+    </prefpane>
 
-    </tabpanels>
-  </tabbox>
-
-  <vbox>
-  </vbox>
+  </deck>
 </window>

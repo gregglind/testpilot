@@ -1,7 +1,6 @@
 
 /* TODO layout:
  * 2. Word-wrap title if it's too long, instead of pushing stuff out
- * 3. Fix width of the left and right columns
  * 4. Background colors depending on status?
  * 5. Adjust window size?
  */
@@ -138,12 +137,13 @@ var TestPilotXulWindow = {
         this.addImg(statusVbox, "study-finished");
         this.addLabel(statusVbox, "Thank you for submitting!");
       }
-
+      let spacer = document.createElement("spacer");
+      spacer.setAttribute("flex", "1");
+      newRow.appendChild(spacer);
       newRow.appendChild(statusVbox);
 
       // Use status to decide which panel to add this to:
       let rowset;
-      dump("Datatype of status is " + typeof(task.status) + "\n");
       switch (task.status) {
       case TaskConstants.STATUS_NEW:
       case TaskConstants.STATUS_PENDING:

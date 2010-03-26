@@ -19,15 +19,15 @@
         <image class="new-study"/>
         <label value="Current Studies"/>
       </radio>
-      <radio pane="true" id="upcoming-studies-rb" orient="vertical"
-             onclick="TestPilotXulWindow.focusPane(1);">
-        <image class="new-study"/>
-        <label value="Upcoming Studies"/>
-      </radio>
       <radio pane="true" id="finished-studies-rb" orient="vertical"
-             onclick="TestPilotXulWindow.focusPane(2);">
+             onclick="TestPilotXulWindow.focusPane(1);">
          <image class="study-finished"/>
          <label value="Finished Studies"/>
+      </radio>
+      <radio pane="true" id="results-rb" orient="vertical"
+             onclick="TestPilotXulWindow.focusPane(2);">
+         <image class="new-results"/>
+         <label value="Study Findings"/>
       </radio>
     </radiogroup>
   </windowdragbox>
@@ -38,13 +38,13 @@
       </richlistbox>
     </prefpane>
 
-    <prefpane id="upcoming-studies-tab" class="tp-tab-panel">
-      <richlistbox id="upcoming-studies-listbox" class="tp-study-list">
+    <prefpane id="finished-studies-tab" class="tp-tab-panel">
+      <richlistbox id="finished-studies-listbox" class="tp-study-list">
       </richlistbox>
     </prefpane>
 
-    <prefpane id="finished-studies-tab" class="tp-tab-panel">
-      <richlistbox id="finished-studies-listbox" class="tp-study-list">
+    <prefpane id="study-results-tab" class="tp-tab-panel">
+      <richlistbox id="study-results-listbox" class="tp-study-list">
       </richlistbox>
     </prefpane>
 

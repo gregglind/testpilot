@@ -17,7 +17,13 @@
 // TODO Show individual status page in new chromeless window as html with
 // background color set to "moz-dialog".
 
+// TODO the whole menu bar disappears when the XUL window is up!  What's up
+// with that?
 
+// TODO double-click on the <richlistitem> should open the page too?
+
+// TODO general-purpose link to website's page of Upcoming Studies or what
+// have you.
 
 var TestPilotXulWindow = {
   onSubmitButton: function(experimentId) {
@@ -153,8 +159,6 @@ var TestPilotXulWindow = {
       switch (task.status) {
       case TaskConstants.STATUS_NEW:
       case TaskConstants.STATUS_PENDING:
-        rowset = document.getElementById("upcoming-studies-listbox");
-      break;
       case TaskConstants.STATUS_STARTING:
       case TaskConstants.STATUS_IN_PROGRESS:
       case TaskConstants.STATUS_FINISHED:

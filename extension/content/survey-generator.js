@@ -61,7 +61,7 @@ function drawSurveyForm(task, contentDiv) {
     contentDiv.appendChild(elem);
     if (explanation) {
       elem = document.createElement("p");
-      elem.setAttribute("class", "survey-question-explanation")
+      elem.setAttribute("class", "survey-question-explanation");
       elem.innerHTML = explanation;
       contentDiv.appendChild(elem);
     }

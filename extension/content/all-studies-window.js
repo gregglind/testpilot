@@ -97,6 +97,9 @@ var TestPilotXulWindow = {
     // Links to discussion group, twitter, etc should open in new
     // tab in main browser window, if we have these links here at all!!
     // Maybe just one link to the main Test Pilot website.
+
+    // TODO this window opening triggers studies' window-open code.
+    // Is that what we want or not?
     let win = window.open(url, "TestPilotStudyDetailWindow",
                          "resizable=yes,scrollbars=yes,status=no");
   },

@@ -415,7 +415,12 @@ let TestPilotSetup = {
            * minimum version is higher than our version, don't try to
            * load the experiment: */
 	  try {
-            let minVer = experiments[filename].experimentInfo.minTPVersion;
+            let minVer;
+            if (experiments[filename].experimentInfo) {
+              minVer = experiments[filename].experimentInfo.minTPVersion;
+            } else if (experiments[filename].surveyInfo) {
+              minVer = experiments[filename].surveyInfo.minTPVersion;
+            }
             if (minVer && self._isNewerThanMe(minVer)) {
               dump("Not loading " + filename + "\n");
               dump("Because it requires version " + minVer + "\n");

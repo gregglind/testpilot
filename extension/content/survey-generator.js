@@ -66,11 +66,10 @@ function drawSurveyForm(task, contentDiv) {
       contentDiv.appendChild(elem);
     }
     // If you've done this survey before, preset all inputs using old answers
-    let j;
     let choices = surveyQuestions[i].choices;
     switch (surveyQuestions[i].type) {
     case MULTIPLE_CHOICE:
-      for (j = 0; j < choices.length; j++) {
+      for (let j = 0; j < choices.length; j++) {
         let newRadio = document.createElement("input");
         newRadio.setAttribute("type", "radio");
         newRadio.setAttribute("name", "answer_to_" + i);
@@ -85,17 +84,20 @@ function drawSurveyForm(task, contentDiv) {
         contentDiv.appendChild(document.createElement("br"));
       }
       break;
+    case CHECK_BOXES:
     case CHECK_BOXES_WITH_FREE_ENTRY:
+      let checkboxName = "answer_to_" + i;
       // Check boxes:
-      for (j = 0; j < choices.length; j++) {
+      for (let j = 0; j < choices.length; j++) {
         let newCheck = document.createElement("input");
         newCheck.setAttribute("type", "checkbox");
-        newCheck.setAttribute("name", "answer_to_" + i);
+        newCheck.setAttribute("name", checkboxName);
         newCheck.setAttribute("value", j);
         if (oldAnswers && oldAnswers[i]) {
           for each (let an in oldAnswers[i]) {
             if (an == String(j)) {
               newCheck.setAttribute("checked", "true");
+              break;
             }
           }
         }
@@ -106,28 +108,53 @@ function drawSurveyForm(task, contentDiv) {
         contentDiv.appendChild(document.createElement("br"));
       }
       // Text area:
-      if (surveyQuestions[i].free_entry) {
+      if (surveyQuestions[i].type == CHECK_BOXES_WITH_FREE_ENTRY &&
+          surveyQuestions[i].free_entry) {
+        let freeformId = "freeform_" + i;
+        let newCheck = document.createElement("input");
+        newCheck.setAttribute("type", "checkbox");
+        newCheck.setAttribute("name", checkboxName);
+        newCheck.setAttribute("value", freeformId);
+        newCheck.addEventListener(
+          "click", function(event) {
+            if (!event.target.checked) {
+              document.getElementById(freeformId).value = "";
+            }
+          }, false);
         let label = document.createElement("span");
-        label.innerHTML = surveyQuestions[i].free_entry + "&nbsp";
-        contentDiv.appendChild(label);
-        let inputBox = document.createElement("textarea");
-        inputBox.setAttribute("id", "freeform_" + i);
-        contentDiv.appendChild(inputBox);
+        label.innerHTML = surveyQuestions[i].free_entry + "&nbsp:&nbsp";
+        let inputBox = document.createElement("input");
+        inputBox.setAttribute("type", "text");
+        inputBox.setAttribute("id", freeformId);
+        inputBox.addEventListener(
+          "keypress", function() {
+            let elements = document.getElementsByName(checkboxName);
+            for (let j = (elements.length - 1); j >= 0; j--) {
+              if (elements[j].value == freeformId) {
+                elements[j].checked = true;
+                break;
+              }
+            }
+          }, false);
         if (oldAnswers && oldAnswers[i]) {
           for each (let an in oldAnswers[i]) {
             if (isNaN(parseInt(an))) {
+              newCheck.setAttribute("checked", "true");
               inputBox.value = an;
               break;
             }
           }
         }
+        contentDiv.appendChild(newCheck);
+        contentDiv.appendChild(label);
+        contentDiv.appendChild(inputBox);
       }
       break;
     case SCALE:
       let label = document.createElement("span");
       label.innerHTML = surveyQuestions[i].min_label;
       contentDiv.appendChild(label);
-      for (j = surveyQuestions[i].scale_minimum;
+      for (let j = surveyQuestions[i].scale_minimum;
            j <= surveyQuestions[i].scale_maximum;
            j++) {
         let newRadio = document.createElement("input");
@@ -144,21 +171,24 @@ function drawSurveyForm(task, contentDiv) {
       contentDiv.appendChild(label);
       break;
     case FREE_ENTRY:
-      // TODO LATER - kind of redundant since it's just the
-      // check-box-plus-free-entry case with zero check boxes.
-      break;
-    case CHECK_BOXES:
-      // TODO LATER - kind of redundant since it's just the
-      // check-box-plus-free-entry case without the free entry.
+      let inputBox = document.createElement("input");
+      inputBox.setAttribute("type", "text");
+      inputBox.setAttribute("id", "freeform_" + i);
+
+      if (oldAnswers && oldAnswers[i] && (oldAnswers[i].length > 0)) {
+        inputBox.value = oldAnswers[i];
+      }
+      contentDiv.appendChild(inputBox);
       break;
     case MULTIPLE_CHOICE_WITH_FREE_ENTRY:
       let checked = false;
       let freeformId = "freeform_" + i;
+      let radioName = "answer_to_" + i;
 
-      for (j = 0; j < choices.length; j++) {
+      for (let j = 0; j < choices.length; j++) {
         let newRadio = document.createElement("input");
         newRadio.setAttribute("type", "radio");
-        newRadio.setAttribute("name", "answer_to_" + i);
+        newRadio.setAttribute("name", radioName);
         newRadio.setAttribute("value", j);
         newRadio.addEventListener(
           "click", function() {
@@ -180,7 +210,6 @@ function drawSurveyForm(task, contentDiv) {
 
       // Text area:
       if (surveyQuestions[i].free_entry) {
-        let radioName = "answer_to_" + i;
         let newRadio = document.createElement("input");
         newRadio.setAttribute("type", "radio");
         newRadio.setAttribute("name", radioName);
@@ -193,11 +222,11 @@ function drawSurveyForm(task, contentDiv) {
         inputBox.addEventListener(
           "keypress", function() {
             let elements = document.getElementsByName(radioName);
-            for (let k = 0; k < elements.length; k++) {
-              if (elements[k].value == freeformId) {
-                elements[k].checked = true;
+            for (let j = 0; j < elements.length; j++) {
+              if (elements[j].value == freeformId) {
+                elements[j].checked = true;
               } else {
-                elements[k].checked = false;
+                elements[j].checked = false;
               }
             }
           }, false);

@@ -53,3 +53,7 @@ richlistbox.tp-study-list {
 .tp-tab-panel {
     padding: 0px;
 }
+
+description.study-description {
+    width: 200px;
+}

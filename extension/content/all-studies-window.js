@@ -86,6 +86,18 @@ var TestPilotXulWindow = {
     container.appendChild(progBar);
   },
 
+  addDescription: function(container, title, paragraph, styleClass) {
+    let desc = document.createElement("description");
+    desc.setAttribute("class", styleClass);
+    container.appendChild(desc);
+    let titleElem = document.createElement("html:h2");
+    titleElem.innerHTML = title;
+    desc.appendChild(titleElem);
+    let paraElem = document.createElement("html:p");
+    paraElem.innerHTML = paragraph;
+    desc.appendChild(paraElem);
+  },
+
   openURL: function(url) {
     //TODO... repeated calls to this should open the new URLs in the
     //same window, not open new windows!
@@ -118,7 +130,8 @@ var TestPilotXulWindow = {
 
       let textVbox = document.createElement("vbox");
       newRow.appendChild(textVbox);
-      this.addLabel(textVbox, task.title, "pilot-title");
+      let desc = "Lorem ipsum bla bla bla here we go yo here we go yo so what so what so what's the scenario antidisestablishmentarianism.";
+      this.addDescription(textVbox, task.title, desc, "study-description");
       this.addXulLink(textVbox, "More Info", task.defaultUrl);
 
 

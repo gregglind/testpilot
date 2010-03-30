@@ -42,6 +42,7 @@ const Ci = Components.interfaces;
 
 Components.utils.import("resource://testpilot/modules/Observers.js");
 Components.utils.import("resource://testpilot/modules/metadata.js");
+Components.utils.import("resource://testpilot/modules/log4moz.js");
 
 const STATUS_PREF_PREFIX = "extensions.testpilot.taskstatus.";
 const START_DATE_PREF_PREFIX = "extensions.testpilot.startDate.";
@@ -93,6 +94,7 @@ var TestPilotTask = {
                                               TaskConstants.STATUS_NEW);
     this._url = infoPageUrl;
     this._resultsUrl = resultsUrl;
+    this._logger = Log4Moz.repository.getLogger("TestPilot.Task_"+this._id);
   },
 
   get title() {
@@ -169,7 +171,8 @@ var TestPilotTask = {
   },
 
   changeStatus: function TPS_changeStatus(newStatus, suppressNotification) {
-    dump("Changing status to " + newStatus + "\n");
+    let logger = Log4Moz.repository.getLogger("TestPilot.Task");
+    task.info("Changing task " + this._id + " status to " + newStatus + "\n");
     this._status = newStatus;
     // Set the pref:
     Application.prefs.setValue(STATUS_PREF_PREFIX + this._id, newStatus);
@@ -254,8 +257,8 @@ TestPilotExperiment.prototype = {
     // Duration is specified in days:
     let duration = expInfo.duration || 7; // default 1 week
     this._endDate = this._startDate + duration * (24 * 60 * 60 * 1000);
-    dump("Start date is " + this._startDate.toString() + "\n");
-    dump("End date is " + this._endDate.toString() + "\n");
+    this._logger.info("Start date is " + this._startDate.toString() + "\n");
+    this._logger.info("End date is " + this._endDate.toString() + "\n");
 
     this._handlers = handlers;
     this._uploadRetryTimer = null;
@@ -365,28 +368,28 @@ TestPilotExperiment.prototype = {
 
   // Pass events along to handlers:
   onNewWindow: function TestPilotExperiment_onNewWindow(window) {
-    dump("Experiment.onNewWindow called.\n");
+    this._logger.trace("Experiment.onNewWindow called.\n");
     if (this.experimentIsRunning()) {
       this._handlers.onNewWindow(window);
     }
   },
 
   onWindowClosed: function TestPilotExperiment_onWindowClosed(window) {
-    dump("Experiment.onWindowClosed called.\n");
+    this._logger.trace("Experiment.onWindowClosed called.\n");
     if (this.experimentIsRunning()) {
       this._handlers.onWindowClosed(window);
     }
   },
 
   onAppStartup: function TestPilotExperiment_onAppStartup() {
-    dump("Experiment.onAppStartup called.\n");
+    this._logger.trace("Experiment.onAppStartup called.\n");
     if (this.experimentIsRunning()) {
       this._handlers.onAppStartup();
     }
   },
 
   onAppShutdown: function TestPilotExperiment_onAppShutdown() {
-    dump("Experiment.onAppShutdown called.\n");
+    this._logger.trace("Experiment.onAppShutdown called.\n");
     // TODO the caller for this is not yet implemented
     if (this.experimentIsRunning()) {
       this._handlers.onAppShutdown();
@@ -394,17 +397,17 @@ TestPilotExperiment.prototype = {
   },
 
   onExperimentStartup: function TestPilotExperiment_onStartup() {
-    dump("Experiment.onExperimentStartup called.\n");
+    this._logger.trace("Experiment.onExperimentStartup called.\n");
     // Make sure not to call this if it's already been called:
     if (this.experimentIsRunning() && !this._startedUpHandlers) {
-      dump("  ... starting up handlers!\n");
+      this._logger.trace("  ... starting up handlers!\n");
       this._handlers.onExperimentStartup(this._dataStore);
       this._startedUpHandlers = true;
     }
   },
 
   onExperimentShutdown: function TestPilotExperiment_onShutdown() {
-    dump("Experiment.onExperimentShutdown called.\n");
+    this._logger.trace("Experiment.onExperimentShutdown called.\n");
     if (this.experimentIsRunning() && this._startedUpHandlers) {
       this._handlers.onExperimentShutdown();
       this._startedUpHandlers = false;
@@ -412,14 +415,14 @@ TestPilotExperiment.prototype = {
   },
 
   onEnterPrivateBrowsing: function TestPilotExperiment_onEnterPrivate() {
-    dump("Task is entering private browsing.\n");
+    this._logger.trace("Task is entering private browsing.\n");
     if (this.experimentIsRunning()) {
       this._handlers.onEnterPrivateBrowsing();
     }
   },
 
   onExitPrivateBrowsing: function TestPilotExperiment_onExitPrivate() {
-    dump("Task is exiting private browsing.\n");
+    this._logger.trace("Task is exiting private browsing.\n");
     if (this.experimentIsRunning()) {
       this._handlers.onExitPrivateBrowsing();
     }
@@ -476,7 +479,7 @@ TestPilotExperiment.prototype = {
       // if we've done a permanent opt-out, then don't start over-
       // just keep rescheduling.
       if (this.recurPref == TaskConstants.NEVER_SUBMIT) {
-        dump("recurPref is never submit, so I'm rescheduling.\n");
+        this._logger.info("recurPref is never submit, so I'm rescheduling.\n");
         this._reschedule();
       } else {
         // Normal case is reset to new.
@@ -485,10 +488,10 @@ TestPilotExperiment.prototype = {
         // increment count of how many times this recurring test has run
         let numTimesRun = this._numTimesRun;
         numTimesRun++;
-        dump("Test recurring... incrementing " + RECUR_TIMES_PREF_PREFIX + this._id + " to " + numTimesRun +"\n");
+        this._logger.trace("Test recurring... incrementing " + RECUR_TIMES_PREF_PREFIX + this._id + " to " + numTimesRun +"\n");
         Application.prefs.setValue( RECUR_TIMES_PREF_PREFIX + this._id,
                                     numTimesRun );
-        dump("Incremented it.\n");
+        this._logger.trace("Incremented it.\n");
       }
     }
 
@@ -506,7 +509,7 @@ TestPilotExperiment.prototype = {
     // What happens when a test finishes:
     if (this._status < TaskConstants.STATUS_FINISHED &&
 	currentDate > this._endDate) {
-      dump("Passed End Date - Switched Task Status to Finished\n");
+      this._logger.info("Passed End Date - Switched Task Status to Finished\n");
       this.changeStatus( TaskConstants.STATUS_FINISHED );
       this.onExperimentShutdown();
 
@@ -515,10 +518,10 @@ TestPilotExperiment.prototype = {
         // A recurring experiment may have been set to automatically submit. If
         // so, submit now!
         if (this.recurPref == TaskConstants.ALWAYS_SUBMIT) {
-          dump("Automatically Uploading Data\n");
+          this._logger.info("Automatically Uploading Data\n");
           this.upload( function() {} );
         } else if (this.recurPref == TaskConstants.NEVER_SUBMIT) {
-          dump("Automatically opting out of uploading data\n");
+          this._logger.info("Automatically opting out of uploading data\n");
           this.changeStatus( TaskConstants.STATUS_CANCELLED, true);
         } else {
           // set the expiration date for date submission
@@ -622,7 +625,7 @@ TestPilotExperiment.prototype = {
     req.onreadystatechange = function(aEvt) {
       if (req.readyState == 4) {
 	if (req.status == 200) {
-	  dump("DATA WAS POSTED SUCCESSFULLY " + req.responseText + "\n");
+	  self._logger.info("DATA WAS POSTED SUCCESSFULLY " + req.responseText + "\n");
           if (self._uploadRetryTimer) {
             self._uploadRetryTimer.cancel(); // Stop retrying - it worked!
           }
@@ -630,7 +633,7 @@ TestPilotExperiment.prototype = {
 	  // self._dataStore.wipeAllData();
           callback(true);
 	} else {
-	  dump("ERROR POSTING DATA: " + req.responseText + "\n");
+	  self._logger.warn("ERROR POSTING DATA: " + req.responseText + "\n");
           /* Something went wrong with the upload?
            * Exit for now, but try again in an hour; maybe the network will
            * be working better by then.  Note that this means Test Pilot will
@@ -651,13 +654,14 @@ TestPilotExperiment.prototype = {
   },
 
   optOut: function TestPilotExperiment_optOut(reason, callback) {
+    let logger = this._logger;
     this.changeStatus(TaskConstants.STATUS_CANCELLED);
-    dump("Opting out of test with reason " + reason + "\n");
+    logger.info("Opting out of test with reason " + reason + "\n");
     if (reason) {
       // Send us the reason...
       let params = "testid=" + this._id + "&data=" + encodeURI(reason);
       var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
-      dump("Posting " + params + " to " + DATA_UPLOAD_URL + "\n");
+      logger.trace("Posting " + params + " to " + DATA_UPLOAD_URL + "\n");
       req.open('POST', DATA_UPLOAD_URL, true);
       req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
       req.setRequestHeader("Content-length", params.length);
@@ -665,15 +669,15 @@ TestPilotExperiment.prototype = {
       req.onreadystatechange = function(aEvt) {
         if (req.readyState == 4) {
           if (req.status == 200) {
-	    dump("Quit reason posted successfully " + req.responseText + "\n");
+	    logger.info("Quit reason posted successfully " + req.responseText + "\n");
     	    callback(true);
 	  } else {
-	    dump(req.status + " posting error " + req.responseText +"\n");
+	    logger.warn(req.status + " posting error " + req.responseText +"\n");
 	    callback(false);
 	  }
 	}
       };
-      dump("Sending quit reason.\n");
+      logger.trace("Sending quit reason.\n");
       req.send( params );
     } else {
       callback(false);
@@ -683,7 +687,7 @@ TestPilotExperiment.prototype = {
   setRecurPref: function TPE_setRecurPrefs(value) {
     // value is NEVER_SUBMIT, ALWAYS_SUBMIT, or ASK_EACH_TIME
     let prefName = RECUR_PREF_PREFIX + this._id;
-    dump("Setting recur pref for task " + this._id + " to " + value + "\n");
+    this._logger.info("Setting recur pref to " + value + "\n");
     Application.prefs.setValue(prefName, value);
   }
 };
@@ -699,7 +703,7 @@ TestPilotWebSurvey.prototype = {
                    surveyInfo.surveyName,
                    surveyInfo.surveyUrl,
                    surveyInfo.resultsUrl);
-    dump("Initing survey.  This._status is " + this._status + "\n");
+    this._logger.info("Initing survey.  This._status is " + this._status + "\n");
     if (this._status < TaskConstants.STATUS_RESULTS) {
       this.checkForCompletion();
     }
@@ -720,7 +724,7 @@ TestPilotWebSurvey.prototype = {
 
   checkForCompletion: function TestPilotWebSurvey_checkForCompletion() {
     var self = this;
-    dump("Checking for survey completion...\n");
+    self._logger.trace("Checking for survey completion...\n");
     // Note, the following depends on SurveyMonkey and will break if
     // SurveyMonkey changes their 'survey complete' page.
     let surveyCompletedText = "Thank you for completing our survey!";
@@ -730,18 +734,18 @@ TestPilotWebSurvey.prototype = {
       if (req.readyState == 4) {
         if (req.status == 200) {
           if (req.responseText.indexOf(surveyCompletedText) > -1) {
-            dump("Survey is completed.\n");
+            self._logger.trace("Survey is completed.\n");
             if (self._resultsUrl != undefined) {
-              dump("Setting survey status to RESULTS\n");
+              self._logger.trace("Setting survey status to RESULTS\n");
               self.changeStatus( TaskConstants.STATUS_RESULTS, true );
             } else {
-              dump("Setting survey status to SUBMITTED\n");
+              self._logger.trace("Setting survey status to SUBMITTED\n");
               self.changeStatus( TaskConstants.STATUS_SUBMITTED, true );
             }
-            dump("Survey status is now " + self._status + "\n");
+            self._logger.trace("Survey status is now " + self._status + "\n");
 	  }
         } else {
-          dump("Error loading page\n");
+          self._logger.warn("Error loading page\n");
 	}
       }
     };
@@ -815,7 +819,7 @@ TestPilotBuiltinSurvey.prototype = {
     if (!answers) {
       return null;
     } else {
-      dump("Trying to json.parse this: " + answers + "\n");
+      this._logger.info("Trying to json.parse this: " + answers + "\n");
       return JSON.parse(answers);
     }
   },

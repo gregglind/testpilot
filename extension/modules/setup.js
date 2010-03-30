@@ -80,7 +80,6 @@ let TestPilotSetup = {
   taskList: [],
 
   _initLogging: function TPS__initLogging() {
-    try {
     let props = Cc["@mozilla.org/file/directory_service;1"].
                   getService(Ci.nsIProperties);
     let logFile = props.get("ProfD", Components.interfaces.nsIFile);
@@ -88,14 +87,8 @@ let TestPilotSetup = {
     let formatter = new Log4Moz.BasicFormatter;
     let root = Log4Moz.repository.rootLogger;
     root.level = Log4Moz.Level["All"];
-
-    // use a rotating file appender
-    // todo does this need a full path or where does it go?
     let appender = new Log4Moz.RotatingFileAppender(logFile, formatter);
     root.addAppender(appender);
-    } catch (e) {
-      dump("Error intiting logger: " + e + "\n");
-    }
   },
 
   globalStartup: function TPS__doGlobalSetup() {

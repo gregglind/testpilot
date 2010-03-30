@@ -137,6 +137,7 @@ exports.RemoteExperimentLoader.prototype = {
       {fs: new SecurableModule.CompositeFileSystem(
          [this._codeStorage, Cuddlefish.parentLoader.fs])
       });
+    // TODO wrap log4Moz, pass it in as console: argument.
   },
 
   checkForUpdates: function(callback) {

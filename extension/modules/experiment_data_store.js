@@ -41,6 +41,7 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 
 Cu.import("resource://testpilot/modules/dbutils.js");
+Cu.import("resource://testpilot/modules/log4moz.js");
 var _dirSvc = Cc["@mozilla.org/file/directory_service;1"]
                 .getService(Ci.nsIProperties);
 var _storSvc = Cc["@mozilla.org/storage/service;1"]
@@ -186,12 +187,13 @@ ExperimentDataStore.prototype = {
   },
 
   wipeAllData: function EDS_wipeAllData() {
-    dump("ExperimentDataStore.wipeAllData called.\n");
+    let logger = Log4Moz.repository.getLogger("TestPilot.Database");
+    logger.trace("ExperimentDataStore.wipeAllData called.\n");
     let wipeSql = "DELETE FROM " + this._tableName;
     let wipeStmt = this._createStatement(wipeSql);
     wipeStmt.execute();
     wipeStmt.finalize();
-    dump("ExperimentDataStore.wipeAllData complete.\n");
+    logger.trace("ExperimentDataStore.wipeAllData complete.\n");
   },
 
   haveData: function EDS_haveData() {

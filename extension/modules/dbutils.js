@@ -40,6 +40,8 @@ var Cc = Components.classes;
 var Cu = Components.utils;
 var EXPORTED_SYMBOLS = ["DbUtils"];
 
+Cu.import("resource://testpilot/modules/log4moz.js");
+
 /* Make a namespace object called DbUtils, to export,
  * which contains each function in this file.*/
 var DbUtils = ([f for each (f in this) if (typeof f === "function")]
@@ -53,13 +55,14 @@ var _storSvc = Cc["@mozilla.org/storage/service;1"]
 DbUtils.openDatabase = function openDatabase(file) {
   /* If the pointed-at file doesn't already exist, it means the database
    * has never been initialized */
-  var connection = null;
+  let logger = Log4Moz.repository.getLogger("TestPilot.Database");
+  let connection = null;
   try {
-    dump("Trying to open file...\n");
+    logger.debug("Trying to open file...\n");
     connection = _storSvc.openDatabase(file);
-    dump("Opening file done...\n");
+    logger.debug("Opening file done...\n");
   } catch(e) {
-    dump("Opening file failed...\n");
+    logger.debug("Opening file failed...\n");
     Components.utils.reportError(
       "Opening database failed, database may not have been initialized");
   }
@@ -67,19 +70,19 @@ DbUtils.openDatabase = function openDatabase(file) {
 };
 
 DbUtils.createTable = function createTable(connection, tableName, schema){
-  var file = connection.databaseFile;
-  dump("File is " + file + "\n");
-  // Problem 1: The file is null here.
+  let logger = Log4Moz.repository.getLogger("TestPilot.Database");
+  let file = connection.databaseFile;
+  logger.debug("File is " + file + "\n");
   try{
     if(!connection.tableExists(tableName)){
-      connection.executeSimpleSQL(schema); // Problem 2: This fails.
+      connection.executeSimpleSQL(schema);
     }
     else{
-      dump("database table: " + tableName + " already exists\n");
+      logger.debug("database table: " + tableName + " already exists\n");
     }
   }
   catch(e) {
-    dump("Actual exception is " + e + "\n");
+    logger.warn("Error creating database: " + e + "\n");
     Cu.reportError("Test Pilot's " + tableName +
         " database table appears to be corrupt, resetting it.");
     if(file.exists()){
@@ -87,7 +90,7 @@ DbUtils.createTable = function createTable(connection, tableName, schema){
       file.remove(false);
     }
     connection = _storSvc.openDatabase(file);
-    connection.executeSimpleSQL(schema); // This fails.
+    connection.executeSimpleSQL(schema);
   }
   return connection;
 };

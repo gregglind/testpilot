@@ -96,13 +96,16 @@ let TestPilotSetup = {
     // Should get called by the Test Pilot component.
     this._initLogging();
     let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
-    logger.trace("TestPilotSetup.globalStartup was called.\n");
+    logger.trace("TestPilotSetup.globalStartup was called.");
 
     try {
-    logger.trace("Making new cuddlefish loader:\n");
-    this._loader = new Cuddlefish.Loader({rootPaths: ["resource://testpilot/modules/",
-                                                    "resource://testpilot/modules/lib/"]});
-    logger.trace("Made new cuddlefish loader.\n");
+    logger.trace("Making new cuddlefish loader:");
+    this._loader = new Cuddlefish.Loader(
+      {rootPaths: ["resource://testpilot/modules/",
+                   "resource://testpilot/modules/lib/"],
+       console: Log4Moz.repository.getLogger("TestPilot.Loader")
+      });
+    logger.trace("Made new cuddlefish loader.");
     this._obs = this._loader.require("observer-service");
 
     // Show first run page (in front window) if newly installed or upgraded.
@@ -128,7 +131,7 @@ let TestPilotSetup = {
     // Set up timers to remind user x minutes after startup
     // and once per day thereafter.  Use nsITimer so it doesn't belong to
     // any one window.
-    logger.trace("Setting interval for showing reminders...\n");
+    logger.trace("Setting interval for showing reminders...");
 
     this._shortTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this._shortTimer.initWithCallback(
@@ -151,7 +154,7 @@ let TestPilotSetup = {
       /* Callback to complete startup after we finish
        * checking for tasks. */
       self.startupComplete = true;
-      logger.trace("I'm in the callback from checkForTasks!!!!\n");
+      logger.trace("I'm in the callback from checkForTasks.");
       // Send startup message to each task:
       for (let i = 0; i < self.taskList.length; i++) {
         self.taskList[i].onAppStartup();
@@ -160,15 +163,15 @@ let TestPilotSetup = {
       /* onWindowLoad gets called once for each window,
        * but only after we fire this notification. */
     });
-    logger.trace("Testpilot startup complete.\n");
+    logger.trace("Testpilot startup complete.");
     } catch(e) {
-      logger.error("Error in testPilot startup: " + e +"\n");
+      logger.error("Error in testPilot startup: " + e);
     }
   },
 
   globalShutdown: function TPS_globalShutdown() {
     let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
-    logger.trace("Global shutdown.  Unregistering everything.\n");
+    logger.trace("Global shutdown.  Unregistering everything.");
     let self = this;
     for (let i = 0; i < self.taskList.length; i++) {
       self.taskList[i].onAppShutdown();
@@ -181,7 +184,7 @@ let TestPilotSetup = {
     this._loader.unload();
     this._shortTimer.cancel();
     this._longTimer.cancel();
-    logger.trace("Done unregistering everything.\n");
+    logger.trace("Done unregistering everything.");
   },
 
   _getFrontBrowserWindow: function TPS__getFrontWindow() {
@@ -203,7 +206,7 @@ let TestPilotSetup = {
 
   onWindowUnload: function TPS__onWindowRegistered(window) {
     let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
-    logger.trace("Called TestPilotSetup.onWindow unload!\n");
+    logger.trace("Called TestPilotSetup.onWindow unload!");
     for (let i = 0; i < this.taskList.length; i++) {
       this.taskList[i].onWindowClosed(window);
     }
@@ -211,7 +214,7 @@ let TestPilotSetup = {
 
   onWindowLoad: function TPS_onWindowLoad(window) {
     let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
-    logger.trace("Called TestPilotSetup.onWindowLoad!\n");
+    logger.trace("Called TestPilotSetup.onWindowLoad!");
     // Run this stuff once per window...
     let self = this;
 
@@ -388,7 +391,7 @@ let TestPilotSetup = {
     }
     // Do a full reminder -- but at most once per browser session
     if (!this.didReminderAfterStartup) {
-      logger.trace("Doing reminder after startup...\n");
+      logger.trace("Doing reminder after startup...");
       this.didReminderAfterStartup = true;
       this._notifyUserOfTasks(HIGH_AND_MEDIUM_PRIORITY);
     }
@@ -416,17 +419,17 @@ let TestPilotSetup = {
   checkForTasks: function TPS_checkForTasks(callback) {
     let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
     if (! this._remoteExperimentLoader ) {
-      logger.trace("Now requiring remote experiment loader:\n");
+      logger.trace("Now requiring remote experiment loader:");
       let remoteLoaderModule = this._loader.require("remote-experiment-loader");
       logger.trace("Now instantiating remoteExperimentLoader:");
-      let rel = new remoteLoaderModule.RemoteExperimentLoader();
+      let rel = new remoteLoaderModule.RemoteExperimentLoader(Log4Moz);
       this._remoteExperimentLoader = rel;
     }
 
     let self = this;
     this._remoteExperimentLoader.checkForUpdates(
       function(success) {
-        logger.info("Getting updated experiments... Success? " + success + "\n");
+        logger.info("Getting updated experiments... Success? " + success);
         // Actually, we do exactly the same thing whether we succeeded in
         // downloading new contents or not...
         let experiments = self._remoteExperimentLoader.getExperiments();
@@ -443,20 +446,20 @@ let TestPilotSetup = {
               minVer = experiments[filename].surveyInfo.minTPVersion;
             }
             if (minVer && self._isNewerThanMe(minVer)) {
-              logger.warn("Not loading " + filename + "\n");
-              logger.warn("Because it requires version " + minVer + "\n");
+              logger.warn("Not loading " + filename);
+              logger.warn("Because it requires version " + minVer);
               // TODO If this happens, we should tell user to update
               // their extension.
               continue;
             }
 	  } catch (e) {
             logger.warn("Min Test Pilot Version is not found " + filename + ": " +
-		 e + "\n");
+		 e);
 	  }
           try {
             // The try-catch ensures that if something goes wrong in loading one
             // experiment, the other experiments after that one still get loaded.
-            logger.trace("Attempting to load experiment " + filename + "\n");
+            logger.trace("Attempting to load experiment " + filename);
 
             let task;
             // Could be a survey: check if surveyInfo is exported:
@@ -483,9 +486,9 @@ let TestPilotSetup = {
                                              webContent);
             }
             TestPilotSetup.addTask(task);
-            logger.info("Loaded task " + filename + "\n");
+            logger.info("Loaded task " + filename);
           } catch (e) {
-            logger.warn("Failed to load task " + filename + ": " + e + "\n");
+            logger.warn("Failed to load task " + filename + ": " + e);
           }
         }
         if (callback) {

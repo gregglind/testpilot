@@ -98,46 +98,53 @@ var SecurableModule = require("securable-module");
     // {'experiments': [{'name': 'Bookmark Experiment',
     //                           'filename': 'bookmarks.js'}]}
 
-exports.RemoteExperimentLoader = function( fileGetterFunction ) {
+exports.RemoteExperimentLoader = function(log4moz, fileGetterFunction ) {
   /* fileGetterFunction is an optional stub function for unit testing.  Pass in
    * nothing to have it use the default behavior of downloading the files from the
    * Test Pilot server.  FileGetterFunction must take (url, callback).*/
-  this._init(fileGetterFunction);
+  this._init(log4moz, fileGetterFunction);
 };
 
 exports.RemoteExperimentLoader.prototype = {
-  _init: function(fileGetterFunction) {
+  _init: function(log4moz, fileGetterFunction) {
+    this._logger = log4moz.repository.getLogger("TestPilot.Loader");
+    this._expLogger = log4moz.repository.getLogger("TestPilot.RemoteCode");
     this._experimentFilenames = [];
     if (fileGetterFunction != undefined) {
       this._fileGetter = fileGetterFunction;
     } else {
       this._fileGetter = downloadFile;
     }
-    console.info("About to instantiate preferences store.");
+    this._logger.trace("About to instantiate preferences store.");
     this._codeStorage = new PreferencesStore("extensions.testpilot.experiment.codeFs");
     let self = this;
 
     /* Use a composite file system here, compositing codeStorage and a new
      * local file system so that securable modules loaded remotely can
      * themselves require modules in the cuddlefish lib. */
-    console.info("About to instantiate cuddlefish loader.");
+    this._logger.trace("About to instantiate cuddlefish loader.");
     this._refreshLoader();
     // set up the unloading
     require("unload").when( function() {
                               self._loader.unload();
                             });
-    console.info("Done instantiating remoteExperimentLoader.");
+    this._logger.trace("Done instantiating remoteExperimentLoader.");
   },
 
   _refreshLoader: function() {
     if (this._loader) {
       this._loader.unload();
     }
+    /* Pass in "TestPilot.experiment" logger as the console object for
+     * all remote modules loaded through cuddlefish, so they will log their
+     * stuff to the same file as all other modules.  This logger is not
+     * technically a console object but as long as it has .debug, .info,
+     * .warn, and .error methods, it will work fine.*/
     this._loader = Cuddlefish.Loader(
       {fs: new SecurableModule.CompositeFileSystem(
-         [this._codeStorage, Cuddlefish.parentLoader.fs])
+         [this._codeStorage, Cuddlefish.parentLoader.fs]),
+       console: this._expLogger
       });
-    // TODO wrap log4Moz, pass it in as console: argument.
   },
 
   checkForUpdates: function(callback) {
@@ -150,7 +157,7 @@ exports.RemoteExperimentLoader.prototype = {
     let self = this;
     // Just added: Unload everything before checking for updates, to be sure we
     // get the newest stuff.
-    console.warn("Unloading everything to prepare to check for updates.");
+    this._logger.info("Unloading everything to prepare to check for updates.");
     this._refreshLoader();
 
     self._fileGetter(resolveUrl(BASE_URL, indexFileName), function onDone(data) {
@@ -158,7 +165,7 @@ exports.RemoteExperimentLoader.prototype = {
         try {
           data = JSON.parse(data);
         } catch (e) {
-          console.warn("JSON parsing error: " + e );
+          self._logger.warn("JSON parsing error: " + e );
           callback(false);
           return;
         }
@@ -168,34 +175,34 @@ exports.RemoteExperimentLoader.prototype = {
 
         let libNames = [ x.filename for each (x in data.libraries)];
         let expNames = [ x.filename for each (x in data.experiments)];
-        console.info("Libraries: " + libNames);
-        console.info("Experiments: " + expNames);
+        self._logger.debug("Libraries: " + libNames);
+        self._logger.debug("Experiments: " + expNames);
         let filenames = libNames.concat(expNames);
         self._experimentFilenames = expNames;
         let numFilesToDload = filenames.length;
         for each (let f in filenames) {
           let filename = f;
-          console.info("I'm gonna go try to get the code for " + filename);
+          self._logger.trace("I'm gonna go try to get the code for " + filename);
           let modDate = self._codeStorage.getFileModifiedDate(filename);
           self._fileGetter( resolveUrl(BASE_URL, filename),
             function onDone(code) {
               // code will be non-null if there is actually new code to download.
               if (code) {
-                console.info("Downloaded new code for " + filename);
+                self._logger.info("Downloaded new code for " + filename);
                 self._codeStorage.setFile(filename, code);
-                console.warn("Saved code for: " + filename);
+                self._logger.trace("Saved code for: " + filename);
               } else {
-                console.info("Nothing to download for " + filename);
+                self._logger.info("Nothing to download for " + filename);
               }
               numFilesToDload --;
               if (numFilesToDload == 0) {
-                console.info("Calling callback.");
+                self._logger.trace("Calling callback.");
                 callback(true);
               }
             }, modDate);
         }
       } else {
-        console.warn("Could not download index.json from test pilot server.");
+        self._logger.warn("Could not download index.json from test pilot server.");
         callback(false);
       }
     });
@@ -206,17 +213,17 @@ exports.RemoteExperimentLoader.prototype = {
   getExperiments: function() {
     // Load up and return all experiments (not libraries)
     // already stored in codeStorage
-    console.info("GetExperiments called.");
+    this._logger.trace("GetExperiments called.");
     let remoteExperiments = {};
-    console.info("Size of this._experimentFilenames is " + this._experimentFilenames.length);
+    this._logger.debug("Size of this._experimentFilenames is " + this._experimentFilenames.length);
     for each (let filename in this._experimentFilenames) {
-      console.info("GetExperiments is loading " + filename);
+      this._logger.debug("GetExperiments is loading " + filename);
       try {
         remoteExperiments[filename] = this._loader.require(filename);
-        console.info("Loaded " + filename + " OK.");
+        this._logger.info("Loaded " + filename + " OK.");
       } catch(e) {
-        console.warn("Error loading " + filename);
-        console.warn(e);
+        this._logger.warn("Error loading " + filename);
+        this._logger.warn(e);
       }
     }
     return remoteExperiments;

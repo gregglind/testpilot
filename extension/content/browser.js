@@ -120,12 +120,10 @@ var TestPilotWindowHandlers = {
                            .getService(Ci.nsIObserverService);
       var observer = {
         observe: function(subject, topic, data) {
-          dump("Oh hey, startup is done, now I can tell test pilot about my window.\n");
           observerSvc.removeObserver(this, "testpilot:startup:complete");
           TestPilotSetup.onWindowLoad(window);
         }
       };
-      dump("We're still starting up so I can't tell test pilot about my window yet.\n");
       observerSvc.addObserver(observer, "testpilot:startup:complete", false);
     }
   },

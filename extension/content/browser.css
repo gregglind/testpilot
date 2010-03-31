@@ -65,9 +65,13 @@ description.study-description {
 description.study-title {
     width: 300px;
     font-size: 200%;
-    text-align: center;
+    text-align: left;
+    margin-top: 10px;
 }
 
 richlistitem.tp-study-list {
     min-height: 120px;
+    border-color: grey;
+    border-bottom-style: solid;
+    border-width: 1px;
 }

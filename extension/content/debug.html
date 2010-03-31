@@ -40,7 +40,7 @@
   }
 
   function loadExperimentCode() {
-    var filename = "dependency-experiment/ghost-study.js"
+    var filename = "pilot-background-survey.js"
     var textArea = document.getElementById("experiment-code-area");
     prefStore = getCodeStorage();
     code = prefStore.getFile(filename).contents;
@@ -48,8 +48,7 @@
   }
 
   function saveAndRun() {
-
-    var filename = "dependency-experiment/ghost-study.js";
+    var filename = "pilot-background-survey.js";
     var textArea = document.getElementById("experiment-code-area");
     prefStore = getCodeStorage();
     code = prefStore.setFile(filename, textArea.value);

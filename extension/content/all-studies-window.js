@@ -1,7 +1,6 @@
 
 /* TODO layout:
  * 4. Background colors depending on status?
- * 6. Where's my buttons?
  * 7. How do we draw numerical badge on the Finished Studies tab icon?
  *
  */
@@ -129,6 +128,7 @@ var TestPilotXulWindow = {
     for (let i = 0; i < experiments.length; i++) {
       let task = experiments[i];
       let newRow = document.createElement("richlistitem");
+      newRow.setAttribute("class", "tp-study-list");
 
       this.addImg(newRow, "new-study");
 
@@ -141,7 +141,6 @@ var TestPilotXulWindow = {
 
       // Create the rightmost status area, depending on status:
       let statusVbox = document.createElement("vbox");
-      dump("Filling vbox.  Task id "+ task.id + " status is " + task.status + "\n");
       if (task.status == TaskConstants.STATUS_FINISHED) {
         this.addLabel( statusVbox, "Finished on " +
                                    (new Date(task.endDate)).toDateString());

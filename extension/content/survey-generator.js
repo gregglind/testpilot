@@ -123,8 +123,7 @@ function drawSurveyForm(task, contentDiv) {
           }, false);
         let label = document.createElement("span");
         label.innerHTML = surveyQuestions[i].free_entry + "&nbsp:&nbsp";
-        let inputBox = document.createElement("input");
-        inputBox.setAttribute("type", "text");
+        let inputBox = document.createElement("textarea");
         inputBox.setAttribute("id", freeformId);
         inputBox.addEventListener(
           "keypress", function() {
@@ -171,8 +170,7 @@ function drawSurveyForm(task, contentDiv) {
       contentDiv.appendChild(label);
       break;
     case FREE_ENTRY:
-      let inputBox = document.createElement("input");
-      inputBox.setAttribute("type", "text");
+      let inputBox = document.createElement("textarea");
       inputBox.setAttribute("id", "freeform_" + i);
 
       if (oldAnswers && oldAnswers[i] && (oldAnswers[i].length > 0)) {
@@ -216,8 +214,7 @@ function drawSurveyForm(task, contentDiv) {
         newRadio.setAttribute("value", freeformId);
         let label = document.createElement("span");
         label.innerHTML = surveyQuestions[i].free_entry + "&nbsp:&nbsp";
-        let inputBox = document.createElement("input");
-        inputBox.setAttribute("type", "text");
+        let inputBox = document.createElement("textarea");
         inputBox.setAttribute("id", freeformId);
         inputBox.addEventListener(
           "keypress", function() {

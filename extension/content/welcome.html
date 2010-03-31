@@ -3,6 +3,8 @@
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <title>Mozilla Labs Test Pilot</title>
   <link rel="stylesheet" type="text/css" media="all" href="screen.css" />
+  <script src="window-utils.js" type="application/javascript;version=1.8">
+  </script>
 </head>
 <body>
   <div id="container">
@@ -11,24 +13,19 @@
     </div>
     <div id="contentWelcome">
       <div id="thanks">
-        <h1>Thank You for Installing Test Pilot 0.4!</h1>
+        <h1>Thank You for Joining the Test Pilot Team!</h1>
+      </div>
+      <div id="get-started">
+        <div class="button">
+          <h2>Get Started Here</h2>
+          <p class="embiggened"><a class="function-link" onclick="TestPilotWindowUtils.openAllStudiesWindow();">Click here to see the studies that are currently running.</a></p><p></p>
+        </div>
       </div>
       <div id="icon-explanation">
         <div class="button">
           <p><h2>Test Pilot Add-on</h2></p>
-          <p><img src="chrome://testpilot/skin/testpilot_16x16.png"> &laquo; look for this icon in the bottom right of the browser window.</p>
-          <p>You can click on it to see a menu of available tests and surveys.</p>
-          <p>The icon will pop up a notification when there are new things for you to see.</p>
-        </div>
-      </div>
-      <div id="survey-explanation">
-        <div class="button">
-          <h2>Test Pilot 0.4</h2>
-          <p>Test Pilot 0.4 is a maintenance release that fixes some minor problems, but more importantly it adds support for built-in surveys and for automatically recurring experiments.  The next round of tests that we have planned will require both of these features.</p>
-        </div>
-        <div class="button">
-          <h2><a href="https://testpilot.mozillalabs.com/testcases/a-week-life.html">A Week in the Life of a Browser &raquo;</a></h2>
-          <p>This is a new study that will begin in December 2009, and recur periodically. It will run for a week each time, and collect data about the basic performance of Firefox &mdash; how often Firefox crashes or restarts, how many bookmarks it has, and so on.  Find out more about this study <a href="https://testpilot.mozillalabs.com/testcases/a-week-life.html">here</a>.</p>
+          <p class="embiggened"><img src="chrome://testpilot/skin/testpilot_16x16.png"><strong> &laquo; look for this icon in the bottom right of the browser window.</strong>  You can click on it to get the main Test Pilot menu.</p>
+          <p class="embiggened">The icon will pop up a notification when a study is complete.</p>
         </div>
       </div>
     </div>

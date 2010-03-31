@@ -2,6 +2,7 @@
 <?xml-stylesheet href="chrome://testpilot/content/browser.css" type="text/css"?>
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <script src="browser.js"></script>
+<script src="window-utils.js"></script>
 
 <menupopup id="menu_ToolsPopup">
   <menu id="pilot-menu" insertafter="menu_openAddons"/>
@@ -27,9 +28,9 @@
       </menupopup>
     </menu>
     <menuitem label="All Your Studies"
-              oncommand="TestPilotMenuUtils.openAllStudiesWindow();"/>
+              oncommand="TestPilotWindowUtils.openAllStudiesWindow();"/>
     <menuitem label="About Test Pilot"
-              oncommand="TestPilotMenuUtils.openPage('http://testpilot.mozillalabs.com');"/>
+              oncommand="TestPilotWindowUtils.openPage('http://testpilot.mozillalabs.com');"/>
   </menupopup>
 </menu>
 

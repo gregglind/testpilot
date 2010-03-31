@@ -235,15 +235,24 @@ src: url('chrome://testpilot/skin/fonts/DroidSans-Bold.ttf') format('truetype');
 .menuOn a {color: #666666; text-decoration: none;}
 .menuOn a:hover {color: #666666; text-decoration: none;}
 
-#survey-explanation {
-    float: right;
-    width: 45%;
-    margin: 20px 0px;
-
-}
-
-#icon-explanation {
+#get-started {
     float: left;
     width: 45%;
     margin: 20px 0px;
+}
+
+#icon-explanation {
+    float: right;
+    width: 45%;
+    margin: 20px 0px;
+}
+
+.function-link {
+    cursor: pointer;
+    color: #9f423b;
+    text-decoration: underline;
+}
+
+p.embiggened {
+    font-size: 14px;
 }

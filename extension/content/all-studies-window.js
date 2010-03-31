@@ -101,6 +101,14 @@ var TestPilotXulWindow = {
     container.appendChild(desc);
   },
 
+  addButton: function(container, label, id, onClickHandler) {
+    let button = document.createElement("button");
+    button.setAttribute("label", label);
+    button.setAttribute("id", id);
+    button.setAttribute("oncommand", onClickHandler);
+    container.appendChild(button);
+  },
+
   openURL: function(url) {
     //TODO... repeated calls to this should open the new URLs in the
     //same window, not open new windows!
@@ -144,24 +152,20 @@ var TestPilotXulWindow = {
       if (task.status == TaskConstants.STATUS_FINISHED) {
         this.addLabel( statusVbox, "Finished on " +
                                    (new Date(task.endDate)).toDateString());
-
-        let submitButton = document.createElement("button");
-        submitButton.setAttribute("label", "Submit");
-        submitButton.setAttribute("oncommand",
+        this.addButton( statusVbox, "Submit", "submit-button-" + task.id,
           "TestPilotXulWindow.onSubmitButton(" + task.id + ");");
-        submitButton.setAttribute("id", "submit-button-" + task.id);
-        statusVbox.appendChild(submitButton);
       }
       if (task.status == TaskConstants.STATUS_CANCELLED) {
         this.addLabel(statusVbox, "You opted out.");
       }
       if (task.status == TaskConstants.STATUS_NEW ||
           task.status == TaskConstants.STATUS_PENDING ) {
+            if (task.taskType == TaskConstants.TYPE_SURVEY) {
+              this.addButton( statusVBox, "Take Survey", "survey-button", "");
+            }
             if (task.startDate) {
             this.addLabel(statusVbox, "Will start " +
                           (new Date(task.startDate)).toDateString());
-            } else {
-              this.addLabel(statusVbox, "Waiting to start.");
             }
       }
       if (task.status == TaskConstants.STATUS_IN_PROGRESS ||

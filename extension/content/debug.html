@@ -40,7 +40,7 @@
   }
 
   function loadExperimentCode() {
-    var filename = "pilot-background-survey.js"
+    var filename = "a-week-life/a_week_life.js"
     var textArea = document.getElementById("experiment-code-area");
     prefStore = getCodeStorage();
     code = prefStore.getFile(filename).contents;
@@ -48,7 +48,7 @@
   }
 
   function saveAndRun() {
-    var filename = "pilot-background-survey.js";
+    var filename = "a-week-life/a_week_life.js"
     var textArea = document.getElementById("experiment-code-area");
     prefStore = getCodeStorage();
     code = prefStore.setFile(filename, textArea.value);

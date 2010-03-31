@@ -35,21 +35,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const ALL_STUDIES_WINDOW_NAME = "theTestPilotAllStudiesWindow";
-const ALL_STUDIES_WINDOW_TYPE = "extensions:testpilot:all_studies_window";
-
 Cu.import("resource://testpilot/modules/setup.js");
 
 
 // Namespace object
 var TestPilotMenuUtils = {
-  openPage: function(url) {
-    // TODO if already open in a tab, go to that tab rather than re-opening
-    var browser = window.getBrowser();
-    var tab = browser.addTab(url);
-    browser.selectedTab = tab;
-  },
-
   updateSubmenu: function() {
     var ntfyMenuFin = document.getElementById("notify-menu-finished");
     var ntfyMenuNew = document.getElementById("notify-menu-new");
@@ -85,24 +75,6 @@ var TestPilotMenuUtils = {
       menuButton.appendChild(menuPopup);
 
     menuPopup.openPopup(menuButton, "before_start", 0, 0, true);
-  },
-
-  openAllStudiesWindow: function() {
-    // If the window is not already open, open it; but if it is open,
-    // focus it instead.
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                        .getService(Ci.nsIWindowMediator);
-    var allStudiesWindow = wm.getMostRecentWindow(ALL_STUDIES_WINDOW_TYPE);
-
-    if (allStudiesWindow) {
-      allStudiesWindow.focus();
-    } else {
-      allStudiesWindow = window.open(
-        "chrome://testpilot/content/all-studies-window.xul",
-        ALL_STUDIES_WINDOW_NAME,
-        "chrome,centerscreen,resizable=no,scrollbars=yes,status=no,width=650,height=600"
-      );
-    }
   }
 };
 

@@ -6,7 +6,6 @@
 <window id="test-pilot-all-studies-window" title="Your Test Pilot Studies"
         windowtype="extensions:testpilot:all_studies_window"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        xmlns:html="http://www.w3.org/1999/xhtml"
         onload="TestPilotXulWindow.onLoad();">
 
   <script src="chrome://testpilot/content/all-studies-window.js"

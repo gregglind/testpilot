@@ -100,7 +100,7 @@ var TestPilotMenuUtils = {
       allStudiesWindow = window.open(
         "chrome://testpilot/content/all-studies-window.xul",
         ALL_STUDIES_WINDOW_NAME,
-        "chrome,centerscreen,resizable=no,scrollbars=yes,status=no,width=500,height=500"
+        "chrome,centerscreen,resizable=no,scrollbars=yes,status=no,width=650,height=600"
       );
     }
   }

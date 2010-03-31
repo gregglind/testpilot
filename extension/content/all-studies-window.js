@@ -1,8 +1,9 @@
 
 /* TODO layout:
- * 2. Word-wrap title if it's too long, instead of pushing stuff out
  * 4. Background colors depending on status?
- * 5. Adjust window size?
+ * 6. Where's my buttons?
+ * 7. How do we draw numerical badge on the Finished Studies tab icon?
+ *
  */
 
 // TODO more better links
@@ -86,16 +87,19 @@ var TestPilotXulWindow = {
     container.appendChild(progBar);
   },
 
-  addDescription: function(container, title, paragraph, styleClass) {
+  addDescription: function(container, title, paragraph) {
     let desc = document.createElement("description");
-    desc.setAttribute("class", styleClass);
+    desc.setAttribute("class", "study-title");
+    let txtNode = document.createTextNode(title);
+    desc.appendChild(txtNode);
     container.appendChild(desc);
-    let titleElem = document.createElement("html:h2");
-    titleElem.innerHTML = title;
-    desc.appendChild(titleElem);
-    let paraElem = document.createElement("html:p");
-    paraElem.innerHTML = paragraph;
-    desc.appendChild(paraElem);
+
+    desc = document.createElement("description");
+    desc.setAttribute("class", "study-description");
+    desc.setAttribute("crop", "none");
+    txtNode = document.createTextNode(paragraph);
+    desc.appendChild(txtNode);
+    container.appendChild(desc);
   },
 
   openURL: function(url) {
@@ -130,13 +134,14 @@ var TestPilotXulWindow = {
 
       let textVbox = document.createElement("vbox");
       newRow.appendChild(textVbox);
-      let desc = "Lorem ipsum bla bla bla here we go yo here we go yo so what so what so what's the scenario antidisestablishmentarianism.";
-      this.addDescription(textVbox, task.title, desc, "study-description");
+      let desc = "Lorem ipsum bla bla bla here we go yo here we go yo so what so what so what's the scenario.";
+      this.addDescription(textVbox, task.title, desc);
       this.addXulLink(textVbox, "More Info", task.defaultUrl);
 
 
       // Create the rightmost status area, depending on status:
       let statusVbox = document.createElement("vbox");
+      dump("Filling vbox.  Task id "+ task.id + " status is " + task.status + "\n");
       if (task.status == TaskConstants.STATUS_FINISHED) {
         this.addLabel( statusVbox, "Finished on " +
                                    (new Date(task.endDate)).toDateString());
@@ -147,6 +152,18 @@ var TestPilotXulWindow = {
           "TestPilotXulWindow.onSubmitButton(" + task.id + ");");
         submitButton.setAttribute("id", "submit-button-" + task.id);
         statusVbox.appendChild(submitButton);
+      }
+      if (task.status == TaskConstants.STATUS_CANCELLED) {
+        this.addLabel(statusVbox, "You opted out.");
+      }
+      if (task.status == TaskConstants.STATUS_NEW ||
+          task.status == TaskConstants.STATUS_PENDING ) {
+            if (task.startDate) {
+            this.addLabel(statusVbox, "Will start " +
+                          (new Date(task.startDate)).toDateString());
+            } else {
+              this.addLabel(statusVbox, "Waiting to start.");
+            }
       }
       if (task.status == TaskConstants.STATUS_IN_PROGRESS ||
           task.status == TaskConstants.STATUS_STARTING ) {

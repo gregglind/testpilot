@@ -138,11 +138,22 @@ var TestPilotXulWindow = {
       let newRow = document.createElement("richlistitem");
       newRow.setAttribute("class", "tp-study-list");
 
-      this.addImg(newRow, "new-study");
+      if (task._thumbnail) {
+        let newImg = document.createElement("image");
+        newImg.setAttribute("src", task._thumbnail);
+        newImg.setAttribute("class", "results-thumbnail");
+        newRow.appendChild(newImg);
+      } else {
+        this.addImg(newRow, "new-study");
+      }
 
       let textVbox = document.createElement("vbox");
       newRow.appendChild(textVbox);
       let desc = "Lorem ipsum bla bla bla here we go yo here we go yo so what so what so what's the scenario.";
+      if (task._summary) {
+        desc = task._summary;
+      }
+
       this.addDescription(textVbox, task.title, desc);
       this.addXulLink(textVbox, "More Info", task.defaultUrl);
 
@@ -178,10 +189,7 @@ var TestPilotXulWindow = {
         this.addLabel(statusVbox, "Will finish " +
                                  (new Date(task.endDate)).toDateString());
       }
-      if (task.status == TaskConstants.STATUS_SUBMITTED ||
-          task.status == TaskConstants.STATUS_RESULTS ||
-          task.status == TaskConstants.STATUS_ARCHIVED) {
-
+      if (task.status == TaskConstants.STATUS_SUBMITTED) {
         this.addImg(statusVbox, "study-finished");
         this.addLabel(statusVbox, "Thank you for submitting!");
       }
@@ -190,23 +198,19 @@ var TestPilotXulWindow = {
       newRow.appendChild(spacer);
       newRow.appendChild(statusVbox);
 
+
       // Use status to decide which panel to add this to:
       let rowset;
-      switch (task.status) {
-      case TaskConstants.STATUS_NEW:
-      case TaskConstants.STATUS_PENDING:
-      case TaskConstants.STATUS_STARTING:
-      case TaskConstants.STATUS_IN_PROGRESS:
-      case TaskConstants.STATUS_FINISHED:
-        rowset = document.getElementById("current-studies-listbox");
-      break;
-      case TaskConstants.STATUS_SUBMITTED:
-      case TaskConstants.STATUS_RESULTS:
-      case TaskConstants.STATUS_ARCHIVED:
-      case TaskConstants.STATUS_CANCELLED:
-        rowset = document.getElementById("finished-studies-listbox");
-      break;
+      if (task.taskType == TaskConstants.TYPE_RESULTS) {
+        rowset = document.getElementById("study-results-listbox");
+      } else if (task.status == TaskConstants.STATUS_SUBMITTED ||
+                 task.status == TaskConstants.STATUS_CANCELLED) {
+         rowset = document.getElementById("finished-studies-listbox");
+      } else {
+         rowset = document.getElementById("current-studies-listbox");
       }
+
+      // TODO further distinguish by background colors.
       rowset.appendChild(newRow);
     }
   },

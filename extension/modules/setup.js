@@ -490,7 +490,15 @@ let TestPilotSetup = {
           } catch (e) {
             logger.warn("Failed to load task " + filename + ": " + e);
           }
+        } // end for filename in experiments
+
+        // Handling new results is much simpler:
+        let results = self._remoteExperimentLoader.getStudyResults();
+        for (let r in results) {
+          let studyResult = new TestPilotStudyResults(results[r]);
+          TestPilotSetup.addTask(studyResult);
         }
+
         if (callback) {
           callback();
         }

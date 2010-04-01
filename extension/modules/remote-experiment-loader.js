@@ -145,6 +145,7 @@ exports.RemoteExperimentLoader.prototype = {
     this._logger = log4moz.repository.getLogger("TestPilot.Loader");
     this._expLogger = log4moz.repository.getLogger("TestPilot.RemoteCode");
     this._experimentFilenames = [];
+    this._studyResults = [];
     if (fileGetterFunction != undefined) {
       this._fileGetter = fileGetterFunction;
     } else {
@@ -190,28 +191,30 @@ exports.RemoteExperimentLoader.prototype = {
     let indexFileName = prefs.get("extensions.testpilot.indexFileName",
                                   "index.json");
     let self = this;
-    // Just added: Unload everything before checking for updates, to be sure we
+    // Unload everything before checking for updates, to be sure we
     // get the newest stuff.
     this._logger.info("Unloading everything to prepare to check for updates.");
     this._refreshLoader();
 
+    // Check for surveys and studies
     self._fileGetter(resolveUrl(BASE_URL, indexFileName), function onDone(data) {
       if (data) {
         try {
           data = JSON.parse(data);
         } catch (e) {
-          self._logger.warn("JSON parsing error: " + e );
+          self._logger.warn("Error parsing index.json: " + e );
           callback(false);
           return;
         }
+
+        // Cache study results...
+        self._studyResults = data.results;
+
         /* Go through each file indicated in index.json, attempt to load it into
          * codeStorage (replacing any older version there)
          */
-
         let libNames = [ x.filename for each (x in data.libraries)];
         let expNames = [ x.filename for each (x in data.experiments)];
-        self._logger.debug("Libraries: " + libNames);
-        self._logger.debug("Experiments: " + expNames);
         let filenames = libNames.concat(expNames);
         self._experimentFilenames = expNames;
         let numFilesToDload = filenames.length;
@@ -262,5 +265,9 @@ exports.RemoteExperimentLoader.prototype = {
       }
     }
     return remoteExperiments;
+  },
+
+  getStudyResults: function() {
+    return this._studyResults;
   }
 };

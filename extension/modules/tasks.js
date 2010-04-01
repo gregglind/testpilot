@@ -35,7 +35,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 EXPORTED_SYMBOLS = ["TaskConstants", "TestPilotWebSurvey",
-                    "TestPilotBuiltinSurvey", "TestPilotExperiment"];
+                    "TestPilotBuiltinSurvey", "TestPilotExperiment",
+                    "TestPilotStudyResults"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -68,6 +69,7 @@ const TaskConstants = {
 
  TYPE_EXPERIMENT : 1,
  TYPE_SURVEY : 2,
+ TYPE_RESULTS : 3,
 
  ALWAYS_SUBMIT: 1,
  NEVER_SUBMIT: -1,
@@ -87,13 +89,12 @@ var TestPilotTask = {
   _status: null,
   _url: null,
 
-  _taskInit: function TestPilotTask__taskInit(id, title, infoPageUrl, resultsUrl) {
+  _taskInit: function TestPilotTask__taskInit(id, title, infoPageUrl) {
     this._id = id;
     this._title = title;
     this._status = Application.prefs.getValue(STATUS_PREF_PREFIX + this._id,
                                               TaskConstants.STATUS_NEW);
     this._url = infoPageUrl;
-    this._resultsUrl = resultsUrl;
     this._logger = Log4Moz.repository.getLogger("TestPilot.Task_"+this._id);
   },
 
@@ -121,10 +122,6 @@ var TestPilotTask = {
 
   get infoPageUrl() {
     return this._url;
-  },
-
-  get resultsUrl() {
-    return this._resultsUrl;
   },
 
   get currentStatusUrl() {
@@ -226,8 +223,7 @@ TestPilotExperiment.prototype = {
      * recursAutomatically (boolean)
      * recurrenceInterval (number of days)
      * versionNumber (int) */
-    this._taskInit(expInfo.testId, expInfo.testName,
-                   expInfo.testInfoUrl, expInfo.resultsUrl);
+    this._taskInit(expInfo.testId, expInfo.testName, expInfo.testInfoUrl);
     this._webContent = webContent;
     this._dataStore = dataStore;
     this._versionNumber = expInfo.versionNumber;
@@ -299,12 +295,7 @@ TestPilotExperiment.prototype = {
   },
 
   get defaultUrl() {
-    if (this._status >= TaskConstants.STATUS_RESULTS &&
-        this.resultsUrl) {
-      return this.resultsUrl;
-    } else {
-      return this.currentStatusUrl;
-    }
+    return this.currentStatusUrl;
   },
 
   get recurPref() {
@@ -542,13 +533,6 @@ TestPilotExperiment.prototype = {
 	}
       }
     }
-
-    if (this._status == TaskConstants.STATUS_SUBMITTED &&
-        this._testResultsUrl != undefined) {
-      // If we've submitted data and a results URL is defined, bump status
-      // up to RESULTS and let user know that the results are now available.
-      this.changeStatus( TaskConstants.STATUS_RESULTS );
-    }
   },
 
   _prependMetadataToCSV: function TestPilotExperiment__prependMetadata() {
@@ -701,8 +685,7 @@ TestPilotWebSurvey.prototype = {
   _init: function TestPilotWebSurvey__init(surveyInfo) {
     this._taskInit(surveyInfo.surveyId,
                    surveyInfo.surveyName,
-                   surveyInfo.surveyUrl,
-                   surveyInfo.resultsUrl);
+                   surveyInfo.surveyUrl);
     this._logger.info("Initing survey.  This._status is " + this._status);
     if (this._status < TaskConstants.STATUS_RESULTS) {
       this.checkForCompletion();
@@ -714,12 +697,7 @@ TestPilotWebSurvey.prototype = {
   },
 
   get defaultUrl() {
-    if (this._status >= TaskConstants.STATUS_RESULTS &&
-        this._resultsUrl != undefined) {
-      return this.resultsUrl;
-    } else {
-      return this.infoPageUrl;
-    }
+    return this.infoPageUrl;
   },
 
   checkForCompletion: function TestPilotWebSurvey_checkForCompletion() {
@@ -735,13 +713,8 @@ TestPilotWebSurvey.prototype = {
         if (req.status == 200) {
           if (req.responseText.indexOf(surveyCompletedText) > -1) {
             self._logger.trace("Survey is completed.");
-            if (self._resultsUrl != undefined) {
-              self._logger.trace("Setting survey status to RESULTS");
-              self.changeStatus( TaskConstants.STATUS_RESULTS, true );
-            } else {
-              self._logger.trace("Setting survey status to SUBMITTED");
-              self.changeStatus( TaskConstants.STATUS_SUBMITTED, true );
-            }
+            self._logger.trace("Setting survey status to SUBMITTED");
+            self.changeStatus( TaskConstants.STATUS_SUBMITTED, true );
             self._logger.trace("Survey status is now " + self._status);
 	  }
         } else {
@@ -772,8 +745,7 @@ TestPilotBuiltinSurvey.prototype = {
   _init: function TestPilotBuiltinSurvey__init(surveyInfo) {
     this._taskInit(surveyInfo.surveyId,
                    surveyInfo.surveyName,
-                   surveyInfo.surveyUrl,
-                   surveyInfo.resultsUrl);
+                   surveyInfo.surveyUrl);
     this._questions = surveyInfo.surveyQuestions;
     this._explanation = surveyInfo.surveyExplanation;
   },
@@ -796,12 +768,7 @@ TestPilotBuiltinSurvey.prototype = {
   },
 
   get defaultUrl() {
-    if (this._status >= TaskConstants.STATUS_RESULTS &&
-        this._resultsUrl != undefined) {
-      return this.resultsUrl;
-    } else {
-      return this.currentStatusUrl;
-    }
+    return this.currentStatusUrl;
   },
 
   onUrlLoad: function TPS_onUrlLoad(url) {
@@ -831,6 +798,27 @@ TestPilotBuiltinSurvey.prototype = {
     Application.prefs.setValue(prefName, JSON.stringify(answers));
     this.changeStatus( TaskConstants.STATUS_SUBMITTED);
   }
-
 };
 TestPilotBuiltinSurvey.prototype.__proto__ = TestPilotTask;
+
+function TestPilotStudyResults(resultsInfo) {
+  this._init(resultsInfo);
+};
+TestPilotStudyResults.prototype = {
+  _init: function TestPilotStudyResults__init(resultsInfo) {
+    this._taskInit( resultsInfo.id,
+                    resultsInfo.title,
+                    resultsInfo.url);
+    this._studyId = resultsInfo.studyId; // what study do we belong to
+
+    /* TODO summary and thumbnail should be expanded to all studies */
+    this._summary = resultsInfo.summary;
+    this._thumbnail = resultsInfo.thumbnail;
+  },
+
+  get taskType() {
+    return TaskConstants.TYPE_RESULTS;
+  }
+};
+TestPilotStudyResults.prototype.__proto__ = TestPilotTask;
+

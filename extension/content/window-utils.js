@@ -37,15 +37,12 @@
 const ALL_STUDIES_WINDOW_NAME = "theTestPilotAllStudiesWindow";
 const ALL_STUDIES_WINDOW_TYPE = "extensions:testpilot:all_studies_window";
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-
 var TestPilotWindowUtils = {
   openAllStudiesWindow: function() {
     // If the window is not already open, open it; but if it is open,
     // focus it instead.
-    var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-                        .getService(Ci.nsIWindowMediator);
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                        .getService(Components.interfaces.nsIWindowMediator);
     var allStudiesWindow = wm.getMostRecentWindow(ALL_STUDIES_WINDOW_TYPE);
 
     if (allStudiesWindow) {

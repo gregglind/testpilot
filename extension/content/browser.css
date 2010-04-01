@@ -77,7 +77,7 @@ richlistitem.tp-study-list {
 }
 
 image.results-thumbnail {
-    max-height: 110px;
-    max-width: 110px;
+    max-height: 90px;
+    max-width:  90px;
     margin: 5px;
 }

@@ -6,14 +6,11 @@
  */
 
 // TODO more better links
-// TODO insert text (a new blurb, to be specified in task.webContent?)
-// TODO specify study-specific icon in task.webContent too
 
 // TODO fix layout in notification
 // TODO add links to notification
 // TODO make notification for "new survey"
 
-// TODO Make click on the "more info" link open detail view on study...
 // TODO Show individual status page in new chromeless window as html with
 // background color set to "moz-dialog".
 

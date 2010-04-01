@@ -59,11 +59,11 @@ richlistbox.tp-study-list {
 }
 
 description.study-description {
-    width: 300px;
+    width: 350px;
 }
 
 description.study-title {
-    width: 300px;
+    width: 350px;
     font-size: 200%;
     text-align: left;
     margin-top: 10px;
@@ -79,5 +79,5 @@ richlistitem.tp-study-list {
 image.results-thumbnail {
     max-height: 90px;
     max-width:  90px;
-    margin: 5px;
+    margin: 10px;
 }

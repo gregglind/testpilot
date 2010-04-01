@@ -131,11 +131,33 @@ var TestPilotXulWindow = {
                          "resizable=yes,scrollbars=yes,status=no");
   },
 
+  _sortNewestFirst: function(experiments) {
+    experiments.sort(
+      function sortFunc(a, b) {
+        if (a.endDate && b.endDate) {
+          dump("Comparing by end date.\n");
+          return b.endDate - a.endDate;
+        }
+        if (a.publishDate && b.publishDate) {
+          dump("Comparing by publish date.\n");
+          if (isNaN(a.publishDate) || isNaN(b.publishDate)) {
+            dump("NaN\n");
+            return 0;
+          }
+          return b.publishDate - a.publishDate;
+        }
+        dump("No comparison.\n");
+        return 0;
+      });
+    return experiments;
+  },
+
   onLoad: function () {
     Components.utils.import("resource://testpilot/modules/setup.js");
     Components.utils.import("resource://testpilot/modules/tasks.js");
 
     let experiments = TestPilotSetup.getAllTasks();
+    experiments = this._sortNewestFirst(experiments);
 
     for (let i = 0; i < experiments.length; i++) {
       let task = experiments[i];

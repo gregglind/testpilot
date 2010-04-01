@@ -773,10 +773,16 @@ TestPilotStudyResults.prototype = {
                     resultsInfo.summary,
                     resultsInfo.thumbnail);
     this._studyId = resultsInfo.studyId; // what study do we belong to
+    this._pubDate = Date.parse(resultsInfo.date);
+    dump("Publish date is " + this._pubDate + "\n");
   },
 
   get taskType() {
     return TaskConstants.TYPE_RESULTS;
+  },
+
+  get publishDate() {
+    return this._pubDate;
   }
 };
 TestPilotStudyResults.prototype.__proto__ = TestPilotTask;

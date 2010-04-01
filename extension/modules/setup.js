@@ -465,13 +465,7 @@ let TestPilotSetup = {
             // Could be a survey: check if surveyInfo is exported:
             if (experiments[filename].surveyInfo != undefined) {
               let sInfo = experiments[filename].surveyInfo;
-              // survey is either a web survey (specifies a url) or
-              // a built-in survey (specifies surveyQuestions.)
-              if (sInfo.surveyQuestions != undefined) {
-                task = new TestPilotBuiltinSurvey(sInfo);
-              } else {
-                task = new TestPilotWebSurvey(sInfo);
-              }
+              task = new TestPilotBuiltinSurvey(sInfo);
             } else {
               // This one must be an experiment.
               let expInfo = experiments[filename].experimentInfo;

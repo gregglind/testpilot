@@ -186,6 +186,8 @@ var TestPilotXulWindow = {
       }
       if (task.status == TaskConstants.STATUS_NEW ||
           task.status == TaskConstants.STATUS_PENDING ) {
+            newRow.setAttribute("class", "tp-new-results");
+            
             if (task.taskType == TaskConstants.TYPE_SURVEY) {
               this.addButton( statusVBox, "Take Survey", "survey-button", "");
             } else if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {

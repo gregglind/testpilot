@@ -97,6 +97,14 @@ richlistitem.tp-study-list {
     border-width: 1px;
 }
 
+richlistitem.tp-new-results {
+    min-height: 120px;
+    border-color: grey;
+    border-bottom-style: solid;
+    border-width: 1px;
+    background-color: pink;
+}
+
 image.results-thumbnail {
     max-height: 90px;
     max-width:  90px;

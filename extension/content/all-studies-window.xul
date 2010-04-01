@@ -21,7 +21,16 @@
       </radio>
       <radio pane="true" id="finished-studies-rb" orient="vertical"
              onclick="TestPilotXulWindow.focusPane(1);">
-         <image id="finished-studies-tab-img"/>
+         <stack>
+           <image id="finished-studies-tab-img"/>
+           <vbox>
+             <hbox>
+               <label id="num-finished-badge"/>
+               <spacer flex="1"/>
+             </hbox>
+             <spacer flex="1"/>
+           </vbox>
+         </stack>
          <label value="Finished Studies"/>
       </radio>
       <radio pane="true" id="results-rb" orient="vertical"

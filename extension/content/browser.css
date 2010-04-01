@@ -110,3 +110,11 @@ image.results-thumbnail {
     max-width:  90px;
     margin: 10px;
 }
+
+#num-finished-badge {
+    background-color: green;
+    color: white;
+    font-weight: bold;
+    padding: 2px;
+    -moz-border-radius: 4px 4px; 
+}

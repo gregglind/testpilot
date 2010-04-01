@@ -156,6 +156,7 @@ var TestPilotXulWindow = {
     Components.utils.import("resource://testpilot/modules/setup.js");
     Components.utils.import("resource://testpilot/modules/tasks.js");
 
+    let numFinishedStudies = 0;
     let experiments = TestPilotSetup.getAllTasks();
     experiments = this._sortNewestFirst(experiments);
 
@@ -187,7 +188,7 @@ var TestPilotXulWindow = {
       if (task.status == TaskConstants.STATUS_NEW ||
           task.status == TaskConstants.STATUS_PENDING ) {
             newRow.setAttribute("class", "tp-new-results");
-            
+
             if (task.taskType == TaskConstants.TYPE_SURVEY) {
               this.addButton( statusVBox, "Take Survey", "survey-button", "");
             } else if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
@@ -210,6 +211,7 @@ var TestPilotXulWindow = {
       if (task.status == TaskConstants.STATUS_SUBMITTED) {
         this.addImg(statusVbox, "study-submitted");
         this.addLabel(statusVbox, "Thank you for submitting!");
+        numFinishedStudies ++;
       }
       let spacer = document.createElement("spacer");
       spacer.setAttribute("flex", "1");
@@ -231,6 +233,10 @@ var TestPilotXulWindow = {
       // TODO further distinguish by background colors.
       rowset.appendChild(newRow);
     }
+
+    // Show number of studies the user finished on badge:
+    document.getElementById("num-finished-badge").setAttribute(
+      "value", numFinishedStudies);
   },
 
   focusPane: function(paneIndex) {

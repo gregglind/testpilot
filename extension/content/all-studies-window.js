@@ -1,8 +1,6 @@
 
 /* TODO layout:
  * 4. Background colors depending on status?
- * 7. How do we draw numerical badge on the Finished Studies tab icon?
- *
  */
 
 // TODO more better links
@@ -76,11 +74,29 @@ var TestPilotXulWindow = {
     container.appendChild(newImg);
   },
 
+  makeSpacer: function() {
+    let spacer = document.createElement("spacer");
+    spacer.setAttribute("flex", "1");
+    return spacer;
+  },
+
   addThumbnail: function(container, imgUrl) {
+    let boundingBox = document.createElement("vbox");
+    boundingBox.setAttribute("class", "results-thumbnail");
+    let bBox2 = document.createElement("hbox");
+
+    boundingBox.appendChild(this.makeSpacer());
+    boundingBox.appendChild(bBox2);
+    boundingBox.appendChild(this.makeSpacer());
+
+    bBox2.appendChild(this.makeSpacer());
     let newImg = document.createElement("image");
     newImg.setAttribute("src", imgUrl);
     newImg.setAttribute("class", "results-thumbnail");
-    container.appendChild(newImg);
+    bBox2.appendChild(newImg);
+    bBox2.appendChild(this.makeSpacer());
+
+    container.appendChild(boundingBox);
   },
 
   addProgressBar: function(container, percent) {

@@ -188,10 +188,11 @@ var TestPilotXulWindow = {
           task.status == TaskConstants.STATUS_PENDING ) {
             if (task.taskType == TaskConstants.TYPE_SURVEY) {
               this.addButton( statusVBox, "Take Survey", "survey-button", "");
-            }
-            if (task.startDate) {
-            this.addLabel(statusVbox, "Will start " +
-                          (new Date(task.startDate)).toDateString());
+            } else if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
+              if (task.startDate) {
+                this.addLabel(statusVbox, "Will start " +
+                            (new Date(task.startDate)).toDateString());
+              }
             }
       }
       if (task.status == TaskConstants.STATUS_IN_PROGRESS ||
@@ -205,7 +206,7 @@ var TestPilotXulWindow = {
                                  (new Date(task.endDate)).toDateString());
       }
       if (task.status == TaskConstants.STATUS_SUBMITTED) {
-        this.addImg(statusVbox, "study-finished");
+        this.addImg(statusVbox, "study-submitted");
         this.addLabel(statusVbox, "Thank you for submitting!");
       }
       let spacer = document.createElement("spacer");

@@ -16,17 +16,17 @@
                 class="paneSelector">
       <radio pane="true" id="current-studies-rb" orient="vertical"
              onclick="TestPilotXulWindow.focusPane(0);">
-        <image class="new-study"/>
+        <image id="current-studies-tab-img"/>
         <label value="Current Studies"/>
       </radio>
       <radio pane="true" id="finished-studies-rb" orient="vertical"
              onclick="TestPilotXulWindow.focusPane(1);">
-         <image class="study-finished"/>
+         <image id="finished-studies-tab-img"/>
          <label value="Finished Studies"/>
       </radio>
       <radio pane="true" id="results-rb" orient="vertical"
              onclick="TestPilotXulWindow.focusPane(2);">
-         <image class="new-results"/>
+         <image id="study-results-tab-img"/>
          <label value="Study Findings"/>
       </radio>
     </radiogroup>

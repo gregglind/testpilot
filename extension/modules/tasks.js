@@ -54,7 +54,7 @@ const EXPIRATION_DATE_FOR_DATA_SUBMISSION_PREFIX =
 const RETRY_INTERVAL_PREF = "extensions.testpilot.uploadRetryInterval";
 const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
 const EXPIRATION_TIME_FOR_DATA_SUBMISSION = 7 * (24 * 60 * 60 * 1000); // 7 days
-const DEFAULT_THUMBNAIL_URL = "chrome://testpilot/skin/new_study_48x48.png";
+const DEFAULT_THUMBNAIL_URL = "chrome://testpilot/skin/tp-generic-32x32.png";
 
 const TaskConstants = {
  STATUS_NEW: 0, // It's new and you haven't seen it yet.

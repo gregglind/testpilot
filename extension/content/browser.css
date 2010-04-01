@@ -19,29 +19,50 @@
     font-size:200%
 }
 
+#current-studies-tab-img {
+    list-style-image: url("chrome://testpilot/skin/tp-currentstudies-32x32.png");
+    max-height: 32px;
+    max-width: 32px;
+    margin: 10px;
+}
+
+#finished-studies-tab-img {
+    list-style-image: url("chrome://testpilot/skin/tp-completedstudies-32x32.png");
+    max-height: 32px;
+    max-width: 32px;
+    margin: 10px;
+}
+
+#study-results-tab-img {
+    list-style-image: url("chrome://testpilot/skin/tp-learned-32x32.png");
+    max-height: 32px;
+    max-width: 32px;
+    margin: 10px;
+}
+
 image.study-finished {
-    list-style-image: url("chrome://testpilot/skin/ready_submit_48x48.png");
+    list-style-image: url("chrome://testpilot/skin/tp-submit-48x48.png");
     max-height: 48px;
     max-width: 48px;
     margin: 10px;
 }
 
 image.study-submitted {
-    list-style-image: url("chrome://testpilot/skin/ready_submit_48x48.png");
-    max-height: 48px;
-    max-width: 48px;
+    list-style-image: url("chrome://testpilot/skin/tp-completedstudies-32x32.png");
+    max-height: 32px;
+    max-width: 32px;
     margin: 10px;
 }
 
 image.new-study {
-    list-style-image: url("chrome://testpilot/skin/new_study_48x48.png");
+    list-style-image: url("chrome://testpilot/skin/tp-study-48x48.png");
     max-height: 48px;
     max-width: 48px;
     margin: 10px;
 }
 
 image.new-results {
-    list-style-image: url("chrome://testpilot/skin/new_results_48x48.png");
+    list-style-image: url("chrome://testpilot/skin/tp-results-48x48.png");
     max-height: 48px;
     max-width: 48px;
     margin: 10px;

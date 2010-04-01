@@ -79,6 +79,13 @@ var TestPilotXulWindow = {
     container.appendChild(newImg);
   },
 
+  addThumbnail: function(container, imgUrl) {
+    let newImg = document.createElement("image");
+    newImg.setAttribute("src", imgUrl);
+    newImg.setAttribute("class", "results-thumbnail");
+    container.appendChild(newImg);
+  },
+
   addProgressBar: function(container, percent) {
     let progBar = document.createElement("progressmeter");
     progBar.setAttribute("mode", "determined");
@@ -138,23 +145,12 @@ var TestPilotXulWindow = {
       let newRow = document.createElement("richlistitem");
       newRow.setAttribute("class", "tp-study-list");
 
-      if (task._thumbnail) {
-        let newImg = document.createElement("image");
-        newImg.setAttribute("src", task._thumbnail);
-        newImg.setAttribute("class", "results-thumbnail");
-        newRow.appendChild(newImg);
-      } else {
-        this.addImg(newRow, "new-study");
-      }
+      this.addThumbnail(newRow, task.thumbnail);
 
       let textVbox = document.createElement("vbox");
       newRow.appendChild(textVbox);
-      let desc = "Lorem ipsum bla bla bla here we go yo here we go yo so what so what so what's the scenario.";
-      if (task._summary) {
-        desc = task._summary;
-      }
 
-      this.addDescription(textVbox, task.title, desc);
+      this.addDescription(textVbox, task.title, task.summary);
       this.addXulLink(textVbox, "More Info", task.defaultUrl);
 
 

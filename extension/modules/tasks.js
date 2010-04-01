@@ -54,6 +54,7 @@ const EXPIRATION_DATE_FOR_DATA_SUBMISSION_PREFIX =
 const RETRY_INTERVAL_PREF = "extensions.testpilot.uploadRetryInterval";
 const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
 const EXPIRATION_TIME_FOR_DATA_SUBMISSION = 7 * (24 * 60 * 60 * 1000); // 7 days
+const DEFAULT_THUMBNAIL_URL = "chrome://testpilot/skin/new_study_48x48.png";
 
 const TaskConstants = {
  STATUS_NEW: 0, // It's new and you haven't seen it yet.
@@ -88,12 +89,14 @@ var TestPilotTask = {
   _status: null,
   _url: null,
 
-  _taskInit: function TestPilotTask__taskInit(id, title, infoPageUrl) {
+  _taskInit: function TestPilotTask__taskInit(id, title, url, summary, thumb) {
     this._id = id;
     this._title = title;
     this._status = Application.prefs.getValue(STATUS_PREF_PREFIX + this._id,
                                               TaskConstants.STATUS_NEW);
-    this._url = infoPageUrl;
+    this._url = url;
+    this._summary = summary;
+    this._thumbnail = thumb;
     this._logger = Log4Moz.repository.getLogger("TestPilot.Task_"+this._id);
   },
 
@@ -115,6 +118,22 @@ var TestPilotTask = {
 
   get webContent() {
     return this._webContent;
+  },
+
+  get summary() {
+    if (this._summary) {
+      return this._summary;
+    } else {
+      return this._title;
+    }
+  },
+
+  get thumbnail() {
+    if (this._thumbnail) {
+      return this._thumbnail;
+    } else {
+      return DEFAULT_THUMBNAIL_URL;
+    }
   },
 
   // urls:
@@ -217,12 +236,14 @@ TestPilotExperiment.prototype = {
      * testName (human-readable string)
      * testId (int)
      * testInfoUrl (url)
-     * testResultsUrl (url)
+     * summary (string - couple of sentences explaining study)
+     * thumbnail (url of an image representing the study)
      * optInRequired  (boolean)
      * recursAutomatically (boolean)
      * recurrenceInterval (number of days)
      * versionNumber (int) */
-    this._taskInit(expInfo.testId, expInfo.testName, expInfo.testInfoUrl);
+    this._taskInit(expInfo.testId, expInfo.testName, expInfo.testInfoUrl,
+                   expInfo.summary, expInfo.thumbnail);
     this._webContent = webContent;
     this._dataStore = dataStore;
     this._versionNumber = expInfo.versionNumber;
@@ -683,7 +704,9 @@ TestPilotBuiltinSurvey.prototype = {
   _init: function TestPilotBuiltinSurvey__init(surveyInfo) {
     this._taskInit(surveyInfo.surveyId,
                    surveyInfo.surveyName,
-                   surveyInfo.surveyUrl);
+                   surveyInfo.surveyUrl,
+                   surveyInfo.summary,
+                   surveyInfo.thumbnail);
     this._questions = surveyInfo.surveyQuestions;
     this._explanation = surveyInfo.surveyExplanation;
   },
@@ -746,12 +769,10 @@ TestPilotStudyResults.prototype = {
   _init: function TestPilotStudyResults__init(resultsInfo) {
     this._taskInit( resultsInfo.id,
                     resultsInfo.title,
-                    resultsInfo.url);
+                    resultsInfo.url,
+                    resultsInfo.summary,
+                    resultsInfo.thumbnail);
     this._studyId = resultsInfo.studyId; // what study do we belong to
-
-    /* TODO summary and thumbnail should be expanded to all studies */
-    this._summary = resultsInfo.summary;
-    this._thumbnail = resultsInfo.thumbnail;
   },
 
   get taskType() {

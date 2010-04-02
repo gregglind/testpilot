@@ -200,7 +200,9 @@ var TestPilotXulWindow = {
       }
       if (task.status == TaskConstants.STATUS_CANCELLED) {
         newRow.setAttribute("class", "tp-opted-out");
-        this.addLabel(statusVbox, "You opted out.");
+        statusVbox.appendChild(this.makeSpacer());
+        this.addLabel(statusVbox, "(You canceled this study.)");
+        statusVbox.appendChild(this.makeSpacer());
       }
       if (task.status == TaskConstants.STATUS_NEW ||
           task.status == TaskConstants.STATUS_PENDING ) {
@@ -226,8 +228,12 @@ var TestPilotXulWindow = {
                                  (new Date(task.endDate)).toDateString());
       }
       if (task.status == TaskConstants.STATUS_SUBMITTED) {
-        this.addImg(statusVbox, "study-submitted");
-        this.addLabel(statusVbox, "Thank you for submitting!");
+        let hbox = document.createElement("hbox");
+        statusVbox.appendChild(hbox);
+        hbox.appendChild(this.makeSpacer());
+        this.addImg(hbox, "study-submitted");
+        hbox.appendChild(this.makeSpacer());
+        this.addLabel(statusVbox, "Thanks for participating!");
         numFinishedStudies ++;
       }
       let spacer = document.createElement("spacer");

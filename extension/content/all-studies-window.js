@@ -266,7 +266,7 @@ var TestPilotXulWindow = {
         this.addLabel(statusVbox, "Will finish " +
                                  (new Date(task.endDate)).toDateString());
       }
-      if (task.status == TaskConstants.STATUS_SUBMITTED) {
+      if (task.status >= TaskConstants.STATUS_SUBMITTED) {
         let hbox = document.createElement("hbox");
         statusVbox.appendChild(hbox);
         hbox.appendChild(this.makeSpacer());
@@ -285,8 +285,7 @@ var TestPilotXulWindow = {
       let rowset;
       if (task.taskType == TaskConstants.TYPE_RESULTS) {
         rowset = document.getElementById("study-results-listbox");
-      } else if (task.status == TaskConstants.STATUS_SUBMITTED ||
-                 task.status == TaskConstants.STATUS_CANCELLED) {
+      } else if (task.status > TaskConstants.STATUS_FINISHED) {
         rowset = document.getElementById("finished-studies-listbox");
       } else {
         rowset = document.getElementById("current-studies-listbox");

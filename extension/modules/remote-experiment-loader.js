@@ -80,6 +80,12 @@ function PreferencesStore(prefName) {
     let dates = data["modifiedDates"] || {};
     return dates[path];
   };
+
+  this.listAllFiles = function() {
+    let data = this.get();
+    let filename;
+    return [filename for (filename in data.fs)];
+  };
 }
 
 exports.PreferencesStore = PreferencesStore;
@@ -144,7 +150,6 @@ exports.RemoteExperimentLoader.prototype = {
   _init: function(log4moz, fileGetterFunction) {
     this._logger = log4moz.repository.getLogger("TestPilot.Loader");
     this._expLogger = log4moz.repository.getLogger("TestPilot.RemoteCode");
-    this._experimentFilenames = [];
     this._studyResults = [];
     if (fileGetterFunction != undefined) {
       this._fileGetter = fileGetterFunction;
@@ -153,6 +158,7 @@ exports.RemoteExperimentLoader.prototype = {
     }
     this._logger.trace("About to instantiate preferences store.");
     this._codeStorage = new PreferencesStore("extensions.testpilot.experiment.codeFs");
+    this._libraryNames = [];
     let self = this;
 
     /* Use a composite file system here, compositing codeStorage and a new
@@ -214,9 +220,9 @@ exports.RemoteExperimentLoader.prototype = {
          * codeStorage (replacing any older version there)
          */
         let libNames = [ x.filename for each (x in data.libraries)];
+        self._libraryNames = libNames;
         let expNames = [ x.filename for each (x in data.experiments)];
         let filenames = libNames.concat(expNames);
-        self._experimentFilenames = expNames;
         let numFilesToDload = filenames.length;
         for each (let f in filenames) {
           let filename = f;
@@ -253,8 +259,13 @@ exports.RemoteExperimentLoader.prototype = {
     // already stored in codeStorage
     this._logger.trace("GetExperiments called.");
     let remoteExperiments = {};
-    this._logger.debug("Size of this._experimentFilenames is " + this._experimentFilenames.length);
-    for each (let filename in this._experimentFilenames) {
+    dump( "Loading all files: \n");
+    for each (let filename in this._codeStorage.listAllFiles()) {
+      if (this._libraryNames.indexOf(filename) != -1) {
+        dump(filename + " is a library, skipping.\n");
+        continue;
+      }
+      dump("Loading " + filename + "\n");
       this._logger.debug("GetExperiments is loading " + filename);
       try {
         remoteExperiments[filename] = this._loader.require(filename);

@@ -58,10 +58,6 @@ const POPUP_CHECK_INTERVAL = "extensions.testpilot.popup.delayAfterStartup";
 const POPUP_REMINDER_INTERVAL = "extensions.testpilot.popup.timeBetweenChecks";
 const LOG_FILE_NAME = "TestPilotErrorLog.log";
 
-const HIGH_PRIORITY_ONLY = 1;
-const HIGH_AND_MEDIUM_PRIORITY = 2;
-const ANY_PRIORITY = 3;
-
 // TODO move homepage to a pref?
 const TEST_PILOT_HOME_PAGE = "http://testpilot.mozillalabs.com";
 
@@ -142,8 +138,8 @@ let TestPilotSetup = {
     this._longTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this._longTimer.initWithCallback(
       { notify: function(timer) {
-          self._notifyUserOfTasks(HIGH_PRIORITY_ONLY);
           self.reloadRemoteExperiments();
+          self._notifyUserOfTasks();
       }},
       Application.prefs.getValue(POPUP_REMINDER_INTERVAL, 86400000),
       Ci.nsITimer.TYPE_REPEATING_SLACK
@@ -313,7 +309,7 @@ let TestPilotSetup = {
     popup.hidePopup();
   },
 
-  _notifyUserOfTasks: function TPS__notifyUser(priority) {
+  _notifyUserOfTasks: function TPS__notifyUser() {
     // Check whether there are tasks needing attention, and if any are
     // found, show the popup door-hanger thingy.
     let i, task, title, text;
@@ -333,11 +329,6 @@ let TestPilotSetup = {
 	  return;
         }
       }
-    }
-
-    // If we only want to show highest priority stuff, end here.
-    if (priority == HIGH_PRIORITY_ONLY) {
-      return;
     }
 
     // If there's no finished test, next highest priority is new tests that
@@ -370,16 +361,6 @@ let TestPilotSetup = {
         }
       }
     }
-
-    // High and medium priority stuff ends here.
-    if ( priority == HIGH_AND_MEDIUM_PRIORITY ) {
-      return;
-    }
-
-    // TODO:
-    // We could notify users of FINISHED -> SUBMITTED here, or
-    // FINISHED -> CANCELED, but it seems kind of pointless when they
-    // are already looking at a page that gives feedback about that.
   },
 
   _doHousekeeping: function TPS__doHousekeeping() {
@@ -393,12 +374,12 @@ let TestPilotSetup = {
     if (!this.didReminderAfterStartup) {
       logger.trace("Doing reminder after startup...");
       this.didReminderAfterStartup = true;
-      this._notifyUserOfTasks(HIGH_AND_MEDIUM_PRIORITY);
+      this._notifyUserOfTasks();
     }
   },
 
   onTaskStatusChanged: function TPS_onTaskStatusChanged() {
-    this._notifyUserOfTasks(ANY_PRIORITY);
+    this._notifyUserOfTasks();
   },
 
   get version() {

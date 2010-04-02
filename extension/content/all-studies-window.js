@@ -81,7 +81,9 @@ var TestPilotXulWindow = {
       }
       if (success) {
         self.addImg(parent, "study-submitted");
-        self.addLabel(parent, "Thank you for submitting!");
+        // TODO right here this message gets cut off!!!!
+        self.addLabel(parent, "Submission complete! Thank you!");
+        // TODO or should we move it to 'finished studies' immediately?
       } else {
         // TODO a better error message?
         self.addLabel(parent, "Unable to reach Mozilla; try again later.");

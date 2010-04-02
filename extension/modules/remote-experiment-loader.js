@@ -259,13 +259,10 @@ exports.RemoteExperimentLoader.prototype = {
     // already stored in codeStorage
     this._logger.trace("GetExperiments called.");
     let remoteExperiments = {};
-    dump( "Loading all files: \n");
     for each (let filename in this._codeStorage.listAllFiles()) {
       if (this._libraryNames.indexOf(filename) != -1) {
-        dump(filename + " is a library, skipping.\n");
         continue;
       }
-      dump("Loading " + filename + "\n");
       this._logger.debug("GetExperiments is loading " + filename);
       try {
         remoteExperiments[filename] = this._loader.require(filename);

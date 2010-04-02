@@ -446,6 +446,10 @@ let TestPilotSetup = {
             // Could be a survey: check if surveyInfo is exported:
             if (experiments[filename].surveyInfo != undefined) {
               let sInfo = experiments[filename].surveyInfo;
+              if (!sInfo.surveyQuestions) {
+                logger.warn("Survey does not supply questions - skipping.");
+                continue;
+              }
               task = new TestPilotBuiltinSurvey(sInfo);
             } else {
               // This one must be an experiment.

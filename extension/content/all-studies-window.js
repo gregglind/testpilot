@@ -303,6 +303,7 @@ var TestPilotXulWindow = {
       newRow.setAttribute("class", "tp-study-list");
       this.addThumbnail(newRow, NO_STUDIES_IMG);
       let textVbox = document.createElement("vbox");
+      textVbox.setAttribute("class", "pilot-largetext");
       newRow.appendChild(textVbox);
       this.addDescription(textVbox, "", NO_STUDIES_MSG);
       document.getElementById("current-studies-listbox").appendChild(newRow);

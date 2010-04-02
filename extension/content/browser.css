@@ -19,6 +19,10 @@
     font-size:200%
 }
 
+.pilot-largetext {
+    font-size: 150%
+}
+
 #current-studies-tab-img {
     list-style-image: url("chrome://testpilot/skin/tp-currentstudies-32x32.png");
     max-height: 32px;

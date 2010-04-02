@@ -488,7 +488,6 @@ let TestPilotSetup = {
   reloadRemoteExperiments: function TPS_reloadRemoteExperiments(callback) {
     for (let i = 0; i < this.taskList.length; i++) {
       this.taskList[i].onExperimentShutdown();
-      // TODO anything needed to shut down the experiment's data store?
     }
 
     this.taskList = [];

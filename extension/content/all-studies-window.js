@@ -199,6 +199,7 @@ var TestPilotXulWindow = {
           "TestPilotXulWindow.onSubmitButton(" + task.id + ");");
       }
       if (task.status == TaskConstants.STATUS_CANCELLED) {
+        newRow.setAttribute("class", "tp-opted-out");
         this.addLabel(statusVbox, "You opted out.");
       }
       if (task.status == TaskConstants.STATUS_NEW ||

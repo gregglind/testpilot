@@ -102,7 +102,15 @@ richlistitem.tp-new-results {
     border-color: grey;
     border-bottom-style: solid;
     border-width: 1px;
-    background-color: pink;
+    background-color: LemonChiffon;
+}
+
+richlistitem.tp-opted-out {
+    min-height: 120px;
+    border-color: grey;
+    border-bottom-style: solid;
+    border-width: 1px;
+    background-color: #ECECEC;
 }
 
 vbox.results-thumbnail {

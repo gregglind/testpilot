@@ -52,7 +52,7 @@ image.study-finished {
 }
 
 image.study-submitted {
-    list-style-image: url("chrome://testpilot/skin/tp-completedstudies-32x32.png");
+    list-style-image: url("chrome://testpilot/skin/48-check.png");
     max-height: 32px;
     max-width: 32px;
     margin: 10px;

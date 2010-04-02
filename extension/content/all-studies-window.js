@@ -268,11 +268,13 @@ var TestPilotXulWindow = {
       }
       if (task.status >= TaskConstants.STATUS_SUBMITTED) {
         let hbox = document.createElement("hbox");
+        statusVbox.appendChild(this.makeSpacer());
         statusVbox.appendChild(hbox);
+        this.addLabel(statusVbox, "Thanks for contributing!");
+        statusVbox.appendChild(this.makeSpacer());
         hbox.appendChild(this.makeSpacer());
         this.addImg(hbox, "study-submitted");
         hbox.appendChild(this.makeSpacer());
-        this.addLabel(statusVbox, "Thanks for participating!");
         numFinishedStudies ++;
       }
       let spacer = document.createElement("spacer");

@@ -52,14 +52,17 @@ TestPilotComponent.prototype = {
                                          Ci.nsISupportsWeakReference]),
 
   observe: function TPC__observe(subject, topic, data) {
+    let os = Cc["@mozilla.org/observer-service;1"].
+        getService(Ci.nsIObserverService);
     switch (topic) {
     case "app-startup":
-      let os = Cc["@mozilla.org/observer-service;1"].
-        getService(Ci.nsIObserverService);
       os.addObserver(this, "sessionstore-windows-restored", true);
       break;
     case "sessionstore-windows-restored":
       Cu.import("resource://testpilot/modules/setup.js");
+      /* Stop oberver, to ensure that globalStartup doesn't get
+       * called more than once. */
+      os.removeObserver(this, "sessionstore-windows-restored", false);
       TestPilotSetup.globalStartup();
       break;
     }

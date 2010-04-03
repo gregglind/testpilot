@@ -30,7 +30,7 @@
     <menuitem label="All Your Studies"
               oncommand="TestPilotWindowUtils.openAllStudiesWindow();"/>
     <menuitem label="About Test Pilot"
-              oncommand="TestPilotWindowUtils.openPage('http://testpilot.mozillalabs.com');"/>
+              oncommand="TestPilotWindowUtils.openInTab('http://testpilot.mozillalabs.com');"/>
   </menupopup>
 </menu>
 
@@ -53,7 +53,7 @@
       <label id="pilot-notification-text"
              value="Test Pilot wants your attention."/>
       <hbox align="left" id="pilot-notification-bottomrow">
-        <label id="pilot-notification-link" value="link goes here"/>
+        <label id="pilot-notification-link"/>
         <button id="pilot-notification-submit" label="Submit"/>
       </hbox>
     </vbox>

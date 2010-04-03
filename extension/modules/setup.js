@@ -251,6 +251,7 @@ let TestPilotSetup = {
     let icon = doc.getElementById("pilot-notification-icon");
     let closeBtn = doc.getElementById("pilot-notification-close");
     let submitBtn = doc.getElementById("pilot-notification-submit");
+    let link = doc.getElementById("pilot-notification-link");
     var self = this;
 
     // Set all appropriate attributes on popup:
@@ -280,6 +281,18 @@ let TestPilotSetup = {
       };
     }
 
+    // Create the link if specified:
+    if (linkText && linkUrl) {
+      link.setAttribute("value", linkText);
+      link.setAttribute("class", "notification-link");
+      link.onclick = function(event) {
+        if (event.button==0) {
+          self._hideNotification();
+          self._openChromeless(linkUrl);
+        }
+      };
+    }
+
     // If fragile is true, a click anywhere dismisses the popup.  If
     // fragile is false, only a click on the close box dismisses it.
     if (fragile) {
@@ -301,7 +314,14 @@ let TestPilotSetup = {
     popup.openPopup( taskbarIcon, "after_end");
   },
 
-  _hideNotification: function TPS__hideNotification(text) {
+  _openChromeless: function TPS__openChromeless(url) {
+    // TODO this duplicates functionality in WindowUtils... refactor.
+    let window = this._getFrontBrowserWindow();
+    var win = window.open(url, "TestPilotStudyDetailWindow",
+                         "resizable=yes,scrollbars=yes,status=no");
+  },
+
+  _hideNotification: function TPS__hideNotification() {
     let window = this._getFrontBrowserWindow();
     let popup = window.document.getElementById("pilot-notification-popup");
     popup.hidden = true;

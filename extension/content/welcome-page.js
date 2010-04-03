@@ -42,6 +42,8 @@ var TestPilotWelcomePage = {
     // taken it.
     Components.utils.import("resource://testpilot/modules/setup.js");
     Components.utils.import("resource://testpilot/modules/tasks.js");
+    // TODO this can fail if the page loads before the tasks are all
+    // loaded.
     let survey = TestPilotSetup.getTaskById(this.surveyId);
     if (survey.status == TaskConstants.STATUS_NEW) {
       document.getElementById("survey-link-p").setAttribute("style",
@@ -51,7 +53,6 @@ var TestPilotWelcomePage = {
 
   openPilotSurvey: function() {
     let url = "chrome://testpilot/content/take-survey.html?eid=" + this.surveyId;
-    let win = window.open(url, "TestPilotStudyDetailWindow",
-                         "resizable=yes,scrollbars=yes,status=no");
+    TestPilotWindowUtils.openChromeless(url);
   }
 };

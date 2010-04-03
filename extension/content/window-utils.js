@@ -56,10 +56,18 @@ var TestPilotWindowUtils = {
     }
   },
 
-  openPage: function(url) {
+  openInTab: function(url) {
     // TODO if already open in a tab, go to that tab rather than re-opening
     var browser = window.getBrowser();
     var tab = browser.addTab(url);
     browser.selectedTab = tab;
+  },
+
+  openChromeless: function(url) {
+    //TODO... repeated calls to this should open the new URLs in the
+    //same window, not open new windows!
+    var win = window.open(url, "TestPilotStudyDetailWindow",
+                         "resizable=yes,scrollbars=yes,status=no");
+
   }
 };

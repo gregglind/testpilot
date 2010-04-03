@@ -12,7 +12,8 @@
 #pilot-notification-popup-container {
   -moz-appearance: none;
   margin: 4px;
-  color:  #ffffff;
+  color:  white;
+  font-size: 12pt;
 }
 
 .pilot-title {
@@ -138,3 +139,8 @@ image.results-thumbnail {
     -moz-border-radius: 4px 4px; 
 }
 
+.notification-link {
+    color: white;
+    text-decoration: underline;
+    cursor: pointer;
+}

@@ -343,7 +343,7 @@ let TestPilotSetup = {
           text = "The Test Pilot " + task.title + " study is finished " +
                        "gathering data and is ready to submit.";
 	  this._showNotification(task, false, text, title, "study-finished",
-                                 true, "linkText", "linkUrl");
+                                 true, "See Details...", task.url);
           // We return after showing something, because it only makes
           // sense to show one notification at a time!
 	  return;
@@ -361,7 +361,7 @@ let TestPilotSetup = {
           title = "New Test Pilot Study";
           text = "The Test Pilot " + task.title + " study is now beginning.";
 	  this._showNotification(task, true, text, title, "new-study",
-                                 false, false, "linkText", "linkUrl");
+                                 false, false, "See Details...", task.url);
 	  return;
         }
       }
@@ -376,7 +376,7 @@ let TestPilotSetup = {
           text = "New results are now available for the Test Pilot " +
             task.title + " study.";
 	  this._showNotification(task, true, text, title, "new-results",
-                                 false, false, "linkText", "linkUrl");
+                                 false, false, "See Details...", task.url);
           return;
         }
       }

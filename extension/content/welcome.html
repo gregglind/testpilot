@@ -5,8 +5,10 @@
   <link rel="stylesheet" type="text/css" media="all" href="screen.css" />
   <script src="window-utils.js" type="application/javascript;version=1.8">
   </script>
+  <script src="welcome-page.js" type="application/javascript;version=1.8">
+  </script>
 </head>
-<body>
+<body onload="TestPilotWelcomePage.onLoad();">
   <div id="container">
     <div id="logo"><a href="http://labs.mozilla.com/">
       <img src="chrome://testpilot/skin/logo.png" border="0"></a>
@@ -17,7 +19,9 @@
       </div>
       <div id="get-started">
         <div class="button">
-          <h2>Get Started</h2>
+          <h2>Getting Started</h2>
+          <p class="embiggened" id="survey-link-p" style="display:none">
+          Please take the <a class="function-link" onclick="TestPilotWelcomePage.openPilotSurvey();">Pilot Background Survey</a>!</p>
           <p class="embiggened"><a class="function-link" onclick="TestPilotWindowUtils.openAllStudiesWindow();">Click here to see the studies that are currently running.</a></p><p></p>
         </div>
       </div>

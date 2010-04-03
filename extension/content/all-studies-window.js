@@ -51,8 +51,6 @@
 // TODO the whole menu bar disappears when the XUL window is up!  What's up
 // with that?
 
-// TODO double-click on the <richlistitem> should open the page too?
-
 // TODO general-purpose link to website's page of Upcoming Studies or what
 // have you.
 

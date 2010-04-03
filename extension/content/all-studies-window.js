@@ -70,7 +70,7 @@ var TestPilotXulWindow = {
       parent.removeChild(parent.firstChild);
     }
     // Replace it with a message:
-    this.addLabel(parent, "Now uploading, one moment please...");
+    this.addLabel(parent, "Uploading...");
     let self = this;
 
     task.upload( function(success) {
@@ -78,9 +78,7 @@ var TestPilotXulWindow = {
         parent.removeChild(parent.firstChild);
       }
       if (success) {
-        self.addImg(parent, "study-submitted");
-        // TODO right here this message gets cut off!!!!
-        self.addLabel(parent, "Submission complete! Thank you!");
+        self.addThanksMessage(parent);
         // TODO or should we move it to 'finished studies' immediately?
       } else {
         // TODO a better error message?
@@ -88,6 +86,18 @@ var TestPilotXulWindow = {
       }
     });
 
+  },
+
+  addThanksMessage: function(container) {
+    // Fill in status box with icon and message to show success
+    let hbox = document.createElement("hbox");
+    container.appendChild(this.makeSpacer());
+    container.appendChild(hbox);
+    this.addLabel(container, "Thanks for contributing!");
+    container.appendChild(this.makeSpacer());
+    hbox.appendChild(this.makeSpacer());
+    this.addImg(hbox, "study-submitted");
+    hbox.appendChild(this.makeSpacer());
   },
 
   addXulLink: function (container, text, url) {
@@ -265,14 +275,7 @@ var TestPilotXulWindow = {
                                  (new Date(task.endDate)).toDateString());
       }
       if (task.status >= TaskConstants.STATUS_SUBMITTED) {
-        let hbox = document.createElement("hbox");
-        statusVbox.appendChild(this.makeSpacer());
-        statusVbox.appendChild(hbox);
-        this.addLabel(statusVbox, "Thanks for contributing!");
-        statusVbox.appendChild(this.makeSpacer());
-        hbox.appendChild(this.makeSpacer());
-        this.addImg(hbox, "study-submitted");
-        hbox.appendChild(this.makeSpacer());
+        this.addThanksMessage(statusVbox);
         numFinishedStudies ++;
       }
       let spacer = document.createElement("spacer");

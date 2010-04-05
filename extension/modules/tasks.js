@@ -634,7 +634,6 @@ TestPilotExperiment.prototype = {
             self._uploadRetryTimer.cancel(); // Stop retrying - it worked!
           }
           self.changeStatus( TaskConstants.STATUS_SUBMITTED );
-	  // self._dataStore.wipeAllData();
           callback(true);
 	} else {
 	  self._logger.warn("ERROR POSTING DATA: " + req.responseText);

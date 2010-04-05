@@ -42,9 +42,12 @@ var TestPilotWelcomePage = {
     // taken it.
     Components.utils.import("resource://testpilot/modules/setup.js");
     Components.utils.import("resource://testpilot/modules/tasks.js");
-    // TODO this can fail if the page loads before the tasks are all
-    // loaded.
     let survey = TestPilotSetup.getTaskById(this.surveyId);
+    if (!survey) {
+      // Can happen if page loaded before all tasks loaded
+      window.setTimeout(function() { TestPilotWelcomePage.onLoad();}, 2000);
+      return;
+    }
     if (survey.status == TaskConstants.STATUS_NEW) {
       document.getElementById("survey-link-p").setAttribute("style",
                                                             "display:block");

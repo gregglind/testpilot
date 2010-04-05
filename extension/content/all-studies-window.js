@@ -34,11 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-/* TODO layout:
- * 4. Background colors depending on status?
- */
-
 // TODO more better links
 
 // TODO fix layout in notification

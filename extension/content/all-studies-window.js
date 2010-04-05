@@ -276,7 +276,8 @@ var TestPilotXulWindow = {
         this.addLabel(statusVbox, "Will finish " +
                                  (new Date(task.endDate)).toDateString());
       }
-      if (task.status >= TaskConstants.STATUS_SUBMITTED) {
+      if (task.status >= TaskConstants.STATUS_SUBMITTED &&
+         task.taskType != TaskConstants.TYPE_RESULTS) {
         this.addThanksMessage(statusVbox);
         numFinishedStudies ++;
       }
@@ -321,5 +322,22 @@ var TestPilotXulWindow = {
 
   focusPane: function(paneIndex) {
     document.getElementById("tp-xulwindow-deck").selectedIndex = paneIndex;
+
+    // When you focus the 'study findings' tab, any results there which
+    // are still marked "new" should have their status changed as the user
+    // is considered to have seen them.
+    if (paneIndex == 2) {
+      Components.utils.import("resource://testpilot/modules/setup.js");
+      Components.utils.import("resource://testpilot/modules/tasks.js");
+
+      let experiments = TestPilotSetup.getAllTasks();
+      for each (let experiment in experiments) {
+        if (experiment.taskType == TaskConstants.TYPE_RESULTS) {
+          if (experiment.status == TaskConstants.STATUS_NEW) {
+            experiment.changeStatus(TaskConstants.STATUS_ARCHIVED, true);
+          }
+        }
+      }
+    }
   }
 };

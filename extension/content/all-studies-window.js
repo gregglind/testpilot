@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// TODO more better links
+// TODO link to task.infoPageUrl?
 
 // TODO fix layout in notification
 // TODO add links to notification
@@ -216,6 +216,13 @@ var TestPilotXulWindow = {
     let numFinishedStudies = 0;
     let numCurrentStudies = 0;
     let experiments = TestPilotSetup.getAllTasks();
+
+    if (experiments.length == 0 ) {
+      // Can happen if this window opens before all tasks are done loading
+      window.setTimeout(function() { TestPilotXulWindow.onLoad();}, 2000);
+      return;
+    }
+
     experiments = this._sortNewestFirst(experiments);
 
     for (let i = 0; i < experiments.length; i++) {
@@ -316,20 +323,3 @@ var TestPilotXulWindow = {
     document.getElementById("tp-xulwindow-deck").selectedIndex = paneIndex;
   }
 };
-
-    // Show links for:
-   // task.currentStatusUrl
-    // task.infoPageUrl
-    // task.resultsUrl // may not exist
-    // task.defaultUrl points to one of these!
-
-  // If there are no experiments here, it must be because we're
-  // not done loading yet... try again in a few seconds.
-  // (YES this can still happen!  If you pick the menu item during startup!)
-
-  /*  if (experiments.length == 0 ) {
-      contentDiv.innerHTML = "Loading, please wait a moment...";
-      window.setTimeout(function() { showStatusMenuPage();}, 2000);
-      return;
-    }
-  */

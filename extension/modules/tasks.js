@@ -743,12 +743,12 @@ TestPilotBuiltinSurvey.prototype = {
 
   get oldAnswers() {
     let prefName = SURVEY_ANSWER_PREFIX + this._id;
-    let answers = Application.prefs.getValue(prefName, null);
-    if (!answers) {
+    let surveyResults = Application.prefs.getValue(prefName, null);
+    if (!surveyResults) {
       return null;
     } else {
-      this._logger.info("Trying to json.parse this: " + answers);
-      return JSON.parse(answers);
+      this._logger.info("Trying to json.parse this: " + surveyResults);
+      return JSON.parse(surveyResults)["answers"];
     }
   },
 

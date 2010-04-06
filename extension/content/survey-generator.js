@@ -22,10 +22,6 @@ function onBuiltinSurveyLoad() {
 
   let title = document.getElementById("survey-title");
   title.innerHTML = task.title;
-  let explanation = document.getElementById("survey-explanation");
-  if (task.surveyExplanation) {
-    explanation.innerHTML = task.surveyExplanation;
-  }
 
   if (task.status == TaskConstants.STATUS_SUBMITTED) {
     contentDiv.innerHTML = "<p>Thank you for finishing this survey. Your " +
@@ -37,6 +33,10 @@ function onBuiltinSurveyLoad() {
     let changeButton = document.getElementById("change-answers");
     changeButton.setAttribute("style", "");
   } else {
+    let explanation = document.getElementById("survey-explanation");
+    if (task.surveyExplanation) {
+      explanation.innerHTML = task.surveyExplanation;
+    }
     drawSurveyForm(task, contentDiv);
   }
 }

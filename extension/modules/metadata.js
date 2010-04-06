@@ -48,7 +48,7 @@ const PREFIX_ITEM_URI = "urn:mozilla:item:";
 /* The following preference, if present, stores answers to the basic panel
  * survey, which tell us user's general tech level, and so should be included
  * with any upload.*/
-const SURVEY_ANS = "extensions.testpilot.surveyAnswers.basic_panel_survey";
+const SURVEY_ANS = "extensions.testpilot.surveyAnswers.basic_panel_survey_2";
 
 let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);

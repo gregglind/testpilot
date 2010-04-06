@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 var TestPilotWelcomePage = {
-  surveyId: "basic_panel_survey",
+  surveyId: "basic_panel_survey_2",
 
   onLoad: function() {
     // Show link to pilot background survey only if user hasn't already

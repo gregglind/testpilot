@@ -39,8 +39,14 @@
     return new module.PreferencesStore("extensions.testpilot.experiment.codeFs");
   }
 
+  function getSelectedFilename() {
+    var selector = document.getElementById("file-selector");
+    var i = selector.selectedIndex;
+    return selector.options[i].text;
+  }
+
   function loadExperimentCode() {
-    var filename = "a-week-life/a_week_life.js"
+    var filename = getSelectedFilename();
     var textArea = document.getElementById("experiment-code-area");
     prefStore = getCodeStorage();
     code = prefStore.getFile(filename).contents;
@@ -48,7 +54,7 @@
   }
 
   function saveAndRun() {
-    var filename = "a-week-life/a_week_life.js"
+    var filename = getSelectedFilename();
     var textArea = document.getElementById("experiment-code-area");
     prefStore = getCodeStorage();
     code = prefStore.setFile(filename, textArea.value);
@@ -79,6 +85,20 @@
     debug.innerHTML = "Wiped!";
   }
 
+  function populateFileDropdown() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    var loader = TestPilotSetup._remoteExperimentLoader;
+    var files = loader._codeStorage.listAllFiles();
+    var selector = document.getElementById("file-selector");
+    var opt;
+    for (var i = 0; i < files.length; i++) {
+      opt = document.createElement("option");
+      opt.innerHTML = files[i];
+      selector.appendChild(opt);
+    }
+    document.getElementById("debug").innerHTML = "<pre>" + text + "</pre>";
+  }
+
 </script>
 
 <style type="text/css">
@@ -87,7 +107,7 @@
 
 </head>
 
-<body>
+<body onload="populateFileDropdown();">
 <p>Experiment number <input type="text" id="eid-input" value="1"></input></p>
 <p><button onclick="showRawData(1);">Show Raw Data</button>
 <button onclick="wipeDb();">Wipe My Data</button>
@@ -104,6 +124,7 @@
 
 <textarea id="experiment-code-area" rows="40" cols="80">
 </textarea>
+<select id="file-selector"></select>
 <button onclick="loadExperimentCode();">Load Ye Code</button>
 <button onclick="saveAndRun();">Save And Run Ye Code</button>
 

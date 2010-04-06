@@ -706,6 +706,7 @@ TestPilotBuiltinSurvey.prototype = {
                    surveyInfo.surveyUrl,
                    surveyInfo.summary,
                    surveyInfo.thumbnail);
+    this._versionNumber = surveyInfo.versionNumber;
     this._questions = surveyInfo.surveyQuestions;
     this._explanation = surveyInfo.surveyExplanation;
   },
@@ -752,9 +753,12 @@ TestPilotBuiltinSurvey.prototype = {
   },
 
   store: function( answers ) {
-    // Store answers in appropriate data store...
-    // such as preferences store?
+    // Store answers in preferences store
     let prefName = SURVEY_ANSWER_PREFIX + this._id;
+    // Also store survey version number
+    if (this._versionNumber) {
+      answers["version_number"] = this._versionNumber;
+    }
     Application.prefs.setValue(prefName, JSON.stringify(answers));
     this.changeStatus( TaskConstants.STATUS_SUBMITTED);
   }

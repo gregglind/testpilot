@@ -4,7 +4,7 @@
   -moz-window-shadow: none;
   background-color: transparent;
   margin-top: -4px;
-  margin-left: -13px;
+  margin-right: -24px;
   min-width: 280px;
   -moz-border-image: url(chrome://testpilot/skin/hud-panel.png) 26 50 22 18 / 26px 50px 22px 18px repeat; 
 }
@@ -14,6 +14,10 @@
   margin: 4px;
   color:  white;
   font-size: 10pt;
+}
+
+#pilot-notifications-button {
+  margin-right: 10px;
 }
 
 .pilot-title {
@@ -136,7 +140,7 @@ image.results-thumbnail {
     color: white;
     font-weight: bold;
     padding: 2px;
-    -moz-border-radius: 4px 4px; 
+    -moz-border-radius: 100%; 
 }
 
 .notification-link {

@@ -258,7 +258,8 @@ var TestPilotXulWindow = {
             newRow.setAttribute("class", "tp-new-results");
 
             if (task.taskType == TaskConstants.TYPE_SURVEY) {
-              this.addButton( statusVBox, "Take Survey", "survey-button", "");
+              this.addButton( statusVbox, "Take Survey", "survey-button",
+                 "TestPilotXulWindow.openURL('" + task.defaultUrl + "');");
             } else if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
               if (task.startDate) {
                 this.addLabel(statusVbox, "Will start " +

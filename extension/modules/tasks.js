@@ -752,14 +752,14 @@ TestPilotBuiltinSurvey.prototype = {
     }
   },
 
-  store: function( answers ) {
+  store: function( surveyResults ) {
     // Store answers in preferences store
     let prefName = SURVEY_ANSWER_PREFIX + this._id;
     // Also store survey version number
     if (this._versionNumber) {
-      answers["version_number"] = this._versionNumber;
+      surveyResults["version_number"] = this._versionNumber;
     }
-    Application.prefs.setValue(prefName, JSON.stringify(answers));
+    Application.prefs.setValue(prefName, JSON.stringify(surveyResults));
     this.changeStatus( TaskConstants.STATUS_SUBMITTED);
   }
 };

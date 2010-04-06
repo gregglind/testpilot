@@ -265,9 +265,9 @@ function onBuiltinSurveySubmit() {
     }
     answers.push(anAnswer);
   }
-  dump("Answers is " + answers + "\n");
-  dump("Answers as json is " + JSON.stringify(answers) + "\n");
-  task.store(answers);
+  let surveyResults = { answers: answers };
+  dump("Answers as json is " + JSON.stringify(surveyResults) + "\n");
+  task.store(surveyResults);
   // Reload page to show submitted status:
   onBuiltinSurveyLoad();
 }

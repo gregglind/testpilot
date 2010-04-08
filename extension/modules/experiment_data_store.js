@@ -58,6 +58,7 @@ ExperimentDataStore.prototype = {
     this._fileName = fileName;
     this._tableName = tableName;
     this._columns = columns;
+    let logger = Log4Moz.repository.getLogger("TestPilot.Database");
     let file = _dirSvc.get("ProfD", Ci.nsIFile);
     file.append(this._fileName);
     // openDatabase creates the file if it's not there yet:
@@ -78,8 +79,13 @@ ExperimentDataStore.prototype = {
     let schema = "CREATE TABLE " + this._tableName + "("
                   + schemaClauses.join(", ") + ");";
     // CreateTable creates the table only if it does not already exist:
-    this._connection = DbUtils.createTable(this._connection, this._tableName,
-                                           schema);
+    try {
+      this._connection = DbUtils.createTable(this._connection,
+                                             this._tableName,
+                                             schema);
+    } catch(e) {
+      logger.warn("Error in createTable: " + e + "\n");
+    }
   },
 
   _createStatement: function _createStatement(selectSql) {
@@ -132,6 +138,8 @@ ExperimentDataStore.prototype = {
       let newRecord = {};
       let numCols = selStmt.columnCount;
       for (i = 0; i < numCols; i++) {
+        // TODO bugs out with 'column undefined'.  This is weird, because it
+        // has 9 columns until it suddenly has 8.
         let column = this._columns[i];
         let value = 0;
         // The type property of the column tells us what data type binding to use when
@@ -194,6 +202,14 @@ ExperimentDataStore.prototype = {
     wipeStmt.execute();
     wipeStmt.finalize();
     logger.trace("ExperimentDataStore.wipeAllData complete.\n");
+  },
+
+  nukeTable: function EDS_nukeTable() {
+    // Should never be called, except if schema needs to be changed
+    // during debugging/development.
+    let nuke = this._createStatement("DROP TABLE " + this._tableName);
+    nuke.execute();
+    nuke.finalize();
   },
 
   haveData: function EDS_haveData() {

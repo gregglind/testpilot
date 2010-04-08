@@ -85,6 +85,14 @@
     debug.innerHTML = "Wiped!";
   }
 
+  function nukeDb() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    var task = TestPilotSetup.getTaskById(getEid());
+    task.dataStore.nukeTable();
+    var debug = document.getElementById("debug");
+    debug.innerHTML = "Nuked!";
+  }
+
   function populateFileDropdown() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     var loader = TestPilotSetup._remoteExperimentLoader;
@@ -96,7 +104,6 @@
       opt.innerHTML = files[i];
       selector.appendChild(opt);
     }
-    document.getElementById("debug").innerHTML = "<pre>" + text + "</pre>";
   }
 
 </script>
@@ -111,6 +118,7 @@
 <p>Experiment number <input type="text" id="eid-input" value="1"></input></p>
 <p><button onclick="showRawData(1);">Show Raw Data</button>
 <button onclick="wipeDb();">Wipe My Data</button>
+<button onclick="nukeDb();">NUKE</button>
 <button onclick="uploadData();">Upload My Data</button>
 <button onclick="makeThereBeAPopup();">Popup</button>
 <button onclick="reloadAllExperiments();">Reload All Experiments</button>

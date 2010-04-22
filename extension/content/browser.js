@@ -60,11 +60,14 @@ var TestPilotMenuUtils = {
     Application.prefs.setValue( prefName, !oldVal);
   },
 
-  onPopupHiding: function() {
-    var menuPopup = document.getElementById('pilot-menu-popup');
-    var menu = document.getElementById('pilot-menu');
-    if (menuPopup.parentNode != menu)
-      menu.appendChild(menuPopup);
+  onPopupHiding: function(event) {
+    var target = event.target;
+    if (target.id == 'pilot-menu-popup') {
+      var menu = document.getElementById('pilot-menu');
+      if (target.parentNode != menu) {
+        menu.appendChild(target);
+      }
+    }
   },
 
   onMenuButtonMouseDown: function() {

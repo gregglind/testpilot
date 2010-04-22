@@ -5,13 +5,13 @@
 <script src="window-utils.js"></script>
 
 <menupopup id="menu_ToolsPopup">
-  <menu id="pilot-menu" insertafter="menu_openAddons"/>
+  <menu id="pilot-menu" insertafter="menu_openAddons" />
 </menupopup>
 
 <menu id="pilot-menu" class="menu-iconic" label="Test Pilot" insertafter="addonsManager"
       image="chrome://testpilot/skin/testpilot_16x16.png">
   <menupopup id="pilot-menu-popup"
-             onpopuphiding="TestPilotMenuUtils.onPopupHiding();">
+             onpopuphiding="TestPilotMenuUtils.onPopupHiding(event);">
     <menu id="pilot-notification-settings" label="Notification Settings...">
       <menupopup id="new-popup"
                  onpopupshowing="TestPilotMenuUtils.updateSubmenu();">

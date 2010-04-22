@@ -64,10 +64,9 @@ var TestPilotWindowUtils = {
   },
 
   openChromeless: function(url) {
-    //TODO... repeated calls to this should open the new URLs in the
-    //same window, not open new windows!
     var win = window.open(url, "TestPilotStudyDetailWindow",
-                         "resizable=yes,scrollbars=yes,status=no");
-
+                         "chrome,centerscreen,resizable=yes,scrollbars=yes," +
+                         "status=no,width=900,height=600");
+    win.focus();
   }
 };

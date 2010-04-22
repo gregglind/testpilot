@@ -180,12 +180,6 @@ var TestPilotXulWindow = {
   },
 
   openURL: function(url) {
-    //TODO... repeated calls to this should open the new URLs in the
-    //same window, not open new windows!
-
-    // Window title should just be "Mozilla Labs Test Pilot" not
-    // chrome://testpilot - Mozilla Labs Test Pilot.
-
     // Make the window smaller and dialog-boxier
     // Links to discussion group, twitter, etc should open in new
     // tab in main browser window, if we have these links here at all!!
@@ -194,7 +188,9 @@ var TestPilotXulWindow = {
     // TODO this window opening triggers studies' window-open code.
     // Is that what we want or not?
     let win = window.open(url, "TestPilotStudyDetailWindow",
-                         "resizable=yes,scrollbars=yes,status=no");
+                         "chrome,centerscreen,resizable=yes,scrollbars=yes," +
+                         "status=no,width=900,height=600");
+    win.focus();
   },
 
   _sortNewestFirst: function(experiments) {

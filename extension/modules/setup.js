@@ -318,7 +318,9 @@ let TestPilotSetup = {
     // TODO this duplicates functionality in WindowUtils... refactor.
     let window = this._getFrontBrowserWindow();
     var win = window.open(url, "TestPilotStudyDetailWindow",
-                         "resizable=yes,scrollbars=yes,status=no");
+                         "chrome,centerscreen,resizable=yes,scrollbars=yes," +
+                         "status=no,width=900,height=600");
+    win.focus();
   },
 
   _hideNotification: function TPS__hideNotification() {

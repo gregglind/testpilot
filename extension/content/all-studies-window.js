@@ -96,12 +96,17 @@ var TestPilotXulWindow = {
   },
 
   addXulLink: function (container, text, url) {
+    let linkContainer = document.createElement("hbox");
     let link = document.createElement("label");
+    let spacer = document.createElement("spacer");
     link.setAttribute("value", text);
     link.setAttribute("class", "text-link");
     link.setAttribute("onclick",
       "if (event.button==0) {TestPilotXulWindow.openURL('" + url + "');}");
-    container.appendChild(link);
+    linkContainer.appendChild(link);
+    spacer.setAttribute("flex", "1");
+    linkContainer.appendChild(spacer);
+    container.appendChild(linkContainer);
   },
 
   addLabel: function(container, text, styleClass) {

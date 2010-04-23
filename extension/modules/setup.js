@@ -358,14 +358,13 @@ let TestPilotSetup = {
         task = this.taskList[i];
         if (task.status == TaskConstants.STATUS_STARTING ||
             task.status == TaskConstants.STATUS_NEW) {
-
-          if (task.type == TaskConstants.TYPE_EXPERIMENT) {
+          if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
             title = "New Test Pilot Study";
             text = "The Test Pilot " + task.title + " study is now beginning.";
 	    this._showNotification(task, true, text, title, "new-study",
                                    false, false, "See Details...", task.url);
             return;
-          } else if (task.type == TaskConstants.TYPE_SURVEY) {
+          } else if (task.taskType == TaskConstants.TYPE_SURVEY) {
             title = "New Test Pilot Survey";
             text = "The Test Pilot " + task.title + " survey is available.";
 	    this._showNotification(task, true, text, title, "new-study",
@@ -380,7 +379,7 @@ let TestPilotSetup = {
     if (Application.prefs.getValue(POPUP_SHOW_ON_RESULTS, false)) {
       for (i = 0; i < this.taskList.length; i++) {
         task = this.taskList[i];
-        if (task.type == TaskConstants.TYPE_RESULTS &&
+        if (task.taskType == TaskConstants.TYPE_RESULTS &&
             task.status == TaskConstants.STATUS_NEW) {
           title = "New Test Pilot Results";
           text = "New results are now available for the Test Pilot " +

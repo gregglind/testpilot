@@ -269,6 +269,7 @@ exports.RemoteExperimentLoader.prototype = {
         this._logger.info("Loaded " + filename + " OK.");
       } catch(e) {
         this._logger.warn("Error loading " + filename);
+        dump("Error loading " + filename + " : " + e + "\n");
         this._logger.warn(e);
       }
     }

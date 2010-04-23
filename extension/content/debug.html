@@ -5,7 +5,9 @@
 <script type="application/javascript;version=1.8">
 
   function getEid() {
-    return parseInt(document.getElementById("eid-input").value);
+    var selector = document.getElementById("task-selector");
+    var i = selector.selectedIndex;
+    return selector.options[i].getAttribute("value");
   }
 
   function setTaskStatus() {
@@ -28,7 +30,7 @@
 
   function remindMe() {
     Components.utils.import("resource://testpilot/modules/setup.js");
-    TestPilotSetup._notifyUserOfTasks(3);
+    TestPilotSetup._notifyUserOfTasks();
     //TestPilotSetup._doHousekeeping();
   }
 
@@ -98,13 +100,55 @@
     var loader = TestPilotSetup._remoteExperimentLoader;
     var files = loader._codeStorage.listAllFiles();
     var selector = document.getElementById("file-selector");
-    var opt;
+    var opt, i;
     for (var i = 0; i < files.length; i++) {
       opt = document.createElement("option");
       opt.innerHTML = files[i];
       selector.appendChild(opt);
     }
+
+    selector = document.getElementById("task-selector");
+    var tasks = TestPilotSetup.getAllTasks();
+    var title;
+    for (i = 0; i < tasks.length; i++) {
+      opt = document.createElement("option");
+      title = tasks[i].title;
+      opt.innerHTML = title;
+      opt.setAttribute("value", tasks[i].id);
+      selector.appendChild(opt);
+    }
   }
+
+  function showSelectedTaskStatus() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    var task = TestPilotSetup.getTaskById(getEid());
+    document.getElementById("show-status-span").innerHTML = task.status;
+    var selector = document.getElementById("status-selector");
+    selector.selectedIndex = task.status;
+  }
+
+  function resetSelectedTask() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    var task = TestPilotSetup.getTaskById(getEid());
+    task.changeStatus(0, true);
+    var prefService  = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+    var prefName= "extensions.testpilot.startDate." + task.id;
+    if (prefService.prefHasUserValue(prefName)) {
+      prefService.clearUserPref(prefName);
+    }
+    //TestPilotSetup.reloadRemoteExperiments();
+  }
+
+  function setSelectedTaskStatus() {
+    Components.utils.import("resource://testpilot/modules/setup.js");
+    var task = TestPilotSetup.getTaskById(getEid());
+
+    var selector = document.getElementById("status-selector");
+    var i = selector.selectedIndex;
+    var newStatus = parseInt( selector.options[i].value );
+    task.changeStatus(newStatus, false);
+  }
+
 
 </script>
 
@@ -114,19 +158,34 @@
 
 </head>
 
-<body onload="populateFileDropdown();">
-<p>Experiment number <input type="text" id="eid-input" value="1"></input></p>
-<p><button onclick="showRawData(1);">Show Raw Data</button>
+<body onload="populateFileDropdown();showSelectedTaskStatus();">
+
+<fieldset>
+<p><select id="task-selector" onchange="showSelectedTaskStatus();"></select> Current Status = <span id="show-status-span"></span>.
+<button onclick="resetSelectedTask();showSelectedTaskStatus();">Reset Task</button>
+or set it to
+<select id="status-selector" onchange="setSelectedTaskStatus(); showSelectedTaskStatus();">
+  <option value="0">0 (New)</option>
+  <option value="1">1 (Pending)</option>
+  <option value="2">2 (Starting)</option>
+  <option value="3">3 (In Progress)</option>
+  <option value="4">4 (Finished)</option>
+  <option value="5">5 (Cancelled)</option>
+  <option value="6">6 (Submitted)</option>
+  <option value="7">7 (Results)</option>
+  <option value="8">8 (Archived)</option>
+</select>
 <button onclick="wipeDb();">Wipe My Data</button>
 <button onclick="nukeDb();">NUKE</button>
 <button onclick="uploadData();">Upload My Data</button>
-<button onclick="makeThereBeAPopup();">Popup</button>
-<button onclick="reloadAllExperiments();">Reload All Experiments</button>
-<button onclick="runUnitTests();">Run Unit Tests</button>
-<button onclick="remindMe();">Remind Me</button>
-<input type="text" id="status-code"/><button onclick="setTaskStatus();">Set</button>
 <button onclick="showMetaData();">Show Metadata</button>
+</fieldset>
+<fieldset>
+<p><button onclick="makeThereBeAPopup();">Show Dummy Popup</button>
+<button onclick="reloadAllExperiments();">Reload All Experiments</button>
+<button onclick="remindMe();">Notify Me</button>
 </p>
+</fieldset>
 <p><span id="debug"></span></p>
 
 

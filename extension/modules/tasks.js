@@ -216,7 +216,6 @@ var TestPilotTask = {
     } else if (this._status == TaskConstants.STATUS_RESULTS) {
       this.changeStatus( TaskConstants.STATUS_ARCHIVED );
     }
-
   }
 };
 

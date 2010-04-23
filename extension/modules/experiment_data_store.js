@@ -138,8 +138,6 @@ ExperimentDataStore.prototype = {
       let newRecord = {};
       let numCols = selStmt.columnCount;
       for (i = 0; i < numCols; i++) {
-        // TODO bugs out with 'column undefined'.  This is weird, because it
-        // has 9 columns until it suddenly has 8.
         let column = this._columns[i];
         let value = 0;
         // The type property of the column tells us what data type binding to use when

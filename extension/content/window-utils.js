@@ -64,9 +64,17 @@ var TestPilotWindowUtils = {
   },
 
   openChromeless: function(url) {
+    // Make the window smaller and dialog-boxier
+    // Links to discussion group, twitter, etc should open in new
+    // tab in main browser window, if we have these links here at all!!
+    // Maybe just one link to the main Test Pilot website.
+
+    // TODO this window opening triggers studies' window-open code.
+    // Is that what we want or not?
+
     var win = window.open(url, "TestPilotStudyDetailWindow",
                          "chrome,centerscreen,resizable=yes,scrollbars=yes," +
-                         "status=no,width=900,height=600");
+                         "status=no,width=1000,height=800");
     win.focus();
   }
 };

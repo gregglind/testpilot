@@ -102,7 +102,7 @@ var TestPilotXulWindow = {
     link.setAttribute("value", text);
     link.setAttribute("class", "text-link");
     link.setAttribute("onclick",
-      "if (event.button==0) {TestPilotXulWindow.openURL('" + url + "');}");
+      "if (event.button==0) {TestPilotWindowUtils.openChromeless('" + url + "');}");
     linkContainer.appendChild(link);
     spacer.setAttribute("flex", "1");
     linkContainer.appendChild(spacer);
@@ -179,20 +179,6 @@ var TestPilotXulWindow = {
     container.appendChild(button);
   },
 
-  openURL: function(url) {
-    // Make the window smaller and dialog-boxier
-    // Links to discussion group, twitter, etc should open in new
-    // tab in main browser window, if we have these links here at all!!
-    // Maybe just one link to the main Test Pilot website.
-
-    // TODO this window opening triggers studies' window-open code.
-    // Is that what we want or not?
-    let win = window.open(url, "TestPilotStudyDetailWindow",
-                         "chrome,centerscreen,resizable=yes,scrollbars=yes," +
-                         "status=no,width=900,height=600");
-    win.focus();
-  },
-
   _sortNewestFirst: function(experiments) {
     experiments.sort(
       function sortFunc(a, b) {
@@ -260,7 +246,7 @@ var TestPilotXulWindow = {
 
             if (task.taskType == TaskConstants.TYPE_SURVEY) {
               this.addButton( statusVbox, "Take Survey", "survey-button",
-                 "TestPilotXulWindow.openURL('" + task.defaultUrl + "');");
+                 "TestPilotWindowUtils.openChromeless('" + task.defaultUrl + "');");
             } else if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
               if (task.startDate) {
                 this.addLabel(statusVbox, "Will start " +

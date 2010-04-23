@@ -319,7 +319,7 @@ let TestPilotSetup = {
     let window = this._getFrontBrowserWindow();
     var win = window.open(url, "TestPilotStudyDetailWindow",
                          "chrome,centerscreen,resizable=yes,scrollbars=yes," +
-                         "status=no,width=900,height=600");
+                         "status=no,width=1000,height=800");
     win.focus();
   },
 

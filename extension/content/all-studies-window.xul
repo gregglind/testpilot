@@ -8,6 +8,8 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="TestPilotXulWindow.onLoad();">
 
+  <script src="chrome://testpilot/content/window-utils.js"
+          type="application/javascript;version=1.8"/>
   <script src="chrome://testpilot/content/all-studies-window.js"
           type="application/javascript;version=1.8"/>
 

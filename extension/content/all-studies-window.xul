@@ -58,4 +58,19 @@
     </deck>
   </vbox>
 
+  <!-- For the menubar on mac, the below elements are needed for
+       macBrowserOverlay.xul to overlay this window. -->
+  <stringbundleset id="stringbundleset"/>
+
+  <commandset id="mainCommandSet"/>
+  <commandset id="baseMenuCommandSet"/>
+  <commandset id="placesCommands"/>
+
+  <broadcasterset id="mainBroadcasterSet"/>
+
+  <keyset id="mainKeyset"/>
+  <keyset id="baseMenuKeyset"/>
+
+  <menubar id="main-menubar" style="border:none !important;margin:0;padding:0;"/>
+
 </prefwindow>

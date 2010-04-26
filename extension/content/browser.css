@@ -6,7 +6,7 @@
   margin-top: -4px;
   margin-right: -24px;
   min-width: 280px;
-  -moz-border-image: url(chrome://testpilot/skin/hud-panel.png) 26 50 22 18 / 26px 50px 22px 18px repeat; 
+  -moz-border-image: url(chrome://testpilot/skin/hud-panel.png) 26 50 22 18 / 26px 50px 22px 18px repeat;
 }
 
 #pilot-notification-popup-container {
@@ -28,25 +28,41 @@
     font-size: 150%
 }
 
-#current-studies-tab-img {
+#test-pilot-all-studies-window {
+    min-width: 680px !important;
+    min-height: 500px !important;
+}
+
+#test-pilot-all-studies-window > .prefWindow-dlgbuttons {
+    display: none;
+}
+
+.paneSelector {
+    margin: 0 !important;
+}
+
+.paneSelector radio[pane="current-studies-pane-button"] .paneButtonIcon {
     list-style-image: url("chrome://testpilot/skin/tp-currentstudies-32x32.png");
-    max-height: 32px;
-    max-width: 32px;
-    margin: 10px;
+    padding-top: 3px;
 }
-
-#finished-studies-tab-img {
+.paneSelector radio[pane="finished-studies-pane-button"] .paneButtonIcon {
     list-style-image: url("chrome://testpilot/skin/tp-completedstudies-32x32.png");
-    max-height: 32px;
-    max-width: 32px;
-    margin: 10px;
+    padding-top: 3px;
+
+}
+.paneSelector radio[pane="study-results-pane-button"] .paneButtonIcon {
+    list-style-image: url("chrome://testpilot/skin/tp-learned-32x32.png");
+    padding-top: 3px;
 }
 
-#study-results-tab-img {
-    list-style-image: url("chrome://testpilot/skin/tp-learned-32x32.png");
-    max-height: 32px;
-    max-width: 32px;
-    margin: 10px;
+.pane-button-badge {
+    background-color: green;
+    color: white;
+    font-weight: bold;
+    padding: 2px;
+    -moz-border-radius: 100%;
+    margin-right: 25px;
+    margin-bottom: 13px;
 }
 
 image.study-finished {
@@ -79,7 +95,7 @@ image.new-results {
 
 richlistbox.tp-study-list {
     height: 522px;
-    width: 502px; 
+    width: 502px;
     overflow: auto;
     margin: 0px;
 }
@@ -102,26 +118,19 @@ description.study-title {
 richlistitem.tp-study-list {
     min-height: 120px;
     color: black;
-    border-color: grey;
-    border-bottom-style: solid;
-    border-width: 1px;
+    background-color: -moz-dialog;
 }
 
 richlistitem.tp-new-results {
     min-height: 120px;
     color: black;
-    border-color: grey;
-    border-bottom-style: solid;
-    border-width: 1px;
     background-color: LemonChiffon;
 }
 
 richlistitem.tp-opted-out {
     min-height: 120px;
     color: grey;
-    border-color: grey;
-    border-bottom-style: solid;
-    border-width: 1px;
+    background-color: -moz-dialog;
 }
 
 vbox.results-thumbnail {
@@ -133,14 +142,6 @@ image.results-thumbnail {
     max-height: 90px;
     max-width:  90px;
     margin: 10px;
-}
-
-#num-finished-badge {
-    background-color: green;
-    color: white;
-    font-weight: bold;
-    padding: 2px;
-    -moz-border-radius: 100%; 
 }
 
 .notification-link {

@@ -306,6 +306,8 @@ var TestPilotXulWindow = {
     // Show number of studies the user finished on badge:
     document.getElementById("num-finished-badge").setAttribute(
       "value", numFinishedStudies);
+
+    window.sizeToContent();
   },
 
   focusPane: function(paneIndex) {

@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const ALL_STUDIES_WINDOW_NAME = "theTestPilotAllStudiesWindow";
+const ALL_STUDIES_WINDOW_NAME = "TestPilotAllStudiesWindow";
 const ALL_STUDIES_WINDOW_TYPE = "extensions:testpilot:all_studies_window";
 
 var TestPilotWindowUtils = {
@@ -48,11 +48,9 @@ var TestPilotWindowUtils = {
     if (allStudiesWindow) {
       allStudiesWindow.focus();
     } else {
-      allStudiesWindow = window.open(
+      allStudiesWindow = window.openDialog(
         "chrome://testpilot/content/all-studies-window.xul",
-        ALL_STUDIES_WINDOW_NAME,
-        "chrome,centerscreen,resizable=no,scrollbars=yes,status=no,width=650,height=600"
-      );
+        ALL_STUDIES_WINDOW_NAME, "chrome,titlebar,centerscreen,dialog=no");
     }
   },
 

@@ -1,63 +1,61 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/preferences.css" type="text/css"?>
+<?xml-stylesheet href="chrome://mozapps/content/extensions/extensions.css"
+  type="text/css"?>
 <?xml-stylesheet href="chrome://testpilot/content/browser.css" type="text/css"?>
 
-<window id="test-pilot-all-studies-window" title="Your Test Pilot Studies"
+<prefwindow id="test-pilot-all-studies-window" title="Your Test Pilot Studies"
         windowtype="extensions:testpilot:all_studies_window"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="TestPilotXulWindow.onLoad();">
 
   <script src="chrome://testpilot/content/window-utils.js"
-          type="application/javascript;version=1.8"/>
+        type="application/javascript;version=1.8"/>
   <script src="chrome://testpilot/content/all-studies-window.js"
-          type="application/javascript;version=1.8"/>
+        type="application/javascript;version=1.8"/>
 
-  <windowdragbox orient="vertical">
-    <radiogroup id="tp-radiogroup" orient="horizontal" role="listbox" 
-                class="paneSelector">
-      <radio pane="true" id="current-studies-rb" orient="vertical"
-             onclick="TestPilotXulWindow.focusPane(0);">
-        <image id="current-studies-tab-img"/>
-        <label value="Current Studies"/>
-      </radio>
-      <radio pane="true" id="finished-studies-rb" orient="vertical"
-             onclick="TestPilotXulWindow.focusPane(1);">
-         <stack>
-           <image id="finished-studies-tab-img"/>
-           <vbox>
-             <hbox>
-               <label id="num-finished-badge"/>
-               <spacer flex="1"/>
-             </hbox>
-             <spacer flex="1"/>
-           </vbox>
-         </stack>
-         <label value="Finished Studies"/>
-      </radio>
-      <radio pane="true" id="results-rb" orient="vertical"
-             onclick="TestPilotXulWindow.focusPane(2);">
-         <image id="study-results-tab-img"/>
-         <label value="Study Findings"/>
-      </radio>
-    </radiogroup>
-  </windowdragbox>
-  <deck id="tp-xulwindow-deck">
+  <vbox flex="1">
+    <windowdragbox orient="vertical">
+      <radiogroup id="tp-radiogroup" orient="horizontal" role="listbox"
+          class="paneSelector"
+          onselect="TestPilotXulWindow.focusPane(this.selectedIndex);">
+        <radio pane="current-studies-pane-button" orient="vertical">
+          <image class="paneButtonIcon" />
+          <label class="paneButtonLabel" value="Current Studies"/>
+        </radio>
+        <radio pane="finished-studies-pane-button" orient="vertical">
+          <stack align="center" pack="center">
+            <hbox align="center" pack="center">
+             <image class="paneButtonIcon" />
+            </hbox>
+            <label id="num-finished-badge" class="pane-button-badge"/>
+          </stack>
+          <label class="paneButtonLabel" value="Finished Studies"/>
+        </radio>
+        <radio pane="study-results-pane-button" orient="vertical">
+          <image class="paneButtonIcon" />
+          <label class="paneButtonLabel" value="Study Findings"/>
+        </radio>
+      </radiogroup>
+    </windowdragbox>
 
-    <prefpane id="current-studies-tab" class="tp-tab-panel">
-      <richlistbox id="current-studies-listbox" class="tp-study-list" disabled="true">
-      </richlistbox>
-    </prefpane>
+    <deck id="tp-xulwindow-deck" flex="1">
+      <prefpane id="current-studies-pane" class="tp-tab-panel">
+        <richlistbox id="current-studies-listbox" class="tp-study-list"
+          disabled="true" />
+      </prefpane>
 
-    <prefpane id="finished-studies-tab" class="tp-tab-panel">
-      <richlistbox id="finished-studies-listbox" class="tp-study-list" disabled="true">
-      </richlistbox>
-    </prefpane>
+      <prefpane id="finished-studies-pane" class="tp-tab-panel">
+        <richlistbox id="finished-studies-listbox" class="tp-study-list"
+          disabled="true" />
+      </prefpane>
 
-    <prefpane id="study-results-tab" class="tp-tab-panel">
-      <richlistbox id="study-results-listbox" class="tp-study-list" disabled="true">
-      </richlistbox>
-    </prefpane>
+      <prefpane id="study-results-pane" class="tp-tab-panel">
+        <richlistbox id="study-results-listbox" class="tp-study-list"
+          disabled="true" />
+      </prefpane>
+    </deck>
+  </vbox>
 
-  </deck>
-</window>
+</prefwindow>

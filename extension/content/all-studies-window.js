@@ -43,9 +43,6 @@
 // TODO Show individual status page in new chromeless window as html with
 // background color set to "moz-dialog".
 
-// TODO the whole menu bar disappears when the XUL window is up!  What's up
-// with that?
-
 // TODO general-purpose link to website's page of Upcoming Studies or what
 // have you.
 
@@ -197,17 +194,45 @@ var TestPilotXulWindow = {
   },
 
   onLoad: function () {
+    Components.utils.import("resource://testpilot/modules/Observers.js");
     Components.utils.import("resource://testpilot/modules/setup.js");
     Components.utils.import("resource://testpilot/modules/tasks.js");
 
+    this._init(false);
+    Observers.add("testpilot:task:changed", this._onTaskStatusChanged, this);
+  },
+
+  onUnload: function() {
+    Observers.remove("testpilot:task:changed", this._onTaskStatusChanged, this);
+  },
+
+  _onTaskStatusChanged : function() {
+    this._init(true);
+  },
+
+  _init: function(aReload) {
     let numFinishedStudies = 0;
     let numCurrentStudies = 0;
     let experiments = TestPilotSetup.getAllTasks();
 
-    if (experiments.length == 0 ) {
+    if (experiments.length == 0) {
       // Can happen if this window opens before all tasks are done loading
-      window.setTimeout(function() { TestPilotXulWindow.onLoad();}, 2000);
+      window.setTimeout(
+        function() { TestPilotXulWindow._init(aReload); }, 2000);
       return;
+    }
+
+    if (aReload) {
+      let listboxIds =
+        ["current-studies-listbox", "finished-studies-listbox",
+         "study-results-listbox"];
+      for (let i = 0; i < listboxIds.length; i++) {
+        let listbox = document.getElementById(listboxIds[i]);
+
+        while (listbox.lastChild) {
+          listbox.removeChild(listbox.lastChild);
+        }
+      }
     }
 
     experiments = this._sortNewestFirst(experiments);
@@ -225,7 +250,6 @@ var TestPilotXulWindow = {
       this.addDescription(textVbox, task.title, task.summary);
       this.addXulLink(textVbox, "More Info", task.defaultUrl);
 
-
       // Create the rightmost status area, depending on status:
       let statusVbox = document.createElement("vbox");
       if (task.status == TaskConstants.STATUS_FINISHED) {
@@ -242,17 +266,17 @@ var TestPilotXulWindow = {
       }
       if (task.status == TaskConstants.STATUS_NEW ||
           task.status == TaskConstants.STATUS_PENDING ) {
-            newRow.setAttribute("class", "tp-new-results");
+        newRow.setAttribute("class", "tp-new-results");
 
-            if (task.taskType == TaskConstants.TYPE_SURVEY) {
-              this.addButton( statusVbox, "Take Survey", "survey-button",
-                 "TestPilotWindowUtils.openChromeless('" + task.defaultUrl + "');");
-            } else if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
-              if (task.startDate) {
-                this.addLabel(statusVbox, "Will start " +
-                            (new Date(task.startDate)).toDateString());
-              }
-            }
+        if (task.taskType == TaskConstants.TYPE_SURVEY) {
+          this.addButton( statusVbox, "Take Survey", "survey-button",
+            "TestPilotWindowUtils.openChromeless('" + task.defaultUrl + "');");
+        } else if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
+          if (task.startDate) {
+            this.addLabel(statusVbox, "Will start " +
+                          (new Date(task.startDate)).toDateString());
+          }
+        }
       }
       if (task.status == TaskConstants.STATUS_IN_PROGRESS ||
           task.status == TaskConstants.STATUS_STARTING ) {

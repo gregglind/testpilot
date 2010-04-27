@@ -12,7 +12,7 @@
       image="chrome://testpilot/skin/testpilot_16x16.png">
   <menupopup id="pilot-menu-popup"
              onpopuphiding="TestPilotMenuUtils.onPopupHiding(event);">
-    <menu id="pilot-notification-settings" label="Notification Settings...">
+    <menu id="pilot-notification-settings" label="Notification Settings">
       <menupopup id="new-popup"
                  onpopupshowing="TestPilotMenuUtils.updateSubmenu();">
         <menuitem label="Notify me when..." disabled="true"/>

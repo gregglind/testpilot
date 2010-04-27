@@ -8,7 +8,8 @@
 <prefwindow id="test-pilot-all-studies-window" title="Your Test Pilot Studies"
         windowtype="extensions:testpilot:all_studies_window"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="TestPilotXulWindow.onLoad();">
+        onload="TestPilotXulWindow.onLoad();"
+        onunload="TestPilotXulWindow.onUnload();">
 
   <script src="chrome://testpilot/content/window-utils.js"
         type="application/javascript;version=1.8"/>

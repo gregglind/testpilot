@@ -49,6 +49,8 @@
 const NO_STUDIES_MSG = "We are working on a new study now, and it will\
  knock on your door soon! Stay Tuned!";
 const NO_STUDIES_IMG = "chrome://testpilot/skin/testPilot_200x200.png";
+const PROPOSE_STUDY_URL =
+  "https://wiki.mozilla.org/Labs/Test_Pilot#For_researchers";
 
 var TestPilotXulWindow = {
   onSubmitButton: function(experimentId) {
@@ -92,14 +94,23 @@ var TestPilotXulWindow = {
     hbox.appendChild(this.makeSpacer());
   },
 
-  addXulLink: function (container, text, url) {
+  addXulLink: function (container, text, url, openInTab) {
     let linkContainer = document.createElement("hbox");
     let link = document.createElement("label");
     let spacer = document.createElement("spacer");
     link.setAttribute("value", text);
     link.setAttribute("class", "text-link");
-    link.setAttribute("onclick",
-      "if (event.button==0) {TestPilotWindowUtils.openChromeless('" + url + "');}");
+    if (openInTab) {
+      link.setAttribute(
+        "onclick",
+        "if (event.button==0) { " +
+        "TestPilotWindowUtils.openInTab('" + url + "'); }");
+    } else {
+      link.setAttribute(
+        "onclick",
+        "if (event.button==0) { " +
+        "TestPilotWindowUtils.openChromeless('" + url + "'); }");
+    }
     linkContainer.appendChild(link);
     spacer.setAttribute("flex", "1");
     linkContainer.appendChild(spacer);
@@ -298,7 +309,6 @@ var TestPilotXulWindow = {
       newRow.appendChild(spacer);
       newRow.appendChild(statusVbox);
 
-
       // Use status to decide which panel to add this to:
       let rowset;
       if (task.taskType == TaskConstants.TYPE_RESULTS) {
@@ -324,6 +334,8 @@ var TestPilotXulWindow = {
       textVbox.setAttribute("class", "pilot-largetext");
       newRow.appendChild(textVbox);
       this.addDescription(textVbox, "", NO_STUDIES_MSG);
+      this.addXulLink(
+        textVbox, "Propose your own study", PROPOSE_STUDY_URL, true);
       document.getElementById("current-studies-listbox").appendChild(newRow);
     }
 

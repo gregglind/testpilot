@@ -30,7 +30,7 @@
     <menuitem label="All Your Studies"
               oncommand="TestPilotWindowUtils.openAllStudiesWindow();"/>
     <menuitem label="About Test Pilot"
-              oncommand="TestPilotWindowUtils.openInTab('http://testpilot.mozillalabs.com');"/>
+              oncommand="TestPilotWindowUtils.openInTab('https://testpilot.mozillalabs.com/');"/>
   </menupopup>
 </menu>
 

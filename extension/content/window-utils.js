@@ -41,8 +41,8 @@ var TestPilotWindowUtils = {
   openAllStudiesWindow: function() {
     // If the window is not already open, open it; but if it is open,
     // focus it instead.
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                        .getService(Components.interfaces.nsIWindowMediator);
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
+               getService(Components.interfaces.nsIWindowMediator);
     var allStudiesWindow = wm.getMostRecentWindow(ALL_STUDIES_WINDOW_TYPE);
 
     if (allStudiesWindow) {
@@ -55,10 +55,39 @@ var TestPilotWindowUtils = {
   },
 
   openInTab: function(url) {
-    // TODO if already open in a tab, go to that tab rather than re-opening
-    var browser = window.getBrowser();
-    var tab = browser.addTab(url);
-    browser.selectedTab = tab;
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                   .getService(Components.interfaces.nsIWindowMediator);
+    var enumerator = wm.getEnumerator("navigator:browser");
+    var found = false;
+
+    while(enumerator.hasMoreElements()) {
+      var win = enumerator.getNext();
+      var tabbrowser = win.getBrowser();
+
+      // Check each tab of this browser instance
+      var numTabs = tabbrowser.browsers.length;
+      for (var i = 0; i < numTabs; i++) {
+        var currentBrowser = tabbrowser.getBrowserAtIndex(i);
+        if (url == currentBrowser.currentURI.spec) {
+          tabbrowser.selectedTab = tabbrowser.tabContainer.childNodes[i];
+          found = true;
+          win.focus();
+          break;
+        }
+      }
+    }
+
+    if (!found) {
+      win = wm.getMostRecentWindow("navigator:browser");
+      if (win) {
+        var browser = win.getBrowser();
+        var tab = browser.addTab(url);
+        browser.selectedTab = tab;
+        win.focus();
+      } else {
+        window.open(url);
+      }
+    }
   },
 
   openChromeless: function(url) {

@@ -8,7 +8,8 @@
   <menu id="pilot-menu" insertafter="menu_openAddons" />
 </menupopup>
 
-<menu id="pilot-menu" class="menu-iconic" label="Test Pilot" insertafter="addonsManager"
+<menu id="pilot-menu" class="menu-iconic" label="Test Pilot"
+      insertafter="addonsManager"
       image="chrome://testpilot/skin/testpilot_16x16.png">
   <menupopup id="pilot-menu-popup"
              onpopuphiding="TestPilotMenuUtils.onPopupHiding(event);">
@@ -27,7 +28,7 @@
                   oncommand="TestPilotMenuUtils.toggleNotiPref('showOnNewResults');"/>
       </menupopup>
     </menu>
-    <menuitem label="All Your Studies"
+    <menuitem label="All Your Studies..."
               oncommand="TestPilotWindowUtils.openAllStudiesWindow();"/>
     <menuitem label="About Test Pilot"
               oncommand="TestPilotWindowUtils.openInTab('https://testpilot.mozillalabs.com/');"/>

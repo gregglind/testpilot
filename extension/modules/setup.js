@@ -255,6 +255,7 @@ let TestPilotSetup = {
     var self = this;
 
     // Set all appropriate attributes on popup:
+    popup.setAttribute("level", "parent");
     popup.setAttribute("noautohide", !fragile);
     textLabel.setAttribute("value", text);
     titleLabel.setAttribute("value", title);

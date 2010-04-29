@@ -1,3 +1,7 @@
+#pilot-notifications-button {
+  margin-right: 10px;
+}
+
 /* Popup Bounding Box */
 #pilot-notification-popup {
   -moz-appearance: none;
@@ -5,32 +9,85 @@
   background-color: transparent;
   margin-top: -4px;
   margin-right: -24px;
-  min-width: 280px;
+  width: 480px;
   -moz-border-image: url(chrome://testpilot/skin/hud-panel.png) 26 50 22 18 / 26px 50px 22px 18px repeat;
 }
 
-#pilot-notification-popup-container {
+.pilot-notification-popup-container {
   -moz-appearance: none;
-  margin: 4px;
+  margin-right: -24px;
+  padding: 0px 5px 5px 5px;
   color:  white;
-  font-size: 10pt;
+  font-size: 14px;
 }
 
-#pilot-notifications-button {
-  margin-right: 10px;
+.pilot-notification-toprow {
+  margin-bottom: 12px;
 }
 
+#pilot-notification-text,
+#pilot-notification-link {
+  margin-bottom: 5px;
+}
+
+#pilot-notification-close {
+  list-style-image: url("chrome://testpilot/skin/close_button.png");
+  -moz-image-region: rect(0px, 14px, 14px, 0px);
+  width: 14px;
+  height: 14px;
+}
+
+#pilot-notification-close:hover {
+  -moz-image-region: rect(0px, 28px, 14px, 14px);
+}
+
+#pilot-notification-close:hover:active {
+  -moz-image-region: rect(0px, 42px, 14px, 28px);
+}
+
+.pilot-notify-me-when[disabled="true"] {
+  color: -moz-dialogtext;
+}
 .pilot-title {
-    font-size:200%
+  font-size: 25px;
 }
 
+image.study-finished {
+  list-style-image: url("chrome://testpilot/skin/tp-submit-48x48.png");
+  height: 48px;
+  width: 48px;
+  margin-right: 8px;
+}
+
+image.study-submitted {
+  list-style-image: url("chrome://testpilot/skin/48-check.png");
+  height: 48px;
+  width: 48px;
+  margin-right: 8px;
+}
+
+image.new-study {
+  list-style-image: url("chrome://testpilot/skin/tp-study-48x48.png");
+  height: 48px;
+  width: 48px;
+  margin-right: 8px;
+}
+
+image.new-results {
+  list-style-image: url("chrome://testpilot/skin/tp-results-48x48.png");
+  height: 48px;
+  width: 48px;
+  margin-right: 8px;
+}
+
+/* All studies window */
 .pilot-largetext {
-    font-size: 150%
+  font-size: 22px;
 }
 
 #test-pilot-all-studies-window {
-    min-width: 682px !important;
-    min-height: 500px !important;
+  min-width: 685px !important;
+  min-height: 500px !important;
 }
 
 #test-pilot-all-studies-window > .prefWindow-dlgbuttons {
@@ -65,34 +122,6 @@
     margin-bottom: 13px;
 }
 
-image.study-finished {
-    list-style-image: url("chrome://testpilot/skin/tp-submit-48x48.png");
-    max-height: 48px;
-    max-width: 48px;
-    margin: 10px;
-}
-
-image.study-submitted {
-    list-style-image: url("chrome://testpilot/skin/48-check.png");
-    max-height: 32px;
-    max-width: 32px;
-    margin: 10px;
-}
-
-image.new-study {
-    list-style-image: url("chrome://testpilot/skin/tp-study-48x48.png");
-    max-height: 48px;
-    max-width: 48px;
-    margin: 10px;
-}
-
-image.new-results {
-    list-style-image: url("chrome://testpilot/skin/tp-results-48x48.png");
-    max-height: 48px;
-    max-width: 48px;
-    margin: 10px;
-}
-
 richlistbox.tp-study-list {
     height: 522px;
     width: 502px;
@@ -110,7 +139,7 @@ description.study-description {
 
 description.study-title {
     width: 350px;
-    font-size: 200%;
+    font-size: 25px;
     text-align: left;
     margin-top: 10px;
 }

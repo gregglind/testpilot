@@ -36,7 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 EXPORTED_SYMBOLS = ["TestPilotSetup", "POPUP_SHOW_ON_NEW",
-                    "POPUP_SHOW_ON_FINISH", "POPUP_SHOW_ON_RESULTS"];
+                    "POPUP_SHOW_ON_FINISH", "POPUP_SHOW_ON_RESULTS",
+                    "ALWAYS_SUBMIT_DATA"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -56,6 +57,7 @@ const POPUP_SHOW_ON_FINISH = "extensions.testpilot.popup.showOnStudyFinished";
 const POPUP_SHOW_ON_RESULTS = "extensions.testpilot.popup.showOnNewResults";
 const POPUP_CHECK_INTERVAL = "extensions.testpilot.popup.delayAfterStartup";
 const POPUP_REMINDER_INTERVAL = "extensions.testpilot.popup.timeBetweenChecks";
+const ALWAYS_SUBMIT_DATA = "extensions.testpilot.alwaysSubmitData";
 const LOG_FILE_NAME = "TestPilotErrorLog.log";
 
 // TODO move homepage to a pref?
@@ -238,8 +240,8 @@ let TestPilotSetup = {
 
   _showNotification: function TPS__showNotification(task, fragile, text, title,
                                                     iconClass, showSubmit,
-                                                    showClose, linkText,
-                                                    linkUrl) {
+                                                    linkText, linkUrl,
+                                                    showAlwaysSubmitCheckbox) {
     // If there are multiple windows, show notifications in the frontmost
     // window.
     let doc = this._getFrontBrowserWindow().document;
@@ -249,32 +251,39 @@ let TestPilotSetup = {
     let textLabel = doc.getElementById("pilot-notification-text");
     let titleLabel = doc.getElementById("pilot-notification-title");
     let icon = doc.getElementById("pilot-notification-icon");
-    let closeBtn = doc.getElementById("pilot-notification-close");
     let submitBtn = doc.getElementById("pilot-notification-submit");
+    let closeBtn = doc.getElementById("pilot-notification-close");
     let link = doc.getElementById("pilot-notification-link");
+    let alwaysSubmitCheckbox =
+      doc.getElementById("pilot-notification-always-submit-checkbox");
     var self = this;
 
     // Set all appropriate attributes on popup:
-    popup.setAttribute("level", "parent");
     popup.setAttribute("noautohide", !fragile);
-    textLabel.setAttribute("value", text);
     titleLabel.setAttribute("value", title);
+    while (textLabel.lastChild) {
+      textLabel.removeChild(textLabel.lastChild);
+    }
+    textLabel.appendChild(doc.createTextNode(text));
     if (iconClass) {
       // css will set the image url based on the class.
       icon.setAttribute("class", iconClass);
     }
-    closeBtn.setAttribute("hidden", !showClose);
     submitBtn.setAttribute("hidden", !showSubmit);
+    alwaysSubmitCheckbox.setAttribute("hidden", !showAlwaysSubmitCheckbox);
     if (showSubmit) {
       // Functionality for submit button:
       submitBtn.onclick = function() {
         self._hideNotification();
+        if (showAlwaysSubmitCheckbox && alwaysSubmitCheckbox.checked) {
+          Application.prefs.setValue(ALWAYS_SUBMIT_DATA, true);
+        }
         task.upload( function(success) {
           if (success) {
             self._showNotification(task, true,
                                    "Thank you for uploading your data.",
-                                   "Thanks!", "study-submitted",
-                                   false, false, "", "");
+                                   "Thanks!", "study-submitted", false,
+				   "More Info", task.defaultUrl, false);
           } else {
             // TODO any point in showing an error message here?
           }
@@ -283,31 +292,27 @@ let TestPilotSetup = {
     }
 
     // Create the link if specified:
-    if (linkText && linkUrl) {
+    if (linkText && (linkUrl || task)) {
       link.setAttribute("value", linkText);
       link.setAttribute("class", "notification-link");
       link.onclick = function(event) {
         if (event.button==0) {
+	  if (task) {
+            task.loadPage();
+	  } else {
+            self._openChromeless(linkUrl);
+	  }
           self._hideNotification();
-          self._openChromeless(linkUrl);
         }
       };
+      link.setAttribute("hidden", false);
+    } else {
+      link.setAttribute("hidden", true);
     }
 
-    // If fragile is true, a click anywhere dismisses the popup.  If
-    // fragile is false, only a click on the close box dismisses it.
-    if (fragile) {
-      popup.onclick = function() {
-        self._hideNotification();
-        if (task) {
-          task.loadPage();
-        }
-      };
-    } else {
-      closeBtn.onclick = function() {
-        self._hideNotification();
-      };
-    }
+    closeBtn.onclick = function() {
+      self._hideNotification();
+    };
 
     // Show the popup:
     popup.hidden = false;
@@ -316,12 +321,8 @@ let TestPilotSetup = {
   },
 
   _openChromeless: function TPS__openChromeless(url) {
-    // TODO this duplicates functionality in WindowUtils... refactor.
     let window = this._getFrontBrowserWindow();
-    var win = window.open(url, "TestPilotStudyDetailWindow",
-                         "chrome,centerscreen,resizable=yes,scrollbars=yes," +
-                         "status=no,width=1000,height=800");
-    win.focus();
+    window.TestPilotWindowUtils.openChromeless(url);
   },
 
   _hideNotification: function TPS__hideNotification() {
@@ -336,20 +337,23 @@ let TestPilotSetup = {
     // Check whether there are tasks needing attention, and if any are
     // found, show the popup door-hanger thingy.
     let i, task, title, text;
+    var self = this;
 
     // Highest priority is if there is a finished test (needs a decision)
     if (Application.prefs.getValue(POPUP_SHOW_ON_FINISH, false)) {
       for (i = 0; i < this.taskList.length; i++) {
         task = this.taskList[i];
         if (task.status == TaskConstants.STATUS_FINISHED) {
-          title = "Ready to Submit";
-          text = "The Test Pilot " + task.title + " study is finished " +
-                       "gathering data and is ready to submit.";
-	  this._showNotification(task, false, text, title, "study-finished",
-                                 true, "See Details...", task.url);
-          // We return after showing something, because it only makes
-          // sense to show one notification at a time!
-	  return;
+          if (!Application.prefs.getValue(ALWAYS_SUBMIT_DATA, false)) {
+            title = "Ready to Submit";
+            text = "The Test Pilot " + task.title + " study is finished " +
+                   "gathering data and is ready to submit.";
+            this._showNotification(task, false, text, title, "study-finished",
+                                   true, "More Info", task.defaultUrl, true);
+            // We return after showing something, because it only makes
+            // sense to show one notification at a time!
+            return;
+          }
         }
       }
     }
@@ -365,13 +369,14 @@ let TestPilotSetup = {
             title = "New Test Pilot Study";
             text = "The Test Pilot " + task.title + " study is now beginning.";
 	    this._showNotification(task, true, text, title, "new-study",
-                                   false, false, "See Details...", task.url);
+                                   false, "More Info", task.defaultUrl,
+				   false);
             return;
           } else if (task.taskType == TaskConstants.TYPE_SURVEY) {
             title = "New Test Pilot Survey";
             text = "The Test Pilot " + task.title + " survey is available.";
 	    this._showNotification(task, true, text, title, "new-study",
-                                   false, false, "Take Survey...", task.url);
+                                   false, "More Info", task.defaultUrl, false);
             return;
           }
         }
@@ -388,7 +393,7 @@ let TestPilotSetup = {
           text = "New results are now available for the Test Pilot " +
             task.title + " study.";
 	  this._showNotification(task, true, text, title, "new-results",
-                                 false, false, "See Details...", task.url);
+                                 false, "More Info", task.defaultUrl, false);
           return;
         }
       }

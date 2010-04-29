@@ -7,3 +7,4 @@ pref("extensions.testpilot.indexFileName", "index.json");
 pref("extensions.testpilot.popup.showOnNewStudy", false);
 pref("extensions.testpilot.popup.showOnStudyFinished", true);
 pref("extensions.testpilot.popup.showOnNewResults", false);
+pref("extensions.testpilot.alwaysSubmitData", false);

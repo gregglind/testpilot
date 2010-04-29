@@ -198,15 +198,11 @@ var TestPilotTask = {
   },
 
   loadPage: function TestPilotTask_loadPage() {
-    // TODO if the URL is already open in a tab, it should switch
-    // to that tab instead of opening another copy.
+    // open the link in the chromeless window
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                        .getService(Ci.nsIWindowMediator);
-    // TODO Is "most recent" the same as "front"?
     let window = wm.getMostRecentWindow("navigator:browser");
-    let browser = window.getBrowser();
-    let tab = browser.addTab(this.defaultUrl);
-    browser.selectedTab = tab;
+    window.TestPilotWindowUtils.openChromeless(this.defaultUrl);
     /* Advance the status when the user sees the page, so that we can stop
      * notifying them about stuff they've seen. */
     if (this._status == TaskConstants.STATUS_NEW) {
@@ -529,16 +525,24 @@ TestPilotExperiment.prototype = {
         // so, submit now!
         if (this.recurPref == TaskConstants.ALWAYS_SUBMIT) {
           this._logger.info("Automatically Uploading Data");
-          this.upload( function() {} );
+          this.upload(function() {});
         } else if (this.recurPref == TaskConstants.NEVER_SUBMIT) {
           this._logger.info("Automatically opting out of uploading data");
           this.changeStatus( TaskConstants.STATUS_CANCELLED, true);
         } else {
+          if (Application.prefs.getValue(
+            "extensions.testpilot.alwaysSubmitData", false)) {
+            this.upload(function() {});
+          }
           // set the expiration date for date submission
 	  this._expirationDateForDataSubmission =
 	    currentDate + EXPIRATION_TIME_FOR_DATA_SUBMISSION;
 	}
       } else {
+        if (Application.prefs.getValue(
+            "extensions.testpilot.alwaysSubmitData", false)) {
+          this.upload(function() {});
+        }
         // set the expiration date for date submission
 	this._expirationDateForDataSubmission =
 	  currentDate + EXPIRATION_TIME_FOR_DATA_SUBMISSION;
@@ -787,4 +791,3 @@ TestPilotStudyResults.prototype = {
   }
 };
 TestPilotStudyResults.prototype.__proto__ = TestPilotTask;
-

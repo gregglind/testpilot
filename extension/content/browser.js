@@ -41,21 +41,26 @@ Cu.import("resource://testpilot/modules/setup.js");
 // Namespace object
 var TestPilotMenuUtils = {
   updateSubmenu: function() {
-    var ntfyMenuFin = document.getElementById("notify-menu-finished");
-    var ntfyMenuNew = document.getElementById("notify-menu-new");
-    var ntfyMenuResults = document.getElementById("notify-menu-results");
+    var ntfyMenuFinished =
+      document.getElementById("pilot-menu-notify-finished");
+    var ntfyMenuNew = document.getElementById("pilot-menu-notify-new");
+    var ntfyMenuResults = document.getElementById("pilot-menu-notify-results");
+    var alwaysSubmitData =
+      document.getElementById("pilot-menu-always-submit-data");
     var Application = Cc["@mozilla.org/fuel/application;1"]
                     .getService(Ci.fuelIApplication);
-    ntfyMenuFin.setAttribute("checked", Application.prefs.getValue(
-                               POPUP_SHOW_ON_FINISH, false));
+    ntfyMenuFinished.setAttribute("checked", Application.prefs.getValue(
+                                  POPUP_SHOW_ON_FINISH, false));
     ntfyMenuNew.setAttribute("checked", Application.prefs.getValue(
-                               POPUP_SHOW_ON_NEW, false));
+                              POPUP_SHOW_ON_NEW, false));
     ntfyMenuResults.setAttribute("checked", Application.prefs.getValue(
-                               POPUP_SHOW_ON_RESULTS, false));
+                                  POPUP_SHOW_ON_RESULTS, false));
+    alwaysSubmitData.setAttribute("checked", Application.prefs.getValue(
+                                   ALWAYS_SUBMIT_DATA, false));
   },
 
-  toggleNotiPref: function(id) {
-    var prefName = "extensions.testpilot.popup." + id;
+  togglePref: function(id) {
+    var prefName = "extensions.testpilot." + id;
     var oldVal = Application.prefs.getValue(prefName, false);
     Application.prefs.setValue( prefName, !oldVal);
   },

@@ -119,8 +119,7 @@ let TestPilotSetup = {
 
     // Set up observation for task state changes
     var self = this;
-    this._obs.add("testpilot:task:changed", this.onTaskStatusChanged,
-                  self);
+    this._obs.add("testpilot:task:changed", this.onTaskStatusChanged, self);
     // Set up observation for application shutdown.
     this._obs.add("quit-application", this.globalShutdown, self);
     // Set up observation for enter/exit private browsing:
@@ -175,8 +174,7 @@ let TestPilotSetup = {
       self.taskList[i].onAppShutdown();
       self.taskList[i].onExperimentShutdown();
     }
-    this._obs.remove("testpilot:task:changed", this.onTaskStatusChanged,
-                  self);
+    this._obs.remove("testpilot:task:changed", this.onTaskStatusChanged, self);
     this._obs.remove("quit-application", this.globalShutdown, self);
     this._obs.remove("private-browsing", this.onPrivateBrowsingMode, self);
     this._loader.unload();
@@ -240,8 +238,9 @@ let TestPilotSetup = {
 
   _showNotification: function TPS__showNotification(task, fragile, text, title,
                                                     iconClass, showSubmit,
+						    showAlwaysSubmitCheckbox,
                                                     linkText, linkUrl,
-                                                    showAlwaysSubmitCheckbox) {
+						    isExtensionUpdate) {
     // If there are multiple windows, show notifications in the frontmost
     // window.
     let doc = this._getFrontBrowserWindow().document;
@@ -256,9 +255,12 @@ let TestPilotSetup = {
     let link = doc.getElementById("pilot-notification-link");
     let alwaysSubmitCheckbox =
       doc.getElementById("pilot-notification-always-submit-checkbox");
-    var self = this;
+    let self = this;
 
     // Set all appropriate attributes on popup:
+    if (isExtensionUpdate) {
+      popup.setAttribute("tpisextensionupdate", "true");
+    }
     popup.setAttribute("noautohide", !fragile);
     titleLabel.setAttribute("value", title);
     while (textLabel.lastChild) {
@@ -269,34 +271,44 @@ let TestPilotSetup = {
       // css will set the image url based on the class.
       icon.setAttribute("class", iconClass);
     }
-    submitBtn.setAttribute("hidden", !showSubmit);
+
     alwaysSubmitCheckbox.setAttribute("hidden", !showAlwaysSubmitCheckbox);
     if (showSubmit) {
-      // Functionality for submit button:
-      submitBtn.onclick = function() {
-        self._hideNotification();
-        if (showAlwaysSubmitCheckbox && alwaysSubmitCheckbox.checked) {
-          Application.prefs.setValue(ALWAYS_SUBMIT_DATA, true);
-        }
-        task.upload( function(success) {
-          if (success) {
-            self._showNotification(task, true,
-                                   "Thank you for uploading your data.",
-                                   "Thanks!", "study-submitted", false,
-				   "More Info", task.defaultUrl, false);
-          } else {
-            // TODO any point in showing an error message here?
+      if (isExtensionUpdate) {
+        submitBtn.setAttribute("label", "Update...");
+	submitBtn.onclick = function() {
+          self._getFrontBrowserWindow().BrowserOpenAddonsMgr("extensions");
+          self._hideNotification();
+	};
+      } else {
+        submitBtn.setAttribute("label", "Submit");
+        // Functionality for submit button:
+        submitBtn.onclick = function() {
+          self._hideNotification();
+          if (showAlwaysSubmitCheckbox && alwaysSubmitCheckbox.checked) {
+            Application.prefs.setValue(ALWAYS_SUBMIT_DATA, true);
           }
-        });
-      };
+          task.upload( function(success) {
+            if (success) {
+              self._showNotification(task, true,
+                                     "Thank you for uploading your data.",
+                                     "Thanks!", "study-submitted", false, false,
+                                     "More Info", task.defaultUrl);
+            } else {
+              // TODO any point in showing an error message here?
+            }
+          });
+        };
+      }
     }
+    submitBtn.setAttribute("hidden", !showSubmit);
 
     // Create the link if specified:
     if (linkText && (linkUrl || task)) {
       link.setAttribute("value", linkText);
       link.setAttribute("class", "notification-link");
       link.onclick = function(event) {
-        if (event.button==0) {
+        if (event.button == 0) {
 	  if (task) {
             task.loadPage();
 	  } else {
@@ -330,14 +342,26 @@ let TestPilotSetup = {
     let popup = window.document.getElementById("pilot-notification-popup");
     popup.hidden = true;
     popup.setAttribute("open", "false");
+    popup.removeAttribute("tpisextensionupdate");
     popup.hidePopup();
+  },
+
+  _isShowingUpdateNotification : function() {
+    let window = this._getFrontBrowserWindow();
+    let popup = window.document.getElementById("pilot-notification-popup");
+
+    return popup.hasAttribute("tpisextensionupdate");
   },
 
   _notifyUserOfTasks: function TPS__notifyUser() {
     // Check whether there are tasks needing attention, and if any are
     // found, show the popup door-hanger thingy.
     let i, task, title, text;
-    var self = this;
+
+    // if showing extension update notification, don't do anything.
+    if (this._isShowingUpdateNotification()) {
+      return;
+    }
 
     // Highest priority is if there is a finished test (needs a decision)
     if (Application.prefs.getValue(POPUP_SHOW_ON_FINISH, false)) {
@@ -349,7 +373,7 @@ let TestPilotSetup = {
             text = "The Test Pilot " + task.title + " study is finished " +
                    "gathering data and is ready to submit.";
             this._showNotification(task, false, text, title, "study-finished",
-                                   true, "More Info", task.defaultUrl, true);
+                                   true, true, "More Info", task.defaultUrl);
             // We return after showing something, because it only makes
             // sense to show one notification at a time!
             return;
@@ -369,14 +393,13 @@ let TestPilotSetup = {
             title = "New Test Pilot Study";
             text = "The Test Pilot " + task.title + " study is now beginning.";
 	    this._showNotification(task, true, text, title, "new-study",
-                                   false, "More Info", task.defaultUrl,
-				   false);
+                                   false, false, "More Info", task.defaultUrl);
             return;
           } else if (task.taskType == TaskConstants.TYPE_SURVEY) {
             title = "New Test Pilot Survey";
             text = "The Test Pilot " + task.title + " survey is available.";
 	    this._showNotification(task, true, text, title, "new-study",
-                                   false, "More Info", task.defaultUrl, false);
+                                   false, false, "More Info", task.defaultUrl);
             return;
           }
         }
@@ -393,7 +416,7 @@ let TestPilotSetup = {
           text = "New results are now available for the Test Pilot " +
             task.title + " study.";
 	  this._showNotification(task, true, text, title, "new-results",
-                                 false, "More Info", task.defaultUrl, false);
+                                 false, false, "More Info", task.defaultUrl);
           return;
         }
       }
@@ -463,11 +486,20 @@ let TestPilotSetup = {
             } else if (experiments[filename].surveyInfo) {
               minVer = experiments[filename].surveyInfo.minTPVersion;
             }
+
             if (minVer && self._isNewerThanMe(minVer)) {
               logger.warn("Not loading " + filename);
               logger.warn("Because it requires version " + minVer);
-              // TODO If this happens, we should tell user to update
-              // their extension.
+
+              if (!self._isShowingUpdateNotification()) {
+  	        let title = "Extension Update";
+                let text =
+		  "One of your studies requires a newer version of Test Pilot" +
+		  ". You can get the latest version using the Add-ons window.";
+                self._showNotification(
+		  null, false, text, title, "update-extension", true, false, "",
+		  "", true);
+	      }
               continue;
             }
 	  } catch (e) {

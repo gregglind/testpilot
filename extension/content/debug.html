@@ -76,9 +76,8 @@
     var task = TestPilotSetup.getTaskById(getEid());
     var text = "Sample popup for " + task.title;
     TestPilotSetup._showNotification(task, false, text, "This is Title",
-                                     "", true, "Linktext",
-                                     "http://evilbrainjono.net",
-                                     false);
+                                     "", true, false, "Linktext",
+                                     "http://evilbrainjono.net");
   }
 
   function wipeDb() {

@@ -71,7 +71,7 @@
         <spacer flex="1" />
       </hbox>
       <hbox align="right">
-        <button id="pilot-notification-submit" label="Submit" />
+        <button id="pilot-notification-submit" />
       </hbox>
     </vbox>
   </panel>

@@ -80,6 +80,13 @@ image.new-results {
   margin-right: 8px;
 }
 
+image.update-extension {
+  list-style-image: url("chrome://testpilot/skin/testpilot_32x32.png");
+  height: 48px;
+  width: 48px;
+  margin-right: 8px;
+}
+
 /* All studies window */
 .pilot-largetext {
   font-size: 22px;

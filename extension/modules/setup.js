@@ -20,6 +20,7 @@
  * Contributor(s):
  *   Atul Varma <atul@mozilla.com>
  *   Jono X <jono@mozilla.com>
+ *   Raymond Lee <raymond@appcoast.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -47,6 +48,7 @@ Components.utils.import("resource://testpilot/modules/lib/cuddlefish.js",
                         Cuddlefish);
 Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
 Components.utils.import("resource://testpilot/modules/tasks.js");
+Components.utils.import("resource://testpilot/modules/extension-update.js");
 Components.utils.import("resource://testpilot/modules/log4moz.js");
 
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
@@ -195,8 +197,8 @@ let TestPilotSetup = {
   },
 
   _getFrontBrowserWindow: function TPS__getFrontWindow() {
-    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                        .getService(Ci.nsIWindowMediator);
+    let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+               getService(Ci.nsIWindowMediator);
     // TODO Is "most recent" the same as "front"?
     return wm.getMostRecentWindow("navigator:browser");
   },
@@ -290,7 +292,7 @@ let TestPilotSetup = {
 	  this._stringBundle.GetStringFromName(
 	    "testpilot.notification.update"));
 	submitBtn.onclick = function() {
-          self._getFrontBrowserWindow().BrowserOpenAddonsMgr("extensions");
+	  TestPilotExtensionUpdate.check(EXTENSION_ID);
           self._hideNotification();
 	};
       } else {

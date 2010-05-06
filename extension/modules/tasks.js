@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Jono X <jono@mozilla.com>
+ *   Raymond Lee <raymond@appcoast.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,9 +52,11 @@ const RECUR_TIMES_PREF_PREFIX = "extensions.testpilot.recurCount.";
 const SURVEY_ANSWER_PREFIX = "extensions.testpilot.surveyAnswers.";
 const EXPIRATION_DATE_FOR_DATA_SUBMISSION_PREFIX =
   "extensions.testpilot.expirationDateForDataSubmission.";
+const DATE_FOR_DATA_DELETION_PREFIX =
+  "extensions.testpilot.dateForDataDeletion.";
 const RETRY_INTERVAL_PREF = "extensions.testpilot.uploadRetryInterval";
 const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
-const EXPIRATION_TIME_FOR_DATA_SUBMISSION = 7 * (24 * 60 * 60 * 1000); // 7 days
+const TIME_FOR_DATA_DELETION = 7 * (24 * 60 * 60 * 1000); // 7 days
 const DEFAULT_THUMBNAIL_URL = "chrome://testpilot/skin/tp-generic-32x32.png";
 
 const TaskConstants = {
@@ -210,7 +213,7 @@ var TestPilotTask = {
     } else if (this._status == TaskConstants.STATUS_STARTING) {
       this.changeStatus(TaskConstants.STATUS_IN_PROGRESS);
     } else if (this._status == TaskConstants.STATUS_RESULTS) {
-      this.changeStatus( TaskConstants.STATUS_ARCHIVED );
+      this.changeStatus(TaskConstants.STATUS_ARCHIVED);
     }
   }
 };
@@ -331,33 +334,68 @@ TestPilotExperiment.prototype = {
         return this.webContent.inProgressHtml;
       break;
       case TaskConstants.STATUS_FINISHED:
-        return this.webContent.completedHtml;
-      break;
-      case TaskConstants.STATUS_CANCELLED:
-        content = '<h2>You have quit the <a href="' + this.infoPageUrl +
-          '">&quot;' + this.title + '&quot;</a> study.</h2>';
-	if (this._dataStore.haveData() && this.webContent.remainDataHtml) {
-          content += this.webContent.remainDataHtml;
+	if (this._dataStore.haveData()) {
+	  content = this.webContent.completedHtml;
 	} else {
-	  content += '<p>All data related to this study has been deleted from your computer.</p>';
+	  // for after deleting data manually by user.
+	  content =
+	    '<h2>Excellent! You finished the ' +
+	    '<a href="' + this.infoPageUrl + '">&quot;' + this.title +
+            '&quot;</a> Study!</h2>' +
+	    '<p>All data related to this study has been removed from your ' +
+	    'computer.</p>';
 	}
-	content += '<p>Test Pilot will offer you new studies and surveys as they become available.</p>';
         return content;
       break;
-      case TaskConstants.STATUS_SUBMITTED:
-        content = '<h2>Thank you for submitting your ' +
-          '<a href="' + this.infoPageUrl + '">&quot;' + this.title +
-          '&quot;</a> study data!</h2>';
-	if (this._dataStore.haveData() && this.webContent.remainDataHtml) {
-          content += this.webContent.remainDataHtml;
+      case TaskConstants.STATUS_CANCELLED:
+	if (this._expirationDateForDataSubmission.length == 0) {
+          content = this.webContent.canceledHtml;
+	} else {
+          content = this.webContent.dataExpiredHtml;
 	}
-	content += '<h3>More tests are coming soon.  Stay tuned.</h3>' +
-	  '<p>Test Pilot is no longer collecting data.  All the data that was collected has been transmitted to Mozilla and deleted from your computer.</p>' +
-	  '<p>The results of the study will be available soon.  When they are ready to view, Test Pilot will let you know.</p>';
+	return content;
+      break;
+      case TaskConstants.STATUS_SUBMITTED:
+	if (this._dateForDataDeletion.length > 0) {
+          content = this.webContent.remainDataHtml;
+	} else {
+          content = this.webContent.deletedRemainDataHtml;
+	}
         return content;
       break;
     }
     // TODO what to do if status is cancelled, submitted, results, or archived?
+    return "";
+  },
+
+  getDataPrivacyContent: function() {
+    switch (this._status) {
+      case TaskConstants.STATUS_STARTING:
+      case TaskConstants.STATUS_IN_PROGRESS:
+        return this.webContent.inProgressDataPrivacyHtml;
+      break;
+      case TaskConstants.STATUS_FINISHED:
+	if (this._dataStore.haveData()) {
+	  return this.webContent.completedDataPrivacyHtml;
+	}
+      break;
+      case TaskConstants.STATUS_CANCELLED:
+	if (this._expirationDateForDataSubmission.length == 0) {
+          content = this.webContent.canceledDataPrivacyHtml;
+	} else {
+          content = this.webContent.dataExpiredDataPrivacyHtml;
+	}
+	return content;
+      break;
+      case TaskConstants.STATUS_SUBMITTED:
+	if (this._dateForDataDeletion.length > 0) {
+          content = this.webContent.remainDataDataPrivacyHtml;
+	} else {
+          content = this.webContent.deletedRemainDataDataPrivacyHtml;
+	}
+        return content;
+      break;
+    }
     return "";
   },
 
@@ -459,17 +497,33 @@ TestPilotExperiment.prototype = {
   },
 
   set _expirationDateForDataSubmission(date) {
-    Application.prefs.setValue(
-      EXPIRATION_DATE_FOR_DATA_SUBMISSION_PREFIX + this._id,
-      (new Date(date)).toString());
+    if (date) {
+      Application.prefs.setValue(
+        EXPIRATION_DATE_FOR_DATA_SUBMISSION_PREFIX + this._id,
+        (new Date(date)).toString());
+    } else {
+      Application.prefs.setValue(
+        EXPIRATION_DATE_FOR_DATA_SUBMISSION_PREFIX + this._id, "");
+    }
   },
 
   get _expirationDateForDataSubmission() {
-    let expirationDate = Date.now() + EXPIRATION_TIME_FOR_DATA_SUBMISSION;
-
     return Application.prefs.getValue(
-      EXPIRATION_DATE_FOR_DATA_SUBMISSION_PREFIX + this._id,
-      (new Date(expirationDate)).toString());
+      EXPIRATION_DATE_FOR_DATA_SUBMISSION_PREFIX + this._id, "");
+  },
+
+  set _dateForDataDeletion(date) {
+    if (date) {
+      Application.prefs.setValue(
+        DATE_FOR_DATA_DELETION_PREFIX + this._id, (new Date(date)).toString());
+    } else {
+      Application.prefs.setValue(DATE_FOR_DATA_DELETION_PREFIX + this._id, "");
+    }
+  },
+
+  get _dateForDataDeletion() {
+    return Application.prefs.getValue(
+      DATE_FOR_DATA_DELETION_PREFIX + this._id, "");
   },
 
   checkDate: function TestPilotExperiment_checkDate() {
@@ -515,8 +569,9 @@ TestPilotExperiment.prototype = {
     // What happens when a test finishes:
     if (this._status < TaskConstants.STATUS_FINISHED &&
 	currentDate > this._endDate) {
+      let setDataDeletionDate = true;
       this._logger.info("Passed End Date - Switched Task Status to Finished");
-      this.changeStatus( TaskConstants.STATUS_FINISHED );
+      this.changeStatus(TaskConstants.STATUS_FINISHED);
       this.onExperimentShutdown();
 
       if (this._recursAutomatically) {
@@ -528,31 +583,49 @@ TestPilotExperiment.prototype = {
           this.upload(function() {});
         } else if (this.recurPref == TaskConstants.NEVER_SUBMIT) {
           this._logger.info("Automatically opting out of uploading data");
-          this.changeStatus( TaskConstants.STATUS_CANCELLED, true);
+          this.changeStatus(TaskConstants.STATUS_CANCELLED, true);
+          this._dataStore.wipeAllData();
+	  setDataDeletionDate = false;
         } else {
           if (Application.prefs.getValue(
-            "extensions.testpilot.alwaysSubmitData", false)) {
+              "extensions.testpilot.alwaysSubmitData", false)) {
             this.upload(function() {});
           }
-          // set the expiration date for date submission
-	  this._expirationDateForDataSubmission =
-	    currentDate + EXPIRATION_TIME_FOR_DATA_SUBMISSION;
 	}
       } else {
         if (Application.prefs.getValue(
             "extensions.testpilot.alwaysSubmitData", false)) {
           this.upload(function() {});
         }
-        // set the expiration date for date submission
-	this._expirationDateForDataSubmission =
-	  currentDate + EXPIRATION_TIME_FOR_DATA_SUBMISSION;
+      }
+      if (setDataDeletionDate) {
+	let date = this._endDate + TIME_FOR_DATA_DELETION;
+        this._dateForDataDeletion = date;
+        this._expirationDateForDataSubmission = date;
+      } else {
+        this._dateForDataDeletion = null;
+        this._expirationDateForDataSubmission = null;
       }
     } else {
-      // only do this if the state is already finished.
+      // only do this if the state is already finished and the data is expired.
       if (this._status == TaskConstants.STATUS_FINISHED) {
-	let expirationDate = Date.parse(this._expirationDateForDataSubmission);
-	if (currentDate > expirationDate) {
-          this.changeStatus(TaskConstants.STATUS_CANCELLED, true);
+	if (this._expirationDateForDataSubmission.length > 0) {
+	  let expirationDate = Date.parse(this._expirationDateForDataSubmission);
+	  if (currentDate > expirationDate) {
+            this.changeStatus(TaskConstants.STATUS_CANCELLED, true);
+            this._dataStore.wipeAllData();
+	    this._dateForDataDeletion = null;
+	    // need to keep the expirationDateForDataSubmission value so
+	    // we know that data is expired, not user cancels the task.
+	  }
+	}
+      } else if (this._status == TaskConstants.STATUS_SUBMITTED) {
+	if (this._dateForDataDeletion.length > 0) {
+	  let deleteDate = Date.parse(this._dateForDataDeletion);
+	  if (currentDate > deleteDate) {
+            this._dataStore.wipeAllData();
+	    this._dateForDataDeletion = null;
+	  }
 	}
       }
     }
@@ -636,7 +709,10 @@ TestPilotExperiment.prototype = {
           if (self._uploadRetryTimer) {
             self._uploadRetryTimer.cancel(); // Stop retrying - it worked!
           }
-          self.changeStatus( TaskConstants.STATUS_SUBMITTED );
+          self.changeStatus(TaskConstants.STATUS_SUBMITTED);
+	  self._dateForDataDeletion = Date.now() + TIME_FOR_DATA_DELETION;
+	  self._expirationDateForDataSubmission = null;
+
           callback(true);
 	} else {
 	  self._logger.warn("ERROR POSTING DATA: " + req.responseText);
@@ -662,6 +738,9 @@ TestPilotExperiment.prototype = {
   optOut: function TestPilotExperiment_optOut(reason, callback) {
     let logger = this._logger;
     this.changeStatus(TaskConstants.STATUS_CANCELLED);
+    this._dataStore.wipeAllData();
+    this._dateForDataDeletion = null;
+    this._expirationDateForDataSubmission = null;
     logger.info("Opting out of test with reason " + reason);
     if (reason) {
       // Send us the reason...
@@ -740,7 +819,7 @@ TestPilotBuiltinSurvey.prototype = {
      * NEW (havent' seen survey) to PENDING (seen it but not done it).
      * So we can stop notifying people about the survey once they've seen it.*/
     if (url == this._url && this._status == TaskConstants.STATUS_NEW) {
-      this.changeStatus( TaskConstants.STATUS_PENDING );
+      this.changeStatus(TaskConstants.STATUS_PENDING);
     }
   },
 
@@ -755,7 +834,7 @@ TestPilotBuiltinSurvey.prototype = {
     }
   },
 
-  store: function( surveyResults ) {
+  store: function(surveyResults) {
     // Store answers in preferences store
     let prefName = SURVEY_ANSWER_PREFIX + this._id;
     // Also store survey version number
@@ -763,7 +842,7 @@ TestPilotBuiltinSurvey.prototype = {
       surveyResults["version_number"] = this._versionNumber;
     }
     Application.prefs.setValue(prefName, JSON.stringify(surveyResults));
-    this.changeStatus( TaskConstants.STATUS_SUBMITTED);
+    this.changeStatus(TaskConstants.STATUS_SUBMITTED);
   }
 };
 TestPilotBuiltinSurvey.prototype.__proto__ = TestPilotTask;

@@ -228,7 +228,7 @@ exports.RemoteExperimentLoader.prototype = {
           let filename = f;
           self._logger.trace("I'm gonna go try to get the code for " + filename);
           let modDate = self._codeStorage.getFileModifiedDate(filename);
-          self._fileGetter( resolveUrl(BASE_URL, filename),
+          self._fileGetter(resolveUrl(BASE_URL, filename),
             function onDone(code) {
               // code will be non-null if there is actually new code to download.
               if (code) {

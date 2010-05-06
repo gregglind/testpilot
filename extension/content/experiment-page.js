@@ -97,6 +97,60 @@
     }
   }
 
+  function exportData() {
+    const nsIFilePicker = Components.interfaces.nsIFilePicker;
+    let filePicker = Components.classes["@mozilla.org/filepicker;1"].
+      createInstance(nsIFilePicker);
+    let eid = parseInt(getUrlParam("eid"));
+    let task = TestPilotSetup.getTaskById(eid);
+
+    filePicker.init(window, null, nsIFilePicker.modeSave);
+    filePicker.appendFilters(
+	nsIFilePicker.filterImages | nsIFilePicker.filterAll);
+    filePicker.defaultString = task.title + ".csv";
+
+    let response = filePicker.show();
+    if (response == nsIFilePicker.returnOK ||
+	response == nsIFilePicker.returnReplace) {
+      const nsIWebBrowserPersist = Components.interfaces.nsIWebBrowserPersist;
+      let foStream =
+        Components.classes["@mozilla.org/network/file-output-stream;1"].
+	  createInstance(Components.interfaces.nsIFileOutputStream);
+      let converter =
+        Components.classes["@mozilla.org/intl/converter-output-stream;1"].
+	  createInstance(Components.interfaces.nsIConverterOutputStream);
+      let file = filePicker.file;
+      let dataStore = task.dataStore;
+      let rawData = dataStore.getAllDataAsJSON(true);
+      let columnNames = dataStore.getHumanReadableColumnNames();
+      let propertyNames = dataStore.getPropertyNames();
+      let csvString = "";
+
+      // titles
+      for (let i = 0; i < columnNames.length; i++) {
+	csvString += "\"" + columnNames[i] + "\",";
+      }
+      if (csvString.length > 0) {
+	csvString = csvString.substring(0, (csvString.length - 1));
+        csvString += "\n";
+      }
+      // data
+      for (let i = 0; i < rawData.length; i++) {
+        for (let j = 0; j < columnNames.length; j++) {
+	  csvString += "\"" + rawData[i][propertyNames[j]] + "\",";
+        }
+	csvString = csvString.substring(0, (csvString.length - 1));
+        csvString += "\n";
+      }
+
+      // write, create, truncate
+      foStream.init(file, 0x02 | 0x08 | 0x20, 0664, 0);
+      converter.init(foStream, "UTF-8", 0, 0);
+      converter.writeString(csvString);
+      converter.close();
+    }
+  }
+
   function getTestEndingDate(experimentId) {
     Components.utils.import("resource://testpilot/modules/setup.js");
     var task = TestPilotSetup.getTaskById(experimentId);
@@ -235,6 +289,7 @@
     Components.utils.import("resource://testpilot/modules/setup.js");
     Components.utils.import("resource://testpilot/modules/tasks.js");
     var contentDiv = document.getElementById("experiment-specific-text");
+    var dataPrivacyDiv = document.getElementById("data-privacy-text");
     // Get experimentID from the GET args of page
     var eid = parseInt(getUrlParam("eid"));
     var experiment = TestPilotSetup.getTaskById(eid);
@@ -245,8 +300,13 @@
       window.setTimeout(function() { loadExperimentPage();}, 2000);
       return;
     }
-
     contentDiv.innerHTML = experiment.getWebContent();
+
+    var dataPrivacyContent = experiment.getDataPrivacyContent();
+    if (dataPrivacyContent && dataPrivacyContent.length > 0) {
+      dataPrivacyDiv.innerHTML = dataPrivacyContent;
+      dataPrivacyDiv.removeAttribute("hidden");
+    }
 
     // Metadata and start/end date should be filled in for every experiment:
     showMetaData();

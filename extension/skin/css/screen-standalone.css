@@ -162,7 +162,6 @@ src: url('chrome://testpilot/skin//DroidSans-Bold.ttf') format('truetype');
 	//display: inline;
 }
 
-
 .callout {
 	font-family: 'DroidSans';
 	font-size: 16px;
@@ -177,6 +176,11 @@ src: url('chrome://testpilot/skin//DroidSans-Bold.ttf') format('truetype');
 		inset rgba(185, 221, 234, 1) 0 0px 1px,
 		inset rgba(255, 255, 255, 0.2) 0 10px 12px;
 	//display: inline;
+}
+
+#data-privacy-text {
+  width: 320px;
+  margin-bottom: 50px;
 }
 
 .home_callout {

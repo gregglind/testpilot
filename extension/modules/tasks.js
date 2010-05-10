@@ -202,7 +202,7 @@ var TestPilotTask = {
 
   loadPage: function TestPilotTask_loadPage() {
     // open the link in the chromeless window
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+    var wm = Cc["@mozilla.org/appshell/window-mediator;1"]
                        .getService(Ci.nsIWindowMediator);
     let window = wm.getMostRecentWindow("navigator:browser");
     window.TestPilotWindowUtils.openChromeless(this.defaultUrl);

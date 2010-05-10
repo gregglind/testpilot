@@ -151,6 +151,19 @@
     }
   }
 
+  function openLink(url) {
+    // open the link in the chromeless window
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+    let recentWindow = wm.getMostRecentWindow("navigator:browser");
+
+    if (recentWindow) {
+      recentWindow.TestPilotWindowUtils.openInTab(url);
+    } else {
+      window.open(url);
+    }
+  }
+
   function getTestEndingDate(experimentId) {
     Components.utils.import("resource://testpilot/modules/setup.js");
     var task = TestPilotSetup.getTaskById(experimentId);
@@ -297,7 +310,7 @@
       // Possible that experiments aren't done loading yet.  Try again in
       // a few seconds.
       contentDiv.innerHTML = "Loading, please wait a moment...";
-      window.setTimeout(function() { loadExperimentPage();}, 2000);
+      window.setTimeout(function() { loadExperimentPage(); }, 2000);
       return;
     }
     contentDiv.innerHTML = experiment.getWebContent();

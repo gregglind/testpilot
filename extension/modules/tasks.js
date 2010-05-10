@@ -569,6 +569,7 @@ TestPilotExperiment.prototype = {
     // What happens when a test finishes:
     if (this._status < TaskConstants.STATUS_FINISHED &&
 	currentDate > this._endDate) {
+      let self = this;
       let setDataDeletionDate = true;
       this._logger.info("Passed End Date - Switched Task Status to Finished");
       this.changeStatus(TaskConstants.STATUS_FINISHED);
@@ -580,7 +581,9 @@ TestPilotExperiment.prototype = {
         // so, submit now!
         if (this.recurPref == TaskConstants.ALWAYS_SUBMIT) {
           this._logger.info("Automatically Uploading Data");
-          this.upload(function() {});
+          this.upload(function(success) {
+            Observers.notify("testpilot:task:dataAutoSubmitted", self, null);
+	  });
         } else if (this.recurPref == TaskConstants.NEVER_SUBMIT) {
           this._logger.info("Automatically opting out of uploading data");
           this.changeStatus(TaskConstants.STATUS_CANCELLED, true);
@@ -589,13 +592,22 @@ TestPilotExperiment.prototype = {
         } else {
           if (Application.prefs.getValue(
               "extensions.testpilot.alwaysSubmitData", false)) {
-            this.upload(function() {});
+            this.upload(function(success) {
+	      if (success) {
+                Observers.notify(
+		  "testpilot:task:dataAutoSubmitted", self, null);
+	      }
+	    });
           }
 	}
       } else {
         if (Application.prefs.getValue(
             "extensions.testpilot.alwaysSubmitData", false)) {
-          this.upload(function() {});
+          this.upload(function(success) {
+	    if (success) {
+              Observers.notify("testpilot:task:dataAutoSubmitted", self, null);
+	    }
+	  });
         }
       }
       if (setDataDeletionDate) {

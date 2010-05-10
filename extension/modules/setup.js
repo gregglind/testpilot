@@ -120,6 +120,8 @@ let TestPilotSetup = {
     // Set up observation for task state changes
     var self = this;
     this._obs.add("testpilot:task:changed", this.onTaskStatusChanged, self);
+    this._obs.add(
+      "testpilot:task:dataAutoSubmitted", this._onTaskDataAutoSubmitted, self);
     // Set up observation for application shutdown.
     this._obs.add("quit-application", this.globalShutdown, self);
     // Set up observation for enter/exit private browsing:
@@ -175,6 +177,8 @@ let TestPilotSetup = {
       self.taskList[i].onExperimentShutdown();
     }
     this._obs.remove("testpilot:task:changed", this.onTaskStatusChanged, self);
+    this._obs.remove(
+      "testpilot:task:dataAutoSubmitted", this._onTaskDataAutoSubmitted, self);
     this._obs.remove("quit-application", this.globalShutdown, self);
     this._obs.remove("private-browsing", this.onPrivateBrowsingMode, self);
     this._loader.unload();
@@ -370,7 +374,7 @@ let TestPilotSetup = {
         if (task.status == TaskConstants.STATUS_FINISHED) {
           if (!Application.prefs.getValue(ALWAYS_SUBMIT_DATA, false)) {
             title = "Ready to Submit";
-            text = "The Test Pilot " + task.title + " study is finished " +
+            text = "The Test Pilot \"" + task.title + "\" study is finished " +
                    "gathering data and is ready to submit.";
             this._showNotification(task, false, text, title, "study-finished",
                                    true, true, "More Info", task.defaultUrl);
@@ -391,7 +395,7 @@ let TestPilotSetup = {
             task.status == TaskConstants.STATUS_NEW) {
           if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
             title = "New Test Pilot Study";
-            text = "The Test Pilot " + task.title + " study is now beginning.";
+            text = "The Test Pilot \"" + task.title + "\" study is now beginning.";
 	    this._showNotification(task, true, text, title, "new-study",
                                    false, false, "More Info", task.defaultUrl);
             return;
@@ -413,8 +417,8 @@ let TestPilotSetup = {
         if (task.taskType == TaskConstants.TYPE_RESULTS &&
             task.status == TaskConstants.STATUS_NEW) {
           title = "New Test Pilot Results";
-          text = "New results are now available for the Test Pilot " +
-            task.title + " study.";
+          text = "New results are now available for the Test Pilot \"" +
+            task.title + "\" study.";
 	  this._showNotification(task, true, text, title, "new-results",
                                  false, false, "More Info", task.defaultUrl);
           return;
@@ -440,6 +444,14 @@ let TestPilotSetup = {
 
   onTaskStatusChanged: function TPS_onTaskStatusChanged() {
     this._notifyUserOfTasks();
+  },
+
+  _onTaskDataAutoSubmitted: function(subject, data) {
+    this._showNotification(
+      subject, true,
+      "The Test Pilot \"" + subject.title  + "\" study is completed and your " +
+      "data has been submitted!", "Thank you!", "study-submitted", false, false,
+      "More Info", subject.defaultUrl);
   },
 
   get version() {

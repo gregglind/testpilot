@@ -60,7 +60,7 @@ image.study-finished {
 }
 
 image.study-submitted {
-  list-style-image: url("chrome://testpilot/skin/48-check.png");
+  list-style-image: url("chrome://testpilot/skin/status-completed.png");
   height: 48px;
   width: 48px;
   margin-right: 8px;

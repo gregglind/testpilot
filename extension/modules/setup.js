@@ -286,13 +286,16 @@ let TestPilotSetup = {
     alwaysSubmitCheckbox.setAttribute("hidden", !showAlwaysSubmitCheckbox);
     if (showSubmit) {
       if (isExtensionUpdate) {
-        submitBtn.setAttribute("label", "Update...");
+        submitBtn.setAttribute("label",
+	  this._stringBundle.GetStringFromName(
+	    "testpilot.notification.update"));
 	submitBtn.onclick = function() {
           self._getFrontBrowserWindow().BrowserOpenAddonsMgr("extensions");
           self._hideNotification();
 	};
       } else {
-        submitBtn.setAttribute("label", "Submit");
+        submitBtn.setAttribute("label",
+	  this._stringBundle.GetStringFromName("testpilot.submit"));
         // Functionality for submit button:
         submitBtn.onclick = function() {
           self._hideNotification();

@@ -338,12 +338,18 @@ TestPilotExperiment.prototype = {
 	  content = this.webContent.completedHtml;
 	} else {
 	  // for after deleting data manually by user.
-	  content =
-	    '<h2>Excellent! You finished the ' +
+          let stringBundle =
+            Components.classes["@mozilla.org/intl/stringbundle;1"].
+              getService(Components.interfaces.nsIStringBundleService).
+	        createBundle("chrome://testpilot/locale/main.properties");
+	  let link =
 	    '<a href="' + this.infoPageUrl + '">&quot;' + this.title +
-            '&quot;</a> Study!</h2>' +
-	    '<p>All data related to this study has been removed from your ' +
-	    'computer.</p>';
+	    '&quot;</a>';
+	  content =
+	    '<h2>' + stringBundle.formatStringFromName(
+	      "testpilot.finishedTask.finishedStudy", [link], 1) + '</h2>' +
+	    '<p>' + stringBundle.GetStringFromName(
+	      "testpilot.finishedTask.allRelatedDataDeleted") + '</p>';
 	}
         return content;
       break;

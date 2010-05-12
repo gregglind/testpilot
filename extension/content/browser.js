@@ -37,7 +37,6 @@
 
 Cu.import("resource://testpilot/modules/setup.js");
 
-
 // Namespace object
 var TestPilotMenuUtils = {
   updateSubmenu: function() {
@@ -67,8 +66,8 @@ var TestPilotMenuUtils = {
 
   onPopupHiding: function(event) {
     var target = event.target;
-    if (target.id == 'pilot-menu-popup') {
-      var menu = document.getElementById('pilot-menu');
+    if (target.id == "pilot-menu-popup") {
+      var menu = document.getElementById("pilot-menu");
       if (target.parentNode != menu) {
         menu.appendChild(target);
       }
@@ -76,7 +75,7 @@ var TestPilotMenuUtils = {
   },
 
   onMenuButtonMouseDown: function() {
-    var menuPopup = document.getElementById('pilot-menu-popup');
+    var menuPopup = document.getElementById("pilot-menu-popup");
     var menuButton = document.getElementById("pilot-notifications-button");
 
     if (menuPopup.parentNode != menuButton)

@@ -1,16 +1,20 @@
+  const PAGE_TYPE_STATUS = 0;
+  const PAGE_TYPE_QUIT = 1;
+  var stringBundle;
+
   function showRawData(experimentId) {
-    window.openDialog("chrome://testpilot/content/raw-data-dialog.xul",
-                      "Test Pilot: Raw Tab Usage Data",
-                      "chrome,centerscreen,resizable,scrollbars",
-                      experimentId);
+    window.openDialog(
+      "chrome://testpilot/content/raw-data-dialog.xul",
+      "TestPilotRawDataDialog", "chrome,centerscreen,resizable,scrollbars",
+      experimentId);
   }
 
   function getUrlParam(name) {
     // from http://www.netlobo.com/url_query_string_javascript.html
     name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
     var regexS = "[\\?&]"+name+"=([^&#]*)";
-    var regex = new RegExp( regexS );
-    var results = regex.exec( window.location.href );
+    var regex = new RegExp(regexS);
+    var results = regex.exec(window.location.href);
     if( results == null )
       return "";
     else
@@ -20,7 +24,7 @@
   function uploadData() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     let eid = parseInt(getUrlParam("eid"));
-    var task = TestPilotSetup.getTaskById(eid);
+    let task = TestPilotSetup.getTaskById(eid);
 
     // If always-submit-checkbox is checked, set the pref
     if (task._recursAutomatically) {
@@ -30,17 +34,18 @@
       }
     }
 
-    var uploadStatus = document.getElementById("upload-status");
-    uploadStatus.innerHTML = "Now uploading data...";
+    let uploadStatus = document.getElementById("upload-status");
+    uploadStatus.innerHTML =
+      stringBundle.GetStringFromName("testpilot.statusPage.uploadingData");
     task.upload( function(success) {
       if (success) {
-        window.location = "chrome://testpilot/content/status.html"
-                            + "?eid=" + eid;
+        window.location =
+	  "chrome://testpilot/content/status.html?eid=" + eid;
       } else {
-        uploadStatus.innerHTML = "<p>Oops!  There was an error connecting to "
-          + "the Mozilla servers.  Maybe your network connection is down?</p>"
-          + "<p>Test Pilot will retry automatically, so it's OK to close this"
-          + " page now.</p>";
+        uploadStatus.innerHTML =
+	  "<p>" +
+	  stringBundle.GetStringFromName("testpilot.statusPage.uploadError"); +
+	  "</p>";
       }
     });
   }
@@ -153,7 +158,7 @@
 
   function openLink(url) {
     // open the link in the chromeless window
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                        .getService(Components.interfaces.nsIWindowMediator);
     let recentWindow = wm.getMostRecentWindow("navigator:browser");
 
@@ -168,25 +173,51 @@
     Components.utils.import("resource://testpilot/modules/setup.js");
     var task = TestPilotSetup.getTaskById(experimentId);
     var endDate = new Date(task.endDate);
-    var diff = endDate - Date.now();
-    var days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
-                  "Sep", "Oct", "Nov", "Dec"];
+    var diff = (endDate - Date.now());
+    var days = [
+      stringBundle.GetStringFromName("testpilot.dayShortName.sunday"),
+      stringBundle.GetStringFromName("testpilot.dayShortName.monday"),
+      stringBundle.GetStringFromName("testpilot.dayShortName.tuesday"),
+      stringBundle.GetStringFromName("testpilot.dayShortName.wednesday"),
+      stringBundle.GetStringFromName("testpilot.dayShortName.thursday"),
+      stringBundle.GetStringFromName("testpilot.dayShortName.friday"),
+      stringBundle.GetStringFromName("testpilot.dayShortName.saturday")
+    ];
+    var months = [
+      stringBundle.GetStringFromName("testpilot.monthShortName.january"),
+      stringBundle.GetStringFromName("testpilot.monthShortName.february"),
+      stringBundle.GetStringFromName("testpilot.monthShortName.march"),
+      stringBundle.GetStringFromName("testpilot.monthShortName.april"),
+      stringBundle.GetStringFromName("testpilot.monthShortName.may"),
+      stringBundle.GetStringFromName("testpilot.monthShortName.june"),
+      stringBundle.GetStringFromName("testpilot.monthShortName.july"),
+      stringBundle.GetStringFromName("testpilot.monthShortName.august"),
+      stringBundle.GetStringFromName("testpilot.monthShortName.saturday"),
+      stringBundle.GetStringFromName("testpilot.monthShortName.october"),
+      stringBundle.GetStringFromName("testpilot.monthShortName.november"),
+      stringBundle.GetStringFromName("testpilot.monthShortName.december")
+    ];
+
     var span = document.getElementById("test-end-time");
     if (!span) {
       return;
     }
     if (diff < 0) {
-      span.innerHTML = "(It has already ended and you should not be seeing this page.)";
+      span.innerHTML =
+        stringBundle.GetStringFromName("testpilot.statusPage.endedAlready");
       return;
     }
     var hours = diff / (60 * 60 * 1000);
     if (hours < 24) {
-      span.innerHTML = " today, at " + endDate.toLocaleTimeString();
+      span.innerHTML =
+        stringBundle.formatStringFromName(
+	  "testpilot.statusPage.todayAt", [endDate.toLocaleTimeString()], 1);
     } else {
-      span.innerHTML = " on " + days[endDate.getDay()] + ", "
-	+ months[endDate.getMonth()] + " " + endDate.getDate() + ", "
-        + endDate.getFullYear();
+      span.innerHTML =
+        stringBundle.formatStringFromName(
+	  "testpilot.statusPage.endOn",
+	  [days[endDate.getDay()], months[endDate.getMonth()],
+	   endDate.getDate(), endDate.getFullYear()], 4);
     }
   }
 
@@ -206,23 +237,30 @@
     if (mdNumExt) {
       var numExt = md.extensions.length;
       if (numExt == 1) {
-	mdNumExt.innerHTML = numExt + " extension";
+	mdNumExt.innerHTML =
+	  stringBundle.GetStringFromName("testpilot.statusPage.extension");
       } else {
-	mdNumExt.innerHTML = numExt + " extensions";
+	mdNumExt.innerHTML =
+	  stringBundle.formatStringFromName(
+	    "testpilot.statusPage.extensions", [numExt], 1);
       }
     }
   }
 
   function onQuitPageLoad() {
     Components.utils.import("resource://testpilot/modules/setup.js");
+    setStrings(PAGE_TYPE_QUIT);
     let eid = parseInt(getUrlParam("eid"));
     let task = TestPilotSetup.getTaskById(eid);
-    let span = document.getElementById("exp-name");
-    span.innerHTML = task.title;
+    let header = document.getElementById("about-quit-title");
+    header.innerHTML =
+      stringBundle.formatStringFromName(
+	"testpilot.quitPage.aboutToQuit", [task.title], 1);
 
     if (task._recursAutomatically) {
-      let recurOptions = document.getElementById("recur-options");
-      recurOptions.setAttribute("style", "");
+      document.getElementById("recur-options").setAttribute("style", "");
+      document.getElementById("recur-checkbox-container").
+        setAttribute("style", "");
     }
   }
 
@@ -264,8 +302,9 @@
       return;
     }
     let days = experiment._recurrenceInterval;
-    recurPrefSpan.innerHTML = "This test recurs every " + days +
-        " days.  Each time it completes: ";
+    recurPrefSpan.innerHTML =
+      stringBundle.formatStringFromName(
+	"testpilot.statusPage.recursEveryNumberOfDays", [days], 1);
 
     let controls = document.getElementById("recur-controls");
     let selector = document.createElement("select");
@@ -278,7 +317,9 @@
     if (experiment.recurPref == TaskConstants.ASK_EACH_TIME) {
       option.setAttribute("selected", "true");
     }
-    option.innerHTML = "Ask me whether I want to submit my data.";
+    option.innerHTML =
+      stringBundle.GetStringFromName(
+	"testpilot.statusPage.askMeBeforeSubmitData");
     selector.appendChild(option);
 
     option = document.createElement("option");
@@ -286,7 +327,9 @@
     if (experiment.recurPref == TaskConstants.ALWAYS_SUBMIT) {
       option.setAttribute("selected", "true");
     }
-    option.innerHTML = "Always submit my data, and don't ask me about it.";
+    option.innerHTML =
+      stringBundle.GetStringFromName(
+	"testpilot.statusPage.alwaysSubmitData");
     selector.appendChild(option);
 
     option = document.createElement("option");
@@ -294,7 +337,9 @@
     if (experiment.recurPref == TaskConstants.NEVER_SUBMIT) {
       option.setAttribute("selected", "true");
     }
-    option.innerHTML = "Never submit my data, and don't ask me about it.";
+    option.innerHTML =
+      stringBundle.GetStringFromName(
+	"testpilot.statusPage.neverSubmitData");
     selector.appendChild(option);
   }
 
@@ -309,7 +354,8 @@
     if (!experiment) {
       // Possible that experiments aren't done loading yet.  Try again in
       // a few seconds.
-      contentDiv.innerHTML = "Loading, please wait a moment...";
+      contentDiv.innerHTML =
+        stringBundle.GetStringFromName("testpilot.statusPage.loading");
       window.setTimeout(function() { loadExperimentPage(); }, 2000);
       return;
     }
@@ -334,13 +380,61 @@
   }
 
   function onStatusPageLoad() {
+    setStrings(PAGE_TYPE_STATUS);
     /* If an experiment ID (eid) is provided in the url params, show status
      * for that experiment.  If not, show the main menu with status for all
      * installed experiments. */
-    var eidString = getUrlParam("eid");
+    let eidString = getUrlParam("eid");
     if (eidString == "") {
       showStatusMenuPage();
     } else {
       loadExperimentPage();
+    }
+  }
+
+  function setStrings(pageType) {
+    stringBundle =
+      Components.classes["@mozilla.org/intl/stringbundle;1"].
+        getService(Components.interfaces.nsIStringBundleService).
+	  createBundle("chrome://testpilot/locale/main.properties");
+    let map;
+    let mapLength;
+
+    if (pageType == PAGE_TYPE_STATUS) {
+      map = [
+	{ id: "page-title", stringKey: "testpilot.fullBrandName" },
+	{ id: "comments-and-discussions-link",
+	  stringKey: "testpilot.page.commentsAndDiscussions" },
+	{ id: "propose-test-link",
+	  stringKey: "testpilot.page.proposeATest" },
+	{ id: "testpilot-twitter-link",
+	  stringKey: "testpilot.page.testpilotOnTwitter" }
+      ];
+    } else if (pageType == PAGE_TYPE_QUIT) {
+      map = [
+	{ id: "page-title", stringKey: "testpilot.fullBrandName" },
+	{ id: "comments-and-discussions-link",
+	  stringKey: "testpilot.page.commentsAndDiscussions" },
+	{ id: "propose-test-link",
+	  stringKey: "testpilot.page.proposeATest" },
+	{ id: "testpilot-twitter-link",
+	  stringKey: "testpilot.page.testpilotOnTwitter" },
+	{ id: "optional-message",
+	  stringKey: "testpilot.quitPage.optionalMessage" },
+	{ id: "reason-text",
+	  stringKey: "testpilot.quitPage.reason" },
+	{ id: "recur-options",
+	  stringKey: "testpilot.quitPage.recurringStudy" },
+	{ id: "quit-forever-text",
+	  stringKey: "testpilot.quitPage.quitFoever" },
+	{ id: "quit-study-link",
+	  stringKey: "testpilot.quitPage.quitStudy" }
+      ];
+    }
+    mapLength = map.length;
+    for (let i = 0; i < mapLength; i++) {
+      let entry = map[i];
+      document.getElementById(entry.id).innerHTML =
+        stringBundle.GetStringFromName(entry.stringKey);
     }
   }

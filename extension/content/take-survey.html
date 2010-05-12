@@ -4,9 +4,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-  <title>Mozilla Labs Test Pilot</title>
-  <link rel="stylesheet" type="text/css" media="all"  
-         href="chrome://testpilot/skin/css/screen-standalone.css" />
+  <title id="page-title"></title>
+  <link rel="stylesheet" type="text/css" media="all"
+    href="chrome://testpilot/skin/css/screen-standalone.css" />
   <script src="experiment-page.js" type="application/javascript;version=1.8">
   </script>
   <script src="survey-generator.js" type="application/javascript;version=1.8">
@@ -21,15 +21,31 @@
         <div id="survey-contents"></div>
         <br>
         <button id="survey-submit" style="display:none"
-          onclick="onBuiltinSurveySubmit();">Save Answers</button>
+          onclick="onBuiltinSurveySubmit();"></button>
         <button id="change-answers" style="display:none"
-          onclick="onBuiltinSurveyChangeAnswers();">Change Answers</button>
+          onclick="onBuiltinSurveyChangeAnswers();"></button>
       </div>
       <div id="links">
         <p class="spacer">
-        <div class="home_callout"><img class="homeIcon" src="chrome://testpilot/skin/images/home_comments.png"> <a href="http://groups.google.com/group/mozilla-labs-testpilot">Comments & Discussions &raquo;</a></div> <br>
-        <div class="home_callout"><img class="homeIcon" src="chrome://testpilot/skin/images/home_results.png"><a href="https://wiki.mozilla.org/Labs/Test_Pilot">Propose a Test &raquo;</a></div> <br>
-        <div class="home_callout"><img class="homeIcon" src="chrome://testpilot/skin/images/home_twitter.png"><a href="http://www.twitter.com/MozTestPilot">@MozTestPilot on Twitter &raquo;</a></div>
+        <div class="home_callout">
+	  <img class="homeIcon"
+	    src="chrome://testpilot/skin/images/home_comments.png">
+	  <a onclick="
+	    openLink('http://groups.google.com/group/mozilla-labs-testpilot');"
+	    id="comments-and-discussions-link"></a>
+        </div> <br>
+        <div class="home_callout">
+	  <img class="homeIcon"
+	    src="chrome://testpilot/skin/images/home_results.png">
+	  <a onclick="openLink('https://wiki.mozilla.org/Labs/Test_Pilot');"
+	    id="propose-test-link"></a>
+	</div><br>
+        <div class="home_callout">
+	  <img class="homeIcon"
+	    src="chrome://testpilot/skin/images/home_twitter.png">
+	  <a onclick="openLink('http://www.twitter.com/MozTestPilot');"
+	    id="testpilot-twitter-link"></a>
+	</div>
       </div>
     </div>
   </div>

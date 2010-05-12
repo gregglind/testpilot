@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Jono X <jono@mozilla.com>
+ *   Raymond Lee <raymond@appcoast.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -46,13 +47,13 @@
 // TODO general-purpose link to website's page of Upcoming Studies or what
 // have you.
 
-const NO_STUDIES_MSG = "We are working on a new study now, and it will\
- knock on your door soon! Stay Tuned!";
 const NO_STUDIES_IMG = "chrome://testpilot/skin/testPilot_200x200.png";
 const PROPOSE_STUDY_URL =
   "https://wiki.mozilla.org/Labs/Test_Pilot#For_researchers";
 
 var TestPilotXulWindow = {
+  _stringBundle : null,
+
   onSubmitButton: function(experimentId) {
     Components.utils.import("resource://testpilot/modules/setup.js");
     let task = TestPilotSetup.getTaskById(experimentId);
@@ -64,7 +65,9 @@ var TestPilotXulWindow = {
       parent.removeChild(parent.firstChild);
     }
     // Replace it with a message:
-    this.addLabel(parent, "Uploading...");
+    this.addLabel(
+      parent,
+      this._stringBundle.getString("testpilot.studiesWindow.uploading"));
     let self = this;
 
     task.upload( function(success) {
@@ -76,7 +79,10 @@ var TestPilotXulWindow = {
         // TODO or should we move it to 'finished studies' immediately?
       } else {
         // TODO a better error message?
-        self.addLabel(parent, "Unable to reach Mozilla; try again later.");
+        self.addLabel(
+          parent,
+          this._stringBundle.getString(
+            "testpilot.studiesWindow.unableToReachServer"));
       }
     });
 
@@ -87,7 +93,10 @@ var TestPilotXulWindow = {
     let hbox = document.createElement("hbox");
     container.appendChild(this.makeSpacer());
     container.appendChild(hbox);
-    this.addLabel(container, "Thanks for contributing!");
+    this.addLabel(
+      container,
+      this._stringBundle.getString(
+        "testpilot.studiesWindow.thanksForContributing"));
     container.appendChild(this.makeSpacer());
     hbox.appendChild(this.makeSpacer());
     this.addImg(hbox, "study-submitted");
@@ -209,6 +218,7 @@ var TestPilotXulWindow = {
     Components.utils.import("resource://testpilot/modules/setup.js");
     Components.utils.import("resource://testpilot/modules/tasks.js");
 
+    this._stringBundle = document.getElementById("testpilot-stringbundle");
     this._init(false);
     Observers.add("testpilot:task:changed", this._onTaskStatusChanged, this);
   },
@@ -261,20 +271,29 @@ var TestPilotXulWindow = {
       newRow.appendChild(textVbox);
 
       this.addDescription(textVbox, task.title, task.summary);
-      this.addXulLink(textVbox, "More Info", task.defaultUrl);
+      this.addXulLink(
+        textVbox, this._stringBundle.getString("testpilot.moreInfo"),
+        task.defaultUrl);
 
       // Create the rightmost status area, depending on status:
       let statusVbox = document.createElement("vbox");
       if (task.status == TaskConstants.STATUS_FINISHED) {
-        this.addLabel( statusVbox, "Finished on " +
-                                   (new Date(task.endDate)).toDateString());
-        this.addButton( statusVbox, "Submit", "submit-button-" + task.id,
+        this.addLabel(
+          statusVbox,
+          this._stringBundle.getFormattedString(
+            "testpilot.studiesWindow.finishedOn",
+            [(new Date(task.endDate)).toDateString()]));
+        this.addButton(statusVbox,
+          this._stringBundle.getString("testpilot.submit"),
+          "submit-button-" + task.id,
           "TestPilotXulWindow.onSubmitButton(" + task.id + ");");
       }
       if (task.status == TaskConstants.STATUS_CANCELLED) {
         newRow.setAttribute("class", "tp-opted-out");
         statusVbox.appendChild(this.makeSpacer());
-        this.addLabel(statusVbox, "(You canceled this study.)");
+        this.addLabel(
+          statusVbox,
+          this._stringBundle.getString("testpilot.studiesWindow.canceledStudy"));
         statusVbox.appendChild(this.makeSpacer());
       }
       if (task.status == TaskConstants.STATUS_NEW ||
@@ -282,24 +301,37 @@ var TestPilotXulWindow = {
         newRow.setAttribute("class", "tp-new-results");
 
         if (task.taskType == TaskConstants.TYPE_SURVEY) {
-          this.addButton( statusVbox, "Take Survey", "survey-button",
+          this.addButton(
+            statusVbox,
+            this._stringBundle.getString("testpilot.takeSurvey"),
+            "survey-button",
             "TestPilotWindowUtils.openChromeless('" + task.defaultUrl + "');");
         } else if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
           if (task.startDate) {
-            this.addLabel(statusVbox, "Will start " +
-                          (new Date(task.startDate)).toDateString());
+            this.addLabel(
+              statusVbox,
+              this._stringBundle.getFormattedString(
+                "testpilot.studiesWindow.willStart",
+                [(new Date(task.startDate)).toDateString()]));
           }
         }
       }
       if (task.status == TaskConstants.STATUS_IN_PROGRESS ||
           task.status == TaskConstants.STATUS_STARTING ) {
 
-        this.addLabel(statusVbox, "Currently Gathering Data.");
+        this.addLabel(
+          statusVbox,
+          this._stringBundle.getString(
+            "testpilot.studiesWindow.gatheringData"));
         let now = (new Date()).getTime();
-        let progress = 100* (now - task.startDate) / (task.endDate - task.startDate);
+        let progress =
+          100 * (now - task.startDate) / (task.endDate - task.startDate);
         this.addProgressBar(statusVbox, progress);
-        this.addLabel(statusVbox, "Will finish " +
-                                 (new Date(task.endDate)).toDateString());
+        this.addLabel(
+          statusVbox,
+          this._stringBundle.getFormattedString(
+            "testpilot.studiesWindow.willFinish",
+            [(new Date(task.endDate)).toDateString()]));
       }
       if (task.status >= TaskConstants.STATUS_SUBMITTED &&
          task.taskType != TaskConstants.TYPE_RESULTS) {
@@ -335,9 +367,13 @@ var TestPilotXulWindow = {
       let textVbox = document.createElement("vbox");
       textVbox.setAttribute("class", "pilot-largetext");
       newRow.appendChild(textVbox);
-      this.addDescription(textVbox, "", NO_STUDIES_MSG);
+      this.addDescription(
+        textVbox, "",
+        this._stringBundle.getString("testpilot.studiesWindow.noStudies"));
       this.addXulLink(
-        textVbox, "Propose your own study", PROPOSE_STUDY_URL, true);
+        textVbox,
+        this._stringBundle.getString("testpilot.studiesWindow.proposeStudy"),
+        PROPOSE_STUDY_URL, true);
       document.getElementById("current-studies-listbox").appendChild(newRow);
     }
 

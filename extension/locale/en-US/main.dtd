@@ -1,0 +1,22 @@
+<!ENTITY testpilot.brand.label                      "Test Pilot">
+<!-- browser window: menu and status bar -->
+<!ENTITY testpilot.settings.label                   "Settings">
+<!ENTITY testpilot.settings.notifyMeWhen.label      "Notify me when">
+<!ENTITY testpilot.settings.readyToSubmit.label     "A study is ready to submit">
+<!ENTITY testpilot.settings.newStudy.label          "There's a new study">
+<!ENTITY testpilot.settings.hasNewResults.label     "A study has new results">
+<!ENTITY testpilot.settings.alwaysSubmitData.label  "Always submit my data">
+<!ENTITY testpilot.allStudies.label                 "All Your Studies">
+<!ENTITY testpilot.about.label                      "About Test Pilot">
+
+<!-- all studies window -->
+<!ENTITY testpilot.studiesWindow.title                  "Your Test Pilot Studies">
+<!ENTITY testpilot.studiesWindow.currentStudies.label   "Current Studies">
+<!ENTITY testpilot.studiesWindow.finishedStudies.label  "Finished Studies">
+<!ENTITY testpilot.studiesWindow.studyFindings.label    "Study Findings">
+
+<!-- raw data dialog -->
+<!ENTITY testpilot.rawDataWindow.title                  "Test Pilot: Raw Data">
+
+<!-- notification -->
+<!ENTITY testpilot.notification.close.tooltip            "Close">

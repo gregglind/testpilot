@@ -5,37 +5,45 @@ const FREE_ENTRY = 3;
 const CHECK_BOXES = 4;
 const MULTIPLE_CHOICE_WITH_FREE_ENTRY = 5;
 
+var stringBundle;
+
 function onBuiltinSurveyLoad() {
   Components.utils.import("resource://testpilot/modules/setup.js");
   Components.utils.import("resource://testpilot/modules/tasks.js");
+  setStrings();
   let eid = getUrlParam("eid");
   let task = TestPilotSetup.getTaskById(eid);
   let contentDiv = document.getElementById("survey-contents");
+  let explanation = document.getElementById("survey-explanation");
   if (!task) {
     // Tasks haven't all loaded yet.  Try again in a few seconds.
-    contentDiv.innerHTML = "Loading, please wait a moment...";
-     window.setTimeout(function() { onBuiltinSurveyLoad(); }, 2000);
+    contentDiv.innerHTML =
+      stringBundle.GetStringFromName("testpilot.surveyPage.loading");
+    window.setTimeout(function() { onBuiltinSurveyLoad(); }, 2000);
     return;
-  } else {
-    contentDiv.innerHTML = "";
   }
 
   let title = document.getElementById("survey-title");
   title.innerHTML = task.title;
 
   if (task.status == TaskConstants.STATUS_SUBMITTED) {
-    contentDiv.innerHTML = "<p>Thank you for finishing this survey. Your " +
-    "answers will be uploaded along with the next set of experimental data.</p>" +
-    "<p>If you would like to review or change your answers, you can do so at " +
-    "any time using the button below.</p>";
+    contentDiv.innerHTML =
+      "<p>" +
+      stringBundle.GetStringFromName(
+        "testpilot.surveyPage.thankYouForFinishingSurvey") + "</p><p>" +
+      stringBundle.GetStringFromName(
+        "testpilot.surveyPage.reviewOrChangeYourAnswers") + "</p>";
+    explanation.innerHTML = "";
     let submitButton = document.getElementById("survey-submit");
     submitButton.setAttribute("style", "display:none");
     let changeButton = document.getElementById("change-answers");
     changeButton.setAttribute("style", "");
   } else {
-    let explanation = document.getElementById("survey-explanation");
+    contentDiv.innerHTML = "";
     if (task.surveyExplanation) {
       explanation.innerHTML = task.surveyExplanation;
+    } else {
+      explanation.innerHTML = "";
     }
     drawSurveyForm(task, contentDiv);
   }
@@ -278,4 +286,30 @@ function onBuiltinSurveyChangeAnswers() {
   let contentDiv = document.getElementById("survey-contents");
 
   drawSurveyForm(task, contentDiv);
+}
+
+function setStrings() {
+  stringBundle =
+    Components.classes["@mozilla.org/intl/stringbundle;1"].
+      getService(Components.interfaces.nsIStringBundleService).
+        createBundle("chrome://testpilot/locale/main.properties");
+  let map = [
+    { id: "page-title", stringKey: "testpilot.fullBrandName" },
+    { id: "comments-and-discussions-link",
+      stringKey: "testpilot.page.commentsAndDiscussions" },
+    { id: "propose-test-link",
+      stringKey: "testpilot.page.proposeATest" },
+    { id: "testpilot-twitter-link",
+      stringKey: "testpilot.page.testpilotOnTwitter" },
+    { id: "survey-submit",
+      stringKey: "testpilot.surveyPage.saveAnswers" },
+    { id: "change-answers",
+      stringKey: "testpilot.surveyPage.changeAnswers" }
+  ];
+  let mapLength = map.length;
+  for (let i = 0; i < mapLength; i++) {
+    let entry = map[i];
+    document.getElementById(entry.id).innerHTML =
+      stringBundle.GetStringFromName(entry.stringKey);
+  }
 }

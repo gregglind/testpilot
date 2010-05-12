@@ -75,7 +75,9 @@ let TestPilotSetup = {
   _loader: null,
   _remoteExperimentLoader: null,
   _obs: null,
+  _stringBundle: null,
   taskList: [],
+
 
   _initLogging: function TPS__initLogging() {
     let props = Cc["@mozilla.org/file/directory_service;1"].
@@ -95,6 +97,11 @@ let TestPilotSetup = {
     this._initLogging();
     let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
     logger.trace("TestPilotSetup.globalStartup was called.");
+
+    this._stringBundle =
+      Cc["@mozilla.org/intl/stringbundle;1"].
+        getService(Ci.nsIStringBundleService).
+          createBundle("chrome://testpilot/locale/main.properties");
 
     try {
     logger.trace("Making new cuddlefish loader:");
@@ -294,10 +301,15 @@ let TestPilotSetup = {
           }
           task.upload( function(success) {
             if (success) {
-              self._showNotification(task, true,
-                                     "Thank you for uploading your data.",
-                                     "Thanks!", "study-submitted", false, false,
-                                     "More Info", task.defaultUrl);
+              self._showNotification(
+		task, true,
+                self._stringBundle.GetStringFromName(
+		  "testpilot.notification.thankYouForUploadingData.message"),
+                self._stringBundle.GetStringFromName(
+		  "testpilot.notification.thankYouForUploadingData"),
+		"study-submitted", false, false,
+                self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+		task.defaultUrl);
             } else {
               // TODO any point in showing an error message here?
             }
@@ -360,7 +372,7 @@ let TestPilotSetup = {
   _notifyUserOfTasks: function TPS__notifyUser() {
     // Check whether there are tasks needing attention, and if any are
     // found, show the popup door-hanger thingy.
-    let i, task, title, text;
+    let i, task;
 
     // if showing extension update notification, don't do anything.
     if (this._isShowingUpdateNotification()) {
@@ -373,11 +385,16 @@ let TestPilotSetup = {
         task = this.taskList[i];
         if (task.status == TaskConstants.STATUS_FINISHED) {
           if (!Application.prefs.getValue(ALWAYS_SUBMIT_DATA, false)) {
-            title = "Ready to Submit";
-            text = "The Test Pilot \"" + task.title + "\" study is finished " +
-                   "gathering data and is ready to submit.";
-            this._showNotification(task, false, text, title, "study-finished",
-                                   true, true, "More Info", task.defaultUrl);
+            this._showNotification(
+	      task, false,
+	      this._stringBundle.formatStringFromName(
+		"testpilot.notification.readyToSubmit.message", [task.title],
+		1),
+	      this._stringBundle.GetStringFromName(
+		"testpilot.notification.readyToSubmit"),
+	      "study-finished", true, true,
+	      this._stringBundle.GetStringFromName("testpilot.moreInfo"),
+	      task.defaultUrl);
             // We return after showing something, because it only makes
             // sense to show one notification at a time!
             return;
@@ -394,16 +411,28 @@ let TestPilotSetup = {
         if (task.status == TaskConstants.STATUS_STARTING ||
             task.status == TaskConstants.STATUS_NEW) {
           if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
-            title = "New Test Pilot Study";
-            text = "The Test Pilot \"" + task.title + "\" study is now beginning.";
-	    this._showNotification(task, true, text, title, "new-study",
-                                   false, false, "More Info", task.defaultUrl);
+	    this._showNotification(
+	      task, true,
+	      this._stringBundle.formatStringFromName(
+		"testpilot.notification.newTestPilotStudy.message",
+		[task.title], 1),
+	      this._stringBundle.GetStringFromName(
+		"testpilot.notification.newTestPilotStudy"),
+	      "new-study", false, false,
+	      this._stringBundle.GetStringFromName("testpilot.moreInfo"),
+	      task.defaultUrl);
             return;
           } else if (task.taskType == TaskConstants.TYPE_SURVEY) {
-            title = "New Test Pilot Survey";
-            text = "The Test Pilot " + task.title + " survey is available.";
-	    this._showNotification(task, true, text, title, "new-study",
-                                   false, false, "More Info", task.defaultUrl);
+	    this._showNotification(
+	      task, true,
+	      this._stringBundle.formatStringFromName(
+		"testpilot.notification.newTestPilotSurvey.message",
+		[task.title], 1),
+              this._stringBundle.GetStringFromName(
+		"testpilot.notification.newTestPilotSurvey"),
+	      "new-study", false, false,
+	      this._stringBundle.GetStringFromName("testpilot.moreInfo"),
+	      task.defaultUrl);
             return;
           }
         }
@@ -419,8 +448,16 @@ let TestPilotSetup = {
           title = "New Test Pilot Results";
           text = "New results are now available for the Test Pilot \"" +
             task.title + "\" study.";
-	  this._showNotification(task, true, text, title, "new-results",
-                                 false, false, "More Info", task.defaultUrl);
+	  this._showNotification(
+	    task, true,
+	    this._stringBundle.formatStringFromName(
+	      "testpilot.notification.newTestPilotResults.message",
+	      [task.title], 1),
+            this._stringBundle.GetStringFromName(
+	      "testpilot.notification.newTestPilotResults"),
+	    "new-results", false, false,
+	    this._stringBundle.GetStringFromName("testpilot.moreInfo"),
+	    task.defaultUrl);
           return;
         }
       }
@@ -449,9 +486,14 @@ let TestPilotSetup = {
   _onTaskDataAutoSubmitted: function(subject, data) {
     this._showNotification(
       subject, true,
-      "The Test Pilot \"" + subject.title  + "\" study is completed and your " +
-      "data has been submitted!", "Thank you!", "study-submitted", false, false,
-      "More Info", subject.defaultUrl);
+      this._stringBundle.formatStringFromName(
+	"testpilot.notification.autoUploadedData.message",
+	[subject.title], 1),
+      this._stringBundle.GetStringFromName(
+	"testpilot.notification.autoUploadedData"),
+      "study-submitted", false, false,
+      this._stringBundle.GetStringFromName("testpilot.moreInfo"),
+      subject.defaultUrl);
   },
 
   get version() {
@@ -504,13 +546,13 @@ let TestPilotSetup = {
               logger.warn("Because it requires version " + minVer);
 
               if (!self._isShowingUpdateNotification()) {
-  	        let title = "Extension Update";
-                let text =
-		  "One of your studies requires a newer version of Test Pilot" +
-		  ". You can get the latest version using the Add-ons window.";
                 self._showNotification(
-		  null, false, text, title, "update-extension", true, false, "",
-		  "", true);
+		  null, false,
+		  this._stringBundle.GetStringFromName(
+		    "testpilot.notification.extensionUpdate.message"),
+		  this._stringBundle.GetStringFromName(
+		    "testpilot.notification.extensionUpdate"),
+		  "update-extension", true, false, "", "", true);
 	      }
               continue;
             }
@@ -590,5 +632,4 @@ let TestPilotSetup = {
   getAllTasks: function TPS_getAllTasks() {
     return this.taskList;
   }
-
 };

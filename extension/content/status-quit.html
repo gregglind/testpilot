@@ -1,40 +1,55 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-  <title>Mozilla Labs Test Pilot</title>
-  <link rel="stylesheet" type="text/css" media="all" href="chrome://testpilot/skin/css/screen-standalone.css" />
+  <title id="page-title"></title>
+  <link rel="stylesheet" type="text/css" media="all"
+    href="chrome://testpilot/skin/css/screen-standalone.css" />
   <script src="experiment-page.js" type="application/javascript;version=1.8">
   </script>
 </head>
 <body onload="onQuitPageLoad();">
-
   <div id="container">
     <div id="content-standalone">
       <div id="intro">
-	<h2>You are about to quit the experiment <span id="exp-name"></span>.</h2>
-	<p>(Optional) If you have a minute, please let us know why you have chosen to quit the study.</p>
-
-	<p>Reason: <textarea rows="6" cols="64" id="reason-for-quit"></textarea></p>
-
-        <p id="recur-options" style="display:none">This is a recurring study.
-        Normally we will let you know the next time we run the study.  If you
-        never want to hear about this study again, check the box below:<br/>
-        <input type="checkbox" id="opt-out-forever"> Quit Forever
-        </p>
-	<div class="home_callout_continue" style="text-align:center"> <a onclick="quitExperiment();">Quit the Study &raquo;</a></div>
+	<h2 id="about-quit-title"></h2>
+	<p id="optional-message"></p>
+	<p><span id="reason-text"></span>
+	  <textarea rows="6" cols="64" id="reason-for-quit"></textarea></p>
+        <p id="recur-options" style="display:none"></p><br/>
+	<div id="recur-checkbox-container" style="display:none">
+        <input type="checkbox" id="opt-out-forever">
+	<span id="quit-forever-text"></span>
+        </div>
+	<div class="home_callout_continue" style="text-align:center">
+	  <a id="quit-study-link" onclick="quitExperiment();"></a></div>
 	<p class="spacer"></p>
-
-        <div class="home_callout"><img class="homeIcon" src="chrome://testpilot/skin/images/home_comments.png"> <a href="http://groups.google.com/group/mozilla-labs-testpilot">Comments & Discussions &raquo;</a></div> <br>
-					
-        <div class="home_callout"><img class="homeIcon" src="chrome://testpilot/skin/images/home_results.png"><a href="https://wiki.mozilla.org/Labs/Test_Pilot">Propose a Test &raquo;</a></div> <br>
-					
-        <div class="home_callout"><img class="homeIcon" src="chrome://testpilot/skin/images/home_twitter.png"><a href="http://www.twitter.com/MozTestPilot">@MozTestPilot on Twitter &raquo;</a></div>
+        <div class="home_callout">
+	  <img class="homeIcon"
+	    src="chrome://testpilot/skin/images/home_comments.png">
+	  <a id="comments-and-discussions-link"
+	    onclick="
+	      openLink('http://groups.google.com/group/mozilla-labs-testpilot');">
+	  </a>
+	</div>
+	<br>
+        <div class="home_callout">
+	  <img class="homeIcon"
+	    src="chrome://testpilot/skin/images/home_results.png">
+	  <a id="propose-test-link"
+	    onclick="openLink('https://wiki.mozilla.org/Labs/Test_Pilot');"></a>
+	</div>
+	<br>
+        <div class="home_callout">
+	  <img class="homeIcon"
+	    src="chrome://testpilot/skin/images/home_twitter.png">
+	  <a id="testpilot-twitter-link"
+	    onclick="openLink('http://www.twitter.com/MozTestPilot');"></a>
+	</div>
       </div>
-     </div>
     </div>
+  </div>
 </body>
 </html>
-

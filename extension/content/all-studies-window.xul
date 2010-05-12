@@ -5,25 +5,37 @@
   type="text/css"?>
 <?xml-stylesheet href="chrome://testpilot/content/browser.css" type="text/css"?>
 
-<prefwindow id="test-pilot-all-studies-window" title="Your Test Pilot Studies"
-        windowtype="extensions:testpilot:all_studies_window"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="TestPilotXulWindow.onLoad();"
-        onunload="TestPilotXulWindow.onUnload();">
+<!DOCTYPE prefwindow [
+  <!ENTITY % testpilotDTD SYSTEM "chrome://testpilot/locale/main.dtd">
+    %testpilotDTD;
+]>
+
+<prefwindow id="test-pilot-all-studies-window"
+  title="&testpilot.studiesWindow.title;"
+  windowtype="extensions:testpilot:all_studies_window"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="TestPilotXulWindow.onLoad();"
+  onunload="TestPilotXulWindow.onUnload();">
 
   <script src="chrome://testpilot/content/window-utils.js"
-        type="application/javascript;version=1.8"/>
+    type="application/javascript;version=1.8"/>
   <script src="chrome://testpilot/content/all-studies-window.js"
-        type="application/javascript;version=1.8"/>
+    type="application/javascript;version=1.8"/>
+
+  <stringbundleset id="stringbundleset">
+    <stringbundle id="testpilot-stringbundle"
+      src="chrome://testpilot/locale/main.properties" />
+  </stringbundleset>
 
   <vbox flex="1">
     <windowdragbox orient="vertical">
       <radiogroup id="tp-radiogroup" orient="horizontal" role="listbox"
-          class="paneSelector"
-          onselect="TestPilotXulWindow.focusPane(this.selectedIndex);">
+        class="paneSelector"
+        onselect="TestPilotXulWindow.focusPane(this.selectedIndex);">
         <radio pane="current-studies-pane-button" orient="vertical">
           <image class="paneButtonIcon" />
-          <label class="paneButtonLabel" value="Current Studies"/>
+          <label class="paneButtonLabel"
+            value="&testpilot.studiesWindow.currentStudies.label;"/>
         </radio>
         <radio pane="finished-studies-pane-button" orient="vertical">
           <stack align="center" pack="center">
@@ -32,11 +44,13 @@
             </hbox>
             <label id="num-finished-badge" class="pane-button-badge"/>
           </stack>
-          <label class="paneButtonLabel" value="Finished Studies"/>
+          <label class="paneButtonLabel"
+            value="&testpilot.studiesWindow.finishedStudies.label;"/>
         </radio>
         <radio pane="study-results-pane-button" orient="vertical">
           <image class="paneButtonIcon" />
-          <label class="paneButtonLabel" value="Study Findings"/>
+          <label class="paneButtonLabel"
+            value="&testpilot.studiesWindow.studyFindings.label;"/>
         </radio>
       </radiogroup>
     </windowdragbox>

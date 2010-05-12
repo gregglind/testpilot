@@ -81,7 +81,7 @@ var stringBundle;
       } else {
         uploadStatus.innerHTML =
 	  "<p>" +
-	  stringBundle.GetStringFromName("testpilot.statusPage.uploadError"); +
+	  stringBundle.GetStringFromName("testpilot.statusPage.uploadError") +
 	  "</p>";
       }
     });

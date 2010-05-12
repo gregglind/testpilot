@@ -61,8 +61,8 @@ image.study-finished {
 
 image.study-submitted {
   list-style-image: url("chrome://testpilot/skin/status-completed.png");
-  height: 48px;
-  width: 48px;
+  height: 32px;
+  width: 64px;
   margin-right: 8px;
 }
 

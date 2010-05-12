@@ -627,7 +627,14 @@ TestPilotExperiment.prototype = {
     } else {
       // only do this if the state is already finished and the data is expired.
       if (this._status == TaskConstants.STATUS_FINISHED) {
-	if (this._expirationDateForDataSubmission.length > 0) {
+	if (Application.prefs.getValue(
+	    "extensions.testpilot.alwaysSubmitData", false)) {
+          this.upload(function(success) {
+	    if (success) {
+              Observers.notify("testpilot:task:dataAutoSubmitted", self, null);
+	    }
+	  });
+        } else if (this._expirationDateForDataSubmission.length > 0) {
 	  let expirationDate = Date.parse(this._expirationDateForDataSubmission);
 	  if (currentDate > expirationDate) {
             this.changeStatus(TaskConstants.STATUS_CANCELLED, true);

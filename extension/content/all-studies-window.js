@@ -234,6 +234,8 @@ var TestPilotXulWindow = {
     }
 
     if (aReload) {
+      /* If we're reloading, start by clearing out any old stuff already
+       * present in the listboxes. */
       let listboxIds =
         ["current-studies-listbox", "finished-studies-listbox",
          "study-results-listbox"];

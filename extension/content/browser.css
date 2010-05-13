@@ -66,6 +66,13 @@ image.study-submitted {
   margin-right: 8px;
 }
 
+image.study-canceled {
+  list-style-image: url("chrome://testpilot/skin/status-ejected.png");
+  height: 32px;
+  width: 64px;
+  margin-right: 8px;
+}
+
 image.new-study {
   list-style-image: url("chrome://testpilot/skin/tp-study-48x48.png");
   height: 48px;
@@ -87,13 +94,20 @@ image.update-extension {
   margin-right: 8px;
 }
 
+image.study-result {
+  list-style-image: url("chrome://testpilot/skin/badge-default.png");
+  height: 96px;
+  width: 96px;
+  margin-right: 8px;
+}
+
 /* All studies window */
 .pilot-largetext {
   font-size: 22px;
 }
 
 #test-pilot-all-studies-window {
-  min-width: 700px !important;
+  min-width: 720px !important;
   min-height: 500px !important;
 }
 

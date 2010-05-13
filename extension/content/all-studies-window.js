@@ -289,12 +289,17 @@ var TestPilotXulWindow = {
           "TestPilotXulWindow.onSubmitButton(" + task.id + ");");
       }
       if (task.status == TaskConstants.STATUS_CANCELLED) {
+        let hbox = document.createElement("hbox");
         newRow.setAttribute("class", "tp-opted-out");
         statusVbox.appendChild(this.makeSpacer());
+        statusVbox.appendChild(hbox);
         this.addLabel(
           statusVbox,
           this._stringBundle.getString("testpilot.studiesWindow.canceledStudy"));
         statusVbox.appendChild(this.makeSpacer());
+        hbox.appendChild(this.makeSpacer());
+        this.addImg(hbox, "study-canceled");
+        hbox.appendChild(this.makeSpacer());
       }
       if (task.status == TaskConstants.STATUS_NEW ||
           task.status == TaskConstants.STATUS_PENDING ) {
@@ -318,7 +323,6 @@ var TestPilotXulWindow = {
       }
       if (task.status == TaskConstants.STATUS_IN_PROGRESS ||
           task.status == TaskConstants.STATUS_STARTING ) {
-
         this.addLabel(
           statusVbox,
           this._stringBundle.getString(
@@ -333,10 +337,25 @@ var TestPilotXulWindow = {
             "testpilot.studiesWindow.willFinish",
             [(new Date(task.endDate)).toDateString()]));
       }
-      if (task.status >= TaskConstants.STATUS_SUBMITTED &&
-         task.taskType != TaskConstants.TYPE_RESULTS) {
-        this.addThanksMessage(statusVbox);
-        numFinishedStudies ++;
+      if (task.status >= TaskConstants.STATUS_SUBMITTED) {
+        if (task.taskType == TaskConstants.TYPE_RESULTS) {
+          // extract the base id.
+          let parts = (task.id).split("_");
+          if (parts.length > 0) {
+            let maintask = TestPilotSetup.getTaskById(parts[0]);
+            if (maintask && maintask.status >= TaskConstants.STATUS_SUBMITTED) {
+              let hbox = document.createElement("hbox");
+              statusVbox.appendChild(hbox);
+              statusVbox.setAttribute("pack", "center")
+              hbox.appendChild(this.makeSpacer());
+              this.addImg(hbox, "study-result");
+              hbox.appendChild(this.makeSpacer());
+            }
+          }
+        } else {
+          this.addThanksMessage(statusVbox);
+          numFinishedStudies ++;
+        }
       }
       let spacer = document.createElement("spacer");
       spacer.setAttribute("flex", "1");

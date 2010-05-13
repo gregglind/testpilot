@@ -339,18 +339,14 @@ var TestPilotXulWindow = {
       }
       if (task.status >= TaskConstants.STATUS_SUBMITTED) {
         if (task.taskType == TaskConstants.TYPE_RESULTS) {
-          // extract the base id.
-          let parts = (task.id).split("_");
-          if (parts.length > 0) {
-            let maintask = TestPilotSetup.getTaskById(parts[0]);
-            if (maintask && maintask.status >= TaskConstants.STATUS_SUBMITTED) {
-              let hbox = document.createElement("hbox");
-              statusVbox.appendChild(hbox);
-              statusVbox.setAttribute("pack", "center")
-              hbox.appendChild(this.makeSpacer());
-              this.addImg(hbox, "study-result");
-              hbox.appendChild(this.makeSpacer());
-            }
+          let maintask = TestPilotSetup.getTaskById(task.relatedStudyId);
+          if (maintask && maintask.status >= TaskConstants.STATUS_SUBMITTED) {
+            let hbox = document.createElement("hbox");
+            statusVbox.appendChild(hbox);
+            statusVbox.setAttribute("pack", "center");
+            hbox.appendChild(this.makeSpacer());
+            this.addImg(hbox, "study-result");
+            hbox.appendChild(this.makeSpacer());
           }
         } else {
           this.addThanksMessage(statusVbox);

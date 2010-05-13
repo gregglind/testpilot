@@ -892,6 +892,10 @@ TestPilotStudyResults.prototype = {
 
   get publishDate() {
     return this._pubDate;
+  },
+
+  get relatedStudyId() {
+    return this._studyId;
   }
 };
 TestPilotStudyResults.prototype.__proto__ = TestPilotTask;

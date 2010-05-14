@@ -703,7 +703,7 @@ TestPilotExperiment.prototype = {
 
   // Note: When we have multiple experiments running, the uploads
   // are separate files.
-  upload: function TestPilotExperiment_upload(callback) {
+  upload: function TestPilotExperiment_upload(callback, retryCount) {
     // Callback is a function that will be called back with true or false
     // on success or failure.
 
@@ -741,23 +741,25 @@ TestPilotExperiment.prototype = {
           callback(true);
 	} else {
 	  self._logger.warn("ERROR POSTING DATA: " + req.responseText);
-          /* Something went wrong with the upload?
-           * Exit for now, but try again in an hour; maybe the network will
-           * be working better by then.  Note that this means Test Pilot will
-           * retry once an hour until either Firefox is restarted or until
-           * we succeed.
-           */
-          self._uploadRetryTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-          let interval = Application.prefs.getValue(RETRY_INTERVAL_PREF,
-                                                    3600000); // 1 hour
+          self._uploadRetryTimer =
+	    Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
+	  if (!retryCount) {
+	    retryCount = 0;
+	  }
+          let interval =
+	    Application.prefs.getValue(RETRY_INTERVAL_PREF, 3600000); // 1 hour
+	  let delay =
+	    parseInt(Math.random() * Math.pow(2, retryCount) * interval);
           self._uploadRetryTimer.initWithCallback(
-            {notify: function(timer) {self.upload(function() {});}},
-            interval, Ci.nsITimer.TYPE_ONE_SHOT);
+            { notify: function(timer) {
+		self.upload(callback, retryCount++);
+	      } }, (interval + delay), Ci.nsITimer.TYPE_ONE_SHOT);
 	  callback(false);
 	}
       }
     };
-    req.send( params );
+    req.send(params);
   },
 
   optOut: function TestPilotExperiment_optOut(reason, callback) {

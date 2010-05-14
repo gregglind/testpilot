@@ -103,7 +103,7 @@ image.study-result {
 
 /* All studies window */
 .pilot-largetext {
-  font-size: 22px;
+  font-size: 14px;
 }
 
 #test-pilot-all-studies-window {
@@ -160,7 +160,7 @@ description.study-description {
 
 description.study-title {
     width: 350px;
-    font-size: 25px;
+    font-size: 20px;
     text-align: left;
     margin-top: 10px;
 }

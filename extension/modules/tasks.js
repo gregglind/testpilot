@@ -740,6 +740,13 @@ TestPilotExperiment.prototype = {
 
           callback(true);
 	} else {
+          /* If something went wrong with the upload, give up for now,
+           * but start a timer to try again later.  Maybe the network will
+           * be better by then.  "later" starts at 1 hour, but increases
+           * using a random exponential function.  This serves as a backoff
+           * in cases where a lot of users are trying to submit data at
+           * the same time and the network or server can't handle it.
+           */
 	  self._logger.warn("ERROR POSTING DATA: " + req.responseText);
           self._uploadRetryTimer =
 	    Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);

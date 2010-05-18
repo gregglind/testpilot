@@ -35,17 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// TODO link to task.infoPageUrl?
-
-// TODO fix layout in notification
-// TODO add links to notification
-// TODO make notification for "new survey"
-
 // TODO Show individual status page in new chromeless window as html with
 // background color set to "moz-dialog".
-
-// TODO general-purpose link to website's page of Upcoming Studies or what
-// have you.
 
 const NO_STUDIES_IMG = "chrome://testpilot/skin/testPilot_200x200.png";
 const PROPOSE_STUDY_URL =
@@ -341,12 +332,7 @@ var TestPilotXulWindow = {
         if (task.taskType == TaskConstants.TYPE_RESULTS) {
           let maintask = TestPilotSetup.getTaskById(task.relatedStudyId);
           if (maintask && maintask.status >= TaskConstants.STATUS_SUBMITTED) {
-            let hbox = document.createElement("hbox");
-            statusVbox.appendChild(hbox);
-            statusVbox.setAttribute("pack", "center");
-            hbox.appendChild(this.makeSpacer());
-            this.addImg(hbox, "study-result");
-            hbox.appendChild(this.makeSpacer());
+            this.addThanksMessage(statusVbox);
           }
         } else {
           this.addThanksMessage(statusVbox);

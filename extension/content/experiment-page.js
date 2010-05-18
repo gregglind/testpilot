@@ -211,30 +211,6 @@ var stringBundle;
     var task = TestPilotSetup.getTaskById(experimentId);
     var endDate = new Date(task.endDate);
     var diff = (endDate - Date.now());
-    var days = [
-      stringBundle.GetStringFromName("testpilot.dayShortName.sunday"),
-      stringBundle.GetStringFromName("testpilot.dayShortName.monday"),
-      stringBundle.GetStringFromName("testpilot.dayShortName.tuesday"),
-      stringBundle.GetStringFromName("testpilot.dayShortName.wednesday"),
-      stringBundle.GetStringFromName("testpilot.dayShortName.thursday"),
-      stringBundle.GetStringFromName("testpilot.dayShortName.friday"),
-      stringBundle.GetStringFromName("testpilot.dayShortName.saturday")
-    ];
-    var months = [
-      stringBundle.GetStringFromName("testpilot.monthShortName.january"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.february"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.march"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.april"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.may"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.june"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.july"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.august"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.saturday"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.october"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.november"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.december")
-    ];
-
     var span = document.getElementById("test-end-time");
     if (!span) {
       return;
@@ -252,9 +228,7 @@ var stringBundle;
     } else {
       span.innerHTML =
         stringBundle.formatStringFromName(
-	  "testpilot.statusPage.endOn",
-	  [days[endDate.getDay()], months[endDate.getMonth()],
-	   endDate.getDate(), endDate.getFullYear()], 4);
+	  "testpilot.statusPage.endOn", [endDate.toLocaleString()], 1);
     }
   }
 

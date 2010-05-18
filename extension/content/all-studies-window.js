@@ -273,7 +273,7 @@ var TestPilotXulWindow = {
           statusVbox,
           this._stringBundle.getFormattedString(
             "testpilot.studiesWindow.finishedOn",
-            [(new Date(task.endDate)).toDateString()]));
+            [(new Date(task.endDate)).toLocaleDateString()]));
         this.addButton(statusVbox,
           this._stringBundle.getString("testpilot.submit"),
           "submit-button-" + task.id,
@@ -308,12 +308,12 @@ var TestPilotXulWindow = {
               statusVbox,
               this._stringBundle.getFormattedString(
                 "testpilot.studiesWindow.willStart",
-                [(new Date(task.startDate)).toDateString()]));
+                [(new Date(task.startDate)).toLocaleDateString()]));
           }
         }
       }
       if (task.status == TaskConstants.STATUS_IN_PROGRESS ||
-          task.status == TaskConstants.STATUS_STARTING ) {
+          task.status == TaskConstants.STATUS_STARTING) {
         this.addLabel(
           statusVbox,
           this._stringBundle.getString(
@@ -326,7 +326,7 @@ var TestPilotXulWindow = {
           statusVbox,
           this._stringBundle.getFormattedString(
             "testpilot.studiesWindow.willFinish",
-            [(new Date(task.endDate)).toDateString()]));
+            [(new Date(task.endDate)).toLocaleDateString()]));
       }
       if (task.status >= TaskConstants.STATUS_SUBMITTED) {
         if (task.taskType == TaskConstants.TYPE_RESULTS) {

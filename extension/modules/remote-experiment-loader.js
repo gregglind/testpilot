@@ -34,6 +34,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+try {
+  let JarStore = require("jar-code-store.js").JarStore;
+  dump("Imported jar store.\n");
+  exports.JarStore = JarStore;
+} catch (e) {
+  dump("Error importing jar store: " + e + "\n");
+}
+
+
 function PreferencesStore(prefName) {
   var prefs = require("preferences-service");
 
@@ -89,6 +98,7 @@ function PreferencesStore(prefName) {
 }
 
 exports.PreferencesStore = PreferencesStore;
+
 
 function downloadFile(url, cb, lastModified) {
   // lastModified is a timestamp (ms since epoch); if provided, then the file

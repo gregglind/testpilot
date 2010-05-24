@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 try {
-  let JarStore = require("jar-code-store.js").JarStore;
+  let JarStore = require("jar-code-store").JarStore;
   dump("Imported jar store.\n");
   exports.JarStore = JarStore;
 } catch (e) {
@@ -199,6 +199,16 @@ exports.RemoteExperimentLoader.prototype = {
       });
   },
 
+  testJarFileLoader: function(experimentJarList) {
+    let js = new JarStore();
+    for each (let j in experimentJarList) {
+      let jarUrl = resolveUrl(BASE_URL, j.jarFile);
+
+      js.downloadJar(jarUrl, j.jarFile);
+      // and then um do something with j.studyFile as well?
+    }
+  },
+
   checkForUpdates: function(callback) {
     /* Callback will be called with true or false
      * to let us know whether there are any updates, so that client code can
@@ -229,6 +239,7 @@ exports.RemoteExperimentLoader.prototype = {
         /* Go through each file indicated in index.json, attempt to load it into
          * codeStorage (replacing any older version there)
          */
+        self.testJarFileLoader(data.experiment_jars);
         let libNames = [ x.filename for each (x in data.libraries)];
         self._libraryNames = libNames;
         let expNames = [ x.filename for each (x in data.experiments)];

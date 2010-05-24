@@ -36,11 +36,13 @@
 
 
 function JarStore() {
-  let baseDirName = "TestPilotExperimentFiles"; // this should go in pref
+  dump("instantiating jar store.\n");
+  let baseDirName = "TestPilotExperimentFiles"; // this should go in pref?
   this._init( baseDirectory );
   this._baseDir = null;
   this._zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
                 .createInstance(Ci.nsIZipReader);
+  dump("done instantiating jar store.\n");
 }
 JarStore.prototype = {
   _init: function( baseDirectory ) {
@@ -54,9 +56,11 @@ JarStore.prototype = {
     }
   },
 
-  _downloadJar: function( jarUrl, filename ) {
+  downloadJar: function( jarUrl, filename ) {
+    dump("Attempting to download a JAR!\n");
     let file = this._baseDir;
     file.append(filename); // todo does this modify basedir?
+    dump("Basedir is now " + this._baseDir.path + "\n");
     let wbp = Cc['@mozilla.org/embedding/browser/nsWebBrowserPersist;1']
            .createInstance(Ci.nsIWebBrowserPersist);
     let ios = Cc['@mozilla.org/network/io-service;1']
@@ -98,20 +102,11 @@ JarStore.prototype = {
 # file.initWithPath("C:\\filename.html");
    */
 
-  /* Make myself a directory inside the profile dir to store jar files:
-   */
-
-  setFile: function(filename, contents) {
-    // used externally by remote experiment loader, but can be replaced
-    // with calls to _downloadJar I think.  Or keep this interface and
-    // have it call _downloadJar.  Then we dont have to change remoteExperiment
-    // Loader.
-  },
-
   resolveModule: function(root, path) {
     // used by cuddlefish.  What's root?
 
     // must return a path... which gets passed to getFile.
+    // todo what do we return if we can't find a match?
   },
 
   getFile: function(path) {

@@ -34,13 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-try {
-  let JarStore = require("jar-code-store").JarStore;
-  dump("Imported jar store.\n");
-  exports.JarStore = JarStore;
-} catch (e) {
-  dump("Error importing jar store: " + e + "\n");
-}
+let JarStore = require("jar-code-store").JarStore;
+dump("Imported jar store.\n");
+exports.JarStore = JarStore;
 
 
 function PreferencesStore(prefName) {
@@ -200,12 +196,14 @@ exports.RemoteExperimentLoader.prototype = {
   },
 
   testJarFileLoader: function(experimentJarList) {
+    dump("In testJarFileLoader: going to instantiate JarStore...\n");
     let js = new JarStore();
     for each (let j in experimentJarList) {
-      let jarUrl = resolveUrl(BASE_URL, j.jarFile);
-
-      js.downloadJar(jarUrl, j.jarFile);
-      // and then um do something with j.studyFile as well?
+      let jarUrl = resolveUrl(BASE_URL, j.jarfile);
+      // TODO safer way to parse a path?  Want everything after last slash.
+      let filename = j.jarfile.split("/").pop();
+      js.downloadJar(jarUrl, filename);
+      // and then um do something with j.studyfile as well?
     }
   },
 
@@ -239,7 +237,9 @@ exports.RemoteExperimentLoader.prototype = {
         /* Go through each file indicated in index.json, attempt to load it into
          * codeStorage (replacing any older version there)
          */
-        self.testJarFileLoader(data.experiment_jars);
+        dump("Going to test jar file loader.\n");
+        //self.testJarFileLoader(data.experiment_jars);
+        dump("tested jar file loader.\n");
         let libNames = [ x.filename for each (x in data.libraries)];
         self._libraryNames = libNames;
         let expNames = [ x.filename for each (x in data.experiments)];

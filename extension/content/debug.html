@@ -28,6 +28,24 @@
     runAllTests();
   }
 
+  function testJarStore() {
+    var Cuddlefish = {};
+    Components.utils.import("resource://testpilot/modules/lib/cuddlefish.js",
+                        Cuddlefish);
+    var loader = new Cuddlefish.Loader(
+      {rootPaths: ["resource://testpilot/modules/",
+                   "resource://testpilot/modules/lib/"]});
+    var jarStoreModule = loader.require("jar-code-store");
+    var SecurableModule = loader.require("securable-module");
+    var jarStore = new jarStoreModule.JarStore();
+
+    // OK now watch this!  It's gonna be awesome!
+    var clientLoader = Cuddlefish.Loader(
+      {fs: new SecurableModule.CompositeFileSystem(
+         [jarStore, loader.fs])});
+    var toolbarStudy = clientLoader.require("toolbar-study");
+  }
+
   function remindMe() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     TestPilotSetup._notifyUserOfTasks();
@@ -185,6 +203,7 @@ or set it to
 <p><button onclick="makeThereBeAPopup();">Show Dummy Popup</button>
 <button onclick="reloadAllExperiments();">Reload All Experiments</button>
 <button onclick="remindMe();">Notify Me</button>
+<button onclick="testJarStore();">Test Jar Store</button>
 </p>
 </fieldset>
 <p><span id="debug"></span></p>

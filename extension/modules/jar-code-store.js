@@ -36,31 +36,107 @@
 
 
 function JarStore() {
-  dump("instantiating jar store.\n");
+  dump("Trying to instantiate jar store.\n");
+  try {
   let baseDirName = "TestPilotExperimentFiles"; // this should go in pref?
-  this._init( baseDirectory );
   this._baseDir = null;
-  this._zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
-                .createInstance(Ci.nsIZipReader);
+  this._index = {}; // tells us which jar file to look in for each module
+  this._lastModified = {}; // tells us when each jar file was last modified
+  this._init( baseDirName );
   dump("done instantiating jar store.\n");
+  } catch (e) {
+    dump("Error instantiating jar store: " + e + "\n");
+  }
 }
 JarStore.prototype = {
+  _extractJar: function(jarFile) {
+    // Open the jar file
+    let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
+                .createInstance(Ci.nsIZipReader);
+    zipReader.open(jarFile); // This is failing???
+
+    // make a directory to extract into:
+    let dirName = jarFile.leafName.slice(0, jarFile.leafName.length - 4);
+    let dir = this._baseDir.clone();
+    dir.append(dirName);
+    if (!dir.exists() || !dir.isDirectory()) {
+      dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
+    }
+
+    // loop through all entries, extract any that are js files
+    let entries = zipReader.findEntries(null);
+    while(entries.hasMore()) {
+      let entry = entries.getNext();
+      if (entry.indexOf(".js") == entry.length - 3) {
+        // add entry to index
+        let moduleName = entry.slice(0, entry.length - 3);
+        dump("Storing module in index as " + moduleName + "\n");
+        this._index[moduleName] = dir.path;
+
+        // extract file
+        let file = dir.clone();
+        file.append(entry);
+        if (!file.exists()) {
+          zipReader.extract(entry, file);
+        }
+      }
+    }
+    zipReader.close();
+  },
+
+  _verifyJar: function(path) {
+  // TODO
+
+    return true;
+  },
+
   _init: function( baseDirectory ) {
     let dir = Cc["@mozilla.org/file/directory_service;1"].
       getService(Ci.nsIProperties).get("ProfD", Ci.nsIFile);
     dir.append(baseDirectory);
     this._baseDir = dir;
+    dump("Directory is " + this._baseDir.path + "\n");
     if( !this._baseDir.exists() || !this._baseDir.isDirectory() ) {
-      // if it doesn't exist, create
-      this._baseDir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0777);
+      // if jar storage directory doesn't exist, create it:
+      dump("Creating: " + this._baseDir.path + "\n");
+      this._baseDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
+    } else {
+
+      // Build lookup index of module->jar file and modified dates
+      let jarFiles = this._baseDir.directoryEntries;
+      dump("Listing directory...\n");
+      while(jarFiles.hasMoreElements()) {
+        let jarFile = jarFiles.getNext().QueryInterface(Ci.nsIFile);
+        // Make sure this is actually a jar file:
+        if (jarFile.leafName.indexOf(".jar") != jarFile.leafName.length - 4) {
+          continue;
+        }
+        dump("  --> " + jarFile.path + " (" + jarFile.leafName + ")\n");
+        this._lastModified[jarFile.leafName] = jarFile.lastModifiedTime;
+        dump("  --> Last modified at " + jarFile.lastModifiedTime + "\n");
+
+        // TODO don't extract it if it's already been extracted!!
+        // we could A. record a preference,
+        // B. delete the jar file once it's extracted, or
+        // C. look to see if there's already a directory (might fail if
+        // there was a partially completed extraction last time)
+        this._extractJar(jarFile);
+      }
     }
   },
 
   downloadJar: function( jarUrl, filename ) {
-    dump("Attempting to download a JAR!\n");
-    let file = this._baseDir;
-    file.append(filename); // todo does this modify basedir?
-    dump("Basedir is now " + this._baseDir.path + "\n");
+    dump("Attempting to download jarUrl = " + jarUrl + " to file " + filename + "\n");
+    // TODO only download if file has changed since we got it.
+    // (OR use the logic we've already got to do the same thing.)
+    // TODO set last modified date, and add each jar entry to the index.
+    try {
+      dump("This._baseDir = " + this._baseDir.path + "\n");
+      let file = this._baseDir.clone();
+      dump("File is " + file.path + "\n");
+      file.append(filename);
+      dump("Now file is " + file.path + "\n");
+      dump("Basedir is now " + this._baseDir.path + "\n");
     let wbp = Cc['@mozilla.org/embedding/browser/nsWebBrowserPersist;1']
            .createInstance(Ci.nsIWebBrowserPersist);
     let ios = Cc['@mozilla.org/network/io-service;1']
@@ -71,67 +147,60 @@ JarStore.prototype = {
     wbp.saveURI(uri, null, null, null, null, file);
     //but that's synchronous?  Can I do it with a callback?
     // and how do I know if something went wrong?
+      dump("Finished downloading jar!");
+    } catch(e) {
+      dump("Error downloading jar: " + e + "\n");
+    }
   },
 
-  // 1st question: Where do we put the jar files so they'll be accessible?
-  //jar:http://www.mozilla.org/projects/security/components/capsapp.jar!/getprefs.html
-
-  // Question 2:Can we use that jar url scheme to access files inside the jar without
-  // unzipping it?
-  // (Apparently using channel or local XHR to that url to read it maybe?)
-
-  // Question 3: But do we need to register jars with chrome manifest to be
-  // able to refer to them by url?
-
-
-  // nsIZipReader and nsIZipEntry are what I want.
-
-  // nsiZipReader.getEntry() and pass it to nsiZipReader.getInputStream(),
-  // then read out of the input stream.
-
-  // It's also got a getCertificatePrincipal(), though that requires
-  // Firefox 3.7?
-
-  // Question 4:  I do an XHR to get the JAR file, then I have to write it
-  // to disk -- how do I do that?
-  // (with a nsIFileOutputStream?
-
-  /*
-   * # var file = Components.classes["@mozilla.org/file/local;1"]
-#             .createInstance(Components.interfaces.nsILocalFile);
-# file.initWithPath("C:\\filename.html");
-   */
-
   resolveModule: function(root, path) {
+    // TODO what's root and do we need to do anything with it?
+    dump("Jar loader is being asked to resolve module root = " +root);
+    dump(", path = " + path + "\n");
+    if (this._index[path]) {
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.initWithPath(this._index[path]);
+      file.append(path + ".js");
+      dump("Resolving module as " + file.path + "\n");
+      return file.path;
+    }
     // used by cuddlefish.  What's root?
-
+    return null;
     // must return a path... which gets passed to getFile.
-    // todo what do we return if we can't find a match?
   },
 
   getFile: function(path) {
+    dump("Jar loader is getting asked to getFile, with path = " + path + "\n");
     // used externally by cuddlefish; takes the path and returns
     // {contents: data}.
-    let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
-                .createInstance(Ci.nsIZipReader);
-    // todo get nsIFile for that zip file based on path.
-    zipReader.open(theZipFile);
-    // todo get entry name from path...
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    file.initWithPath(path);
+    dump("File size is " + file.fileSize + "\n");
 
-    if (!zipReader.hasEntry(zipEntryName)) {
-      // handle error
-    }
-    let iStream = zipReader.getInputStream(zipEntryName);
-    // duhh how do we read an input stream now?
-    let str = {};
-    iStream.readString(-1, str);
-    iStream.close();
-    zipReader.close();
-    return {contents: str.value};
+    let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
+                         createInstance(Ci.nsIFileInputStream);
+    let cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].
+                         createInstance(Ci.nsIConverterInputStream);
+    fstream.init(file, -1, 0, 0);
+    cstream.init(fstream, "UTF-8", 0, 0);
+    let data = new String();
+    let bytesRead;
+    do {
+      let chunk = {};
+      bytesRead = cstream.readString(-1, chunk);
+      data += chunk.value;
+    } while (bytesRead);
+    cstream.close(); // this closes fstream
+    dump("Length of string is " + data.length + "\n");
+    // Getting truncated at 8192, which happens to be the default buffer size
+    // of the cStream.  Can't be a coincidence.
+    return {contents: data};
   },
 
   getFileModifiedDate: function() {
-    // used by remote experiment loader
+    // used by remote experiment loader to know whether we have to redownload
+    // a thing or not.
+    return this._lastModified[jarFile.leafName];
   },
 
   listAllFiles: function() {

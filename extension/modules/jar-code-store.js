@@ -84,8 +84,36 @@ JarStore.prototype = {
     zipReader.close();
   },
 
-  _verifyJar: function(path) {
-  // TODO
+  _verifyJar: function(jarFile) {
+    // Compare the jar file's MD5 hash to the expected MD5 hash from the
+    // index file.
+    // from https://developer.mozilla.org/en/nsICryptoHash#Computing_the_Hash_of_a_File
+    let istream = Cc["@mozilla.org/network/file-input-stream;1"]
+                        .createInstance(Ci.nsIFileInputStream);
+    // open for reading
+    istream.init(jarFile, 0x01, 0444, 0);
+    let ch = Cc["@mozilla.org/security/hash;1"]
+                   .createInstance(Ci.nsICryptoHash);
+    // we want to use the MD5 algorithm
+    ch.init(ch.MD5);
+    // this tells updateFromStream to read the entire file
+    const PR_UINT32_MAX = 0xffffffff;
+    ch.updateFromStream(istream, PR_UINT32_MAX);
+    // pass false here to get binary data back
+    let hash = ch.finish(false);
+
+    // return the two-digit hexadecimal code for a byte
+    function toHexString(charCode)
+    {
+      return ("0" + charCode.toString(16)).slice(-2);
+    }
+
+    // convert the binary hash data to a hex string.
+    let s = [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
+    // s now contains your hash in hex
+    dump("Hash of this jar is " + s + "\n");
+
+    // TODO get an expected MD5 to compare it to.
 
     return true;
   },
@@ -121,7 +149,7 @@ JarStore.prototype = {
         // C. look to see if there's already a directory (might fail if
         // there was a partially completed extraction last time)
 
-        if (this._verifyJar) {
+        if (this._verifyJar(jarFile)) {
           this._extractJar(jarFile);
         }
       }

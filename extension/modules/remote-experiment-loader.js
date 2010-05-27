@@ -95,6 +95,79 @@ function PreferencesStore(prefName) {
 
 exports.PreferencesStore = PreferencesStore;
 
+/* Security info should look like this:
+ * Security Info:
+	Security state: secure
+	Security description: Authenticated by Equifax
+	Security error message: null
+
+Certificate Status:
+	Verification: OK
+	Common name (CN) = *.mozillalabs.com
+	Organisation = Mozilla Corporation
+	Issuer = Equifax
+	SHA1 fingerprint = E5:CD:91:97:08:E6:88:F2:A2:AE:31:3C:F9:91:8D:14:33:07:C4:EE
+	Valid from 8/12/09 14:04:39
+	Valid until 8/14/11 3:27:26
+ */
+
+function verifyChannelSecurity(channel) {
+  // http://mdn.beonex.com/En/How_to_check_the_security_state_of_an_XMLHTTPRequest_over_SSL
+  // Expect channel to have security state = secure, CN = *.mozillalabs.com,
+  // Organization = "Mozilla Corporation", verification = OK.
+  console.info("Verifying SSL channel security info before download...");
+
+  try {
+    if (! channel instanceof  Ci.nsIChannel) {
+      console.warn("Not a channel.  This should never happen.");
+      return false;
+    }
+    let secInfo = channel.securityInfo;
+
+    if (secInfo instanceof Ci.nsITransportSecurityInfo) {
+      secInfo.QueryInterface(Ci.nsITransportSecurityInfo);
+      let secState = secInfo.securityState & Ci.nsIWebProgressListener.STATE_IS_SECURE;
+      if (secState != Ci.nsIWebProgressListener.STATE_IS_SECURE) {
+        console.warn("Failing security check: Security state is not secure.");
+        return false;
+      }
+    } else {
+      console.warn("Failing secuity check: No TransportSecurityInfo.");
+      return false;
+    }
+
+    // check SSL certificate details
+    if (secInfo instanceof Ci.nsISSLStatusProvider) {
+      let cert = secInfo.QueryInterface(Ci.nsISSLStatusProvider).
+	SSLStatus.QueryInterface(Ci.nsISSLStatus).serverCert;
+
+      let verificationResult = cert.verifyForUsage(
+        Ci.nsIX509Cert.CERT_USAGE_SSLServer);
+      if (verificationResult != Ci.nsIX509Cert.VERIFIED_OK) {
+        console.warn("Failing security check: Cert not verified OK.");
+        return false;
+      }
+      if (cert.commonName != "*.mozillalabs.com") {
+        console.warn("Failing security check: Cert not for *.mozillalabs.com");
+        return false;
+      }
+      if (cert.organization != "Mozilla Corporation") {
+        console.warn("Failing security check: Cert not for Mozilla corporation.");
+        return false;
+      }
+    } else {
+      console.warn("Failing security check: No SSL cert info.");
+      return false;
+    }
+
+    // Passed everything
+    console.info("Channel passed SSL security check.");
+    return true;
+  } catch(err) {
+    console.warn("Failing security check:  Error: " + err);
+    return false;
+  }
+}
 
 function downloadFile(url, cb, lastModified) {
   // lastModified is a timestamp (ms since epoch); if provided, then the file
@@ -112,7 +185,12 @@ function downloadFile(url, cb, lastModified) {
   req.onreadystatechange = function(aEvt) {
     if (req.readyState == 4) {
       if (req.status == 200) {
-	cb(req.responseText);
+        // check security channel:
+        if (verifyChannelSecurity(req.channel)) {
+          cb(req.responseText);
+        } else {
+          cb(null);
+        }
       } else if (req.status == 304) {
         // 304 is "Not Modified", which we can get because we send an
         // If-Modified-Since header.

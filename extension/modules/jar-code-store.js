@@ -120,7 +120,10 @@ JarStore.prototype = {
         // B. delete the jar file once it's extracted, or
         // C. look to see if there's already a directory (might fail if
         // there was a partially completed extraction last time)
-        this._extractJar(jarFile);
+
+        if (this._verifyJar) {
+          this._extractJar(jarFile);
+        }
       }
     }
   },

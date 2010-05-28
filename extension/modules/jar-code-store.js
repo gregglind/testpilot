@@ -140,7 +140,7 @@ JarStore.prototype = {
     let ch = Cc["@mozilla.org/security/hash;1"]
                    .createInstance(Ci.nsICryptoHash);
     // Use SHA256, it's more secure than MD5:
-    ch.init(ch.SHA256;
+    ch.init(ch.SHA256);
     // this tells updateFromStream to read the entire file
     const PR_UINT32_MAX = 0xffffffff;
     ch.updateFromStream(istream, PR_UINT32_MAX);
@@ -161,9 +161,9 @@ JarStore.prototype = {
     return (s == expectedHash);
   },
 
-  setFile: function( filename, rawData, expectedHash ) {
+  saveJarFile: function( filename, rawData, expectedHash ) {
     dump("Saving a JAR file as " + filename + " hash = " + expectedHash + "\n");
-    // rawData is coming in from XHR
+    // rawData is a string of binary data representing a jar file
     try {
     let jarFile = this._baseDir.clone();
       // filename may have directories in it; use just the last part

@@ -309,40 +309,51 @@ exports.RemoteExperimentLoader.prototype = {
         let libNames = [ x.filename for each (x in data.libraries)];
         self._libraryNames = libNames;
         let expNames = [ x.filename for each (x in data.experiments)];
+        let oldStyleFilenames = libNames.concat(expNames);
 
-        let jarFileNames = [x.jarfile for each(x in data.experiment_jars)];
-        dump("Jarfilename list is " + jarFileNames + "\n");
+        let jarFiles = data.experiment_jars;
+        let numFilesToDload = jarFiles.length + oldStyleFilenames.length;
 
-        // Put all three types in one list to simplify the callback logic
-        let filenames = libNames.concat(expNames).concat(jarFileNames);
-        dump("All files to download are " + filenames + "\n");
-        let numFilesToDload = filenames.length;
-
-        let isJar = function(filename)  {
-          return (jarFileNames.indexOf(filename) != -1);
-        };
-
-        for each (let f in filenames) {
-          let filename = f;
-          dump("Getting the code for " + filename + "\n");
+        for each (let j in jarFiles) {
+          let filename = j.jarfile;
+          let md5 = j.MD5;
+          dump("Downloading a jar file " + filename + ", md5 = " + md5 + "\n");
           self._logger.trace("I'm gonna go try to get the code for " + filename);
-          dump("Is this a jarfile? " + isJar(filename) + "\n");
-          let theStore = isJar(filename) ? self._jarStore: self._prefStore;
-          let modDate = theStore.getFileModifiedDate(filename);
+          let modDate = self._jarStore.getFileModifiedDate(filename);
+
+          self._fileGetter(resolveUrl(BASE_URL, filename),
+            function onDone(code) {
+              // code will be non-null if there is actually new code to download.
+              if (code) {
+                self._logger.info("Downloaded jar file " + filename);
+                self._jarStore.setFile(filename, code, md5);
+                self._logger.trace("Saved code for: " + filename);
+              } else {
+                self._logger.info("Nothing to download for " + filename);
+              }
+              numFilesToDload --;
+              if (numFilesToDload == 0) {
+                self._logger.trace("Calling callback.");
+                callback(true);
+              }
+            }, modDate);
+        }
+
+        // This whole thing here is for the legacy file format... can be
+        // deleted as we phase that out.
+        for each (let f in oldStyleFilenames) {
+          let filename = f;
+          self._logger.trace("I'm gonna go try to get the code for " + filename);
+          let modDate = self._prefStore.getFileModifiedDate(filename);
 
           self._fileGetter(resolveUrl(BASE_URL, filename),
             function onDone(code) {
               // code will be non-null if there is actually new code to download.
               if (code) {
                 self._logger.info("Downloaded new code for " + filename);
-                let md5 = "foo";
-                dump("Downloaded new code for " + filename);
-                dump("Calling setFile...\n");
-                theStore.setFile(filename, code, md5);
-                dump("Called setFile.\n");
+                self._prefStore.setFile(filename, code);
                 self._logger.trace("Saved code for: " + filename);
               } else {
-                dump("No new code for " + filename +"\n");
                 self._logger.info("Nothing to download for " + filename);
               }
               numFilesToDload --;

@@ -247,6 +247,7 @@ JarStore.prototype = {
   getFileModifiedDate: function(filename) {
     // used by remote experiment loader to know whether we have to redownload
     // a thing or not.
+    filename = filename.split("/").pop();
     if (this._lastModified[filename]) {
       return (this._lastModified[filename]);
     } else {

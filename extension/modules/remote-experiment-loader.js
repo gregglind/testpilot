@@ -331,7 +331,7 @@ exports.RemoteExperimentLoader.prototype = {
               // code will be non-null if there is actually new code to download.
               if (code) {
                 self._logger.info("Downloaded jar file " + filename);
-                self._jarStore.setFile(filename, code, hash);
+                self._jarStore.saveJarFile(filename, code, hash);
                 self._logger.trace("Saved code for: " + filename);
               } else {
                 self._logger.info("Nothing to download for " + filename);
@@ -407,3 +407,4 @@ exports.RemoteExperimentLoader.prototype = {
     return this._studyResults;
   }
 };
+

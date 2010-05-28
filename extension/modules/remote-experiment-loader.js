@@ -179,6 +179,11 @@ function downloadFile(url, cb, lastModified) {
     req.setRequestHeader("If-Modified-Since", d.toGMTString());
     console.info("Setting if-modified-since header to " + d.toGMTString());
   }
+  //Use binary mode to download jars TODO find a better switch
+  if (url.indexOf(".jar") == url.length - 4) {
+    console.info("Using binary mode to download jar file.");
+    req.overrideMimeType('text/plain; charset=x-user-defined');
+  }
   req.onreadystatechange = function(aEvt) {
     if (req.readyState == 4) {
       if (req.status == 200) {

@@ -192,7 +192,7 @@ JarStore.prototype = {
     } else {
       dump("Verification failed.\n");
       console.warn("Bad JAR file, doesn't match md5: ");
-      jarFile.remove(false);
+      //jarFile.remove(false);
     }
     } catch(e) {
       dump("Error in saving jar file: " + e + "\n");

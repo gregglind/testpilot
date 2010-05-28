@@ -248,6 +248,7 @@ exports.RemoteExperimentLoader.prototype = {
     this._prefStore = new PreferencesStore("extensions.testpilot.experiment.codeFs");
     this._jarStore = new JarStore();
     this._libraryNames = [];
+    this._experimentFileNames = [];
     let self = this;
     this._logger.trace("About to instantiate cuddlefish loader.");
     this._refreshLoader();
@@ -322,6 +323,9 @@ exports.RemoteExperimentLoader.prototype = {
         for each (let j in jarFiles) {
           let filename = j.jarfile;
           let hash = j.hash;
+          if (j.studyfile) {
+            self._experimentFileNames.push(j.studyfile);
+          }
           dump("Downloading a jar file " + filename + ", hash = " + hash + "\n");
           self._logger.trace("I'm gonna go try to get the code for " + filename);
           let modDate = self._jarStore.getFileModifiedDate(filename);
@@ -385,11 +389,27 @@ exports.RemoteExperimentLoader.prototype = {
     // Load up and return all experiments (not libraries)
     // already stored in codeStorage
     this._logger.trace("GetExperiments called.");
+
+    // Old style:
     let remoteExperiments = {};
-    for each (let filename in this._prefStore.listAllFiles()) {
+    let filename;
+    for each (filename in this._prefStore.listAllFiles()) {
       if (this._libraryNames.indexOf(filename) != -1) {
         continue;
       }
+      this._logger.debug("GetExperiments is loading " + filename);
+      try {
+        remoteExperiments[filename] = this._loader.require(filename);
+        this._logger.info("Loaded " + filename + " OK.");
+      } catch(e) {
+        this._logger.warn("Error loading " + filename);
+        dump("Error loading " + filename + " : " + e + "\n");
+        this._logger.warn(e);
+      }
+    }
+
+    // New style:
+    for each (filename in this._experimentFileNames) {
       this._logger.debug("GetExperiments is loading " + filename);
       try {
         remoteExperiments[filename] = this._loader.require(filename);

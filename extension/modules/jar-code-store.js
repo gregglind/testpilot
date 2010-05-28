@@ -35,11 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-// TODO should switch this back to reading out un-extracted... it's
-// actually FASTER to read and decode since there's less disk I/O.
-// Counterintuitive but true.
-
-
 function JarStore() {
   dump("Trying to instantiate jar store.\n");
   try {
@@ -244,8 +239,10 @@ JarStore.prototype = {
 
   listAllFiles: function() {
     // used by remote experiment loader
-
-    // TODO
+    let x;
+    let list = [x for (x in this._index)];
+    dump("Listing all files from jar store: " + list + "\n");
+    return list;
   }
 };
 

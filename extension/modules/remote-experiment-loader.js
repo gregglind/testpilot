@@ -35,9 +35,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 let JarStore = require("jar-code-store").JarStore;
-dump("Imported jar store.\n");
-exports.JarStore = JarStore;
-
 
 function PreferencesStore(prefName) {
   var prefs = require("preferences-service");
@@ -241,13 +238,12 @@ exports.RemoteExperimentLoader.prototype = {
       this._fileGetter = downloadFile;
     }
     this._logger.trace("About to instantiate preferences store.");
-    this._codeStorage = new PreferencesStore("extensions.testpilot.experiment.codeFs");
+    // Make both a pref store (for backwards compatibility with the old code
+    // storage method) and a jar store (for the new and better one)
+    this._prefStore = new PreferencesStore("extensions.testpilot.experiment.codeFs");
+    this._jarStore = new JarStore();
     this._libraryNames = [];
     let self = this;
-
-    /* Use a composite file system here, compositing codeStorage and a new
-     * local file system so that securable modules loaded remotely can
-     * themselves require modules in the cuddlefish lib. */
     this._logger.trace("About to instantiate cuddlefish loader.");
     this._refreshLoader();
     // set up the unloading
@@ -266,23 +262,16 @@ exports.RemoteExperimentLoader.prototype = {
      * stuff to the same file as all other modules.  This logger is not
      * technically a console object but as long as it has .debug, .info,
      * .warn, and .error methods, it will work fine.*/
+
+    /* Use a composite file system here, compositing codeStorage and a new
+     * local file system so that securable modules loaded remotely can
+     * themselves require modules in the cuddlefish lib. */
+    let self = this;
     this._loader = Cuddlefish.Loader(
       {fs: new SecurableModule.CompositeFileSystem(
-         [this._codeStorage, Cuddlefish.parentLoader.fs]),
+         [self._prefStore, self._jarStore, Cuddlefish.parentLoader.fs]),
        console: this._expLogger
       });
-  },
-
-  testJarFileLoader: function(experimentJarList) {
-    dump("In testJarFileLoader: going to instantiate JarStore...\n");
-    let js = new JarStore();
-    for each (let j in experimentJarList) {
-      let jarUrl = resolveUrl(BASE_URL, j.jarfile);
-      // TODO safer way to parse a path?  Want everything after last slash.
-      let filename = j.jarfile.split("/").pop();
-      js.downloadJar(jarUrl, filename);
-      // and then um do something with j.studyfile as well?
-    }
   },
 
   checkForUpdates: function(callback) {
@@ -313,28 +302,47 @@ exports.RemoteExperimentLoader.prototype = {
         self._studyResults = data.results;
 
         /* Go through each file indicated in index.json, attempt to load it into
-         * codeStorage (replacing any older version there)
+         * codeStorage (replacing any older version there).
+         * Note there's three kinds of files to download: libraries, raw
+         * experiment files, and jar files.
          */
-        dump("Going to test jar file loader.\n");
-        //self.testJarFileLoader(data.experiment_jars);
-        dump("tested jar file loader.\n");
         let libNames = [ x.filename for each (x in data.libraries)];
         self._libraryNames = libNames;
         let expNames = [ x.filename for each (x in data.experiments)];
-        let filenames = libNames.concat(expNames);
+
+        let jarFileNames = [x.jarfile for each(x in data.experiment_jars)];
+        dump("Jarfilename list is " + jarFileNames + "\n");
+
+        // Put all three types in one list to simplify the callback logic
+        let filenames = libNames.concat(expNames).concat(jarFileNames);
+        dump("All files to download are " + filenames + "\n");
         let numFilesToDload = filenames.length;
+
+        let isJar = function(filename)  {
+          return (jarFileNames.indexOf(filename) != -1);
+        };
+
         for each (let f in filenames) {
           let filename = f;
+          dump("Getting the code for " + filename + "\n");
           self._logger.trace("I'm gonna go try to get the code for " + filename);
-          let modDate = self._codeStorage.getFileModifiedDate(filename);
+          dump("Is this a jarfile? " + isJar(filename) + "\n");
+          let theStore = isJar(filename) ? self._jarStore: self._prefStore;
+          let modDate = theStore.getFileModifiedDate(filename);
+
           self._fileGetter(resolveUrl(BASE_URL, filename),
             function onDone(code) {
               // code will be non-null if there is actually new code to download.
               if (code) {
                 self._logger.info("Downloaded new code for " + filename);
-                self._codeStorage.setFile(filename, code);
+                let md5 = "foo";
+                dump("Downloaded new code for " + filename);
+                dump("Calling setFile...\n");
+                theStore.setFile(filename, code, md5);
+                dump("Called setFile.\n");
                 self._logger.trace("Saved code for: " + filename);
               } else {
+                dump("No new code for " + filename +"\n");
                 self._logger.info("Nothing to download for " + filename);
               }
               numFilesToDload --;
@@ -354,11 +362,15 @@ exports.RemoteExperimentLoader.prototype = {
   // Filename might be something like "bookmarks01/experiment.js"
 
   getExperiments: function() {
+    // TODO this needs to also get experiment module names from
+    // jar code store.  Jar files can also contain dependency files that aren't
+    // experiments.  So we have to keep the list of which ones ARE experiments
+    // either here or there.
     // Load up and return all experiments (not libraries)
     // already stored in codeStorage
     this._logger.trace("GetExperiments called.");
     let remoteExperiments = {};
-    for each (let filename in this._codeStorage.listAllFiles()) {
+    for each (let filename in this._prefStore.listAllFiles()) {
       if (this._libraryNames.indexOf(filename) != -1) {
         continue;
       }

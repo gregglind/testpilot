@@ -35,6 +35,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 
+// TODO should switch this back to reading out un-extracted... it's
+// actually FASTER to read and decode since there's less disk I/O.
+// Counterintuitive but true.
+
+
 function JarStore() {
   dump("Trying to instantiate jar store.\n");
   try {
@@ -49,74 +54,6 @@ function JarStore() {
   }
 }
 JarStore.prototype = {
-  _extractJar: function(jarFile) {
-    // Open the jar file
-    let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
-                .createInstance(Ci.nsIZipReader);
-    zipReader.open(jarFile); // This is failing???
-
-    // make a directory to extract into:
-    let dirName = jarFile.leafName.slice(0, jarFile.leafName.length - 4);
-    let dir = this._baseDir.clone();
-    dir.append(dirName);
-    if (!dir.exists() || !dir.isDirectory()) {
-      dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
-    }
-
-    // loop through all entries, extract any that are js files
-    let entries = zipReader.findEntries(null);
-    while(entries.hasMore()) {
-      let entry = entries.getNext();
-      if (entry.indexOf(".js") == entry.length - 3) {
-        // add entry to index
-        let moduleName = entry.slice(0, entry.length - 3);
-        dump("Storing module in index as " + moduleName + "\n");
-        this._index[moduleName] = dir.path;
-
-        // extract file
-        let file = dir.clone();
-        file.append(entry);
-        if (!file.exists()) {
-          zipReader.extract(entry, file);
-        }
-      }
-    }
-    zipReader.close();
-  },
-
-  _verifyJar: function(jarFile) {
-    // Compare the jar file's MD5 hash to the expected MD5 hash from the
-    // index file.
-    // from https://developer.mozilla.org/en/nsICryptoHash#Computing_the_Hash_of_a_File
-    let istream = Cc["@mozilla.org/network/file-input-stream;1"]
-                        .createInstance(Ci.nsIFileInputStream);
-    // open for reading
-    istream.init(jarFile, 0x01, 0444, 0);
-    let ch = Cc["@mozilla.org/security/hash;1"]
-                   .createInstance(Ci.nsICryptoHash);
-    // we want to use the MD5 algorithm
-    ch.init(ch.MD5);
-    // this tells updateFromStream to read the entire file
-    const PR_UINT32_MAX = 0xffffffff;
-    ch.updateFromStream(istream, PR_UINT32_MAX);
-    // pass false here to get binary data back
-    let hash = ch.finish(false);
-
-    // return the two-digit hexadecimal code for a byte
-    function toHexString(charCode)
-    {
-      return ("0" + charCode.toString(16)).slice(-2);
-    }
-
-    // convert the binary hash data to a hex string.
-    let s = [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
-    // s now contains your hash in hex
-    dump("Hash of this jar is " + s + "\n");
-
-    // TODO get an expected MD5 to compare it to.
-
-    return true;
-  },
 
   _init: function( baseDirectory ) {
     let dir = Cc["@mozilla.org/file/directory_service;1"].
@@ -156,36 +93,118 @@ JarStore.prototype = {
     }
   },
 
-  downloadJar: function( jarUrl, filename ) {
-    dump("Attempting to download jarUrl = " + jarUrl + " to file " + filename + "\n");
-    // TODO only download if file has changed since we got it.
-    // (OR use the logic we've already got to do the same thing.)
-    // TODO set last modified date, and add each jar entry to the index.
+  _extractJar: function(jarFile) {
+    // Open the jar file
+    let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
+                .createInstance(Ci.nsIZipReader);
+    zipReader.open(jarFile); // This is failing???
+
+    // make a directory to extract into:
+    let dirName = jarFile.leafName.slice(0, jarFile.leafName.length - 4);
+    let dir = this._baseDir.clone();
+    dir.append(dirName);
+    if (!dir.exists() || !dir.isDirectory()) {
+      dir.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
+    }
+
+    // loop through all entries, extract any that are js files
+    let entries = zipReader.findEntries(null);
+    while(entries.hasMore()) {
+      let entry = entries.getNext();
+      if (entry.indexOf(".js") == entry.length - 3) {
+        // add entry to index
+        let moduleName = entry.slice(0, entry.length - 3);
+        dump("Storing module in index as " + moduleName + "\n");
+        this._index[moduleName] = dir.path;
+
+        // extract file
+        let file = dir.clone();
+        file.append(entry);
+        if (!file.exists()) {
+          zipReader.extract(entry, file);
+        }
+      }
+    }
+    zipReader.close();
+  },
+
+  _verifyJar: function(jarFile, expectedMD5) {
+    // Compare the jar file's MD5 hash to the expected MD5 hash from the
+    // index file.
+    // from https://developer.mozilla.org/en/nsICryptoHash#Computing_the_Hash_of_a_File
+    dump("Attempting to verify jarfile vs md5 = " + expectedMD5 + "\n");
+    let istream = Cc["@mozilla.org/network/file-input-stream;1"]
+                        .createInstance(Ci.nsIFileInputStream);
+    // open for reading
+    istream.init(jarFile, 0x01, 0444, 0);
+    let ch = Cc["@mozilla.org/security/hash;1"]
+                   .createInstance(Ci.nsICryptoHash);
+    // we want to use the MD5 algorithm
+    ch.init(ch.MD5);
+    // this tells updateFromStream to read the entire file
+    const PR_UINT32_MAX = 0xffffffff;
+    ch.updateFromStream(istream, PR_UINT32_MAX);
+    // pass false here to get binary data back
+    let hash = ch.finish(false);
+
+    // return the two-digit hexadecimal code for a byte
+    function toHexString(charCode)
+    {
+      return ("0" + charCode.toString(16)).slice(-2);
+    }
+
+    // convert the binary hash data to a hex string.
+    let s = [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
+    // s now contains your hash in hex
+    dump("Hash of this jar is " + s + "\n");
+
+    return (s == expectedMD5);
+  },
+
+  setFile: function( filename, rawData, expectedMD5 ) {
+    dump("Saving a JAR file as " + filename + " md5 = " + expectedMD5 + "\n");
+    // rawData is coming in from XHR
+    // metadata is {jarfile: x, studyfile: y, md5: z}
     try {
-      dump("This._baseDir = " + this._baseDir.path + "\n");
-      let file = this._baseDir.clone();
-      dump("File is " + file.path + "\n");
-      file.append(filename);
-      dump("Now file is " + file.path + "\n");
-      dump("Basedir is now " + this._baseDir.path + "\n");
-    let wbp = Cc['@mozilla.org/embedding/browser/nsWebBrowserPersist;1']
-           .createInstance(Ci.nsIWebBrowserPersist);
-    let ios = Cc['@mozilla.org/network/io-service;1']
-           .getService(Ci.nsIIOService);
-    let uri = ios.newURI(jarUrl, null, null);
-    // TODO what flags do I actually want?
-    wbp.persistFlags &= ~Ci.nsIWebBrowserPersist.PERSIST_FLAGS_NO_CONVERSION; // don't save gzipped
-    wbp.saveURI(uri, null, null, null, null, file);
-    //but that's synchronous?  Can I do it with a callback?
-    // and how do I know if something went wrong?
-      dump("Finished downloading jar!");
+    let jarFile = this._baseDir.clone();
+      // filename may have directories in it; use just the last part
+      jarFile.append(filename.split("/").pop());
+
+    // From https://developer.mozilla.org/en/Code_snippets/File_I%2f%2fO#Getting_special_files
+    jarFile.createUnique( Ci.nsIFile.NORMAL_FILE_TYPE, 600);
+    let stream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
+                    createInstance(Ci.nsIFileOutputStream);
+    stream.init(jarFile, 0x04 | 0x08 | 0x20, 0600, 0); // readwrite, create, truncate
+
+    stream.write(rawData, rawData.length);
+    if (stream instanceof Ci.nsISafeOutputStream) {
+      stream.finish();
+    } else {
+      stream.close();
+    }
+      dump("Saved file, now verifying...\n");
+    // Verify md5 hash; if it's good, extract and set last modified time.
+    // If not good, remove it.
+    if (this._verifyJar(jarFile, expectedMD5)) {
+      dump("Verification passed.\n");
+      this._extractJar(jarFile);
+      this._lastModified[jarFile.leafName] = jarFile.lastModifiedTime;
+    } else {
+      dump("Verification failed.\n");
+      console.warn("Bad JAR file, doesn't match md5: ");
+      jarFile.remove(false);
+    }
     } catch(e) {
-      dump("Error downloading jar: " + e + "\n");
+      dump("Error in saving jar file: " + e + "\n");
     }
   },
 
   resolveModule: function(root, path) {
-    // TODO what's root and do we need to do anything with it?
+    // Root will be null if require() was done by absolute path.
+    if (root != null) {
+      console.error("Not implemented.");
+      return null;
+    }
     dump("Jar loader is being asked to resolve module root = " +root);
     dump(", path = " + path + "\n");
     if (this._index[path]) {
@@ -222,20 +241,23 @@ JarStore.prototype = {
       data += chunk.value;
     } while (bytesRead);
     cstream.close(); // this closes fstream
-    dump("Length of string is " + data.length + "\n");
-    // Getting truncated at 8192, which happens to be the default buffer size
-    // of the cStream.  Can't be a coincidence.
     return {contents: data};
   },
 
-  getFileModifiedDate: function() {
+  getFileModifiedDate: function(filename) {
     // used by remote experiment loader to know whether we have to redownload
     // a thing or not.
-    return this._lastModified[jarFile.leafName];
+    if (this._lastModified[filename]) {
+      return (this._lastModified[filename]);
+    } else {
+      return 0;
+    }
   },
 
   listAllFiles: function() {
     // used by remote experiment loader
+
+    // TODO
   }
 };
 

@@ -176,8 +176,15 @@ JarStore.prototype = {
     }
     dump("Jar loader is being asked to resolve module root = " +root);
     dump(", path = " + path + "\n");
-    if (this._index[path]) {
-      let resolvedPath = this._index[path] + "!" + path + ".js";
+    // drop ".js" off end of path to get module
+    let module;
+    if (path.indexOf(".js") == path.length - 3) {
+      module = path.slice(0, path.length - 3);
+    } else {
+      module = path;
+    }
+    if (this._index[module]) {
+      let resolvedPath = this._index[module] + "!" + module + ".js";
       dump("Resolving module as " + resolvedPath + "\n");
       return resolvedPath;
     }
@@ -192,7 +199,6 @@ JarStore.prototype = {
     let parts = path.split("!");
     let filePath = parts[0];
     let entryName = parts[1];
-
     let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
     file.initWithPath(filePath);
     return this._readEntryFromJarFile(file, entryName);

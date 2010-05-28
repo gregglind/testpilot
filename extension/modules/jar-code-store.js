@@ -128,19 +128,19 @@ JarStore.prototype = {
     zipReader.close();
   },
 
-  _verifyJar: function(jarFile, expectedMD5) {
-    // Compare the jar file's MD5 hash to the expected MD5 hash from the
+  _verifyJar: function(jarFile, expectedHash) {
+    // Compare the jar file's hash to the expected hash from the
     // index file.
     // from https://developer.mozilla.org/en/nsICryptoHash#Computing_the_Hash_of_a_File
-    dump("Attempting to verify jarfile vs md5 = " + expectedMD5 + "\n");
+    dump("Attempting to verify jarfile vs hash = " + expectedHash + "\n");
     let istream = Cc["@mozilla.org/network/file-input-stream;1"]
                         .createInstance(Ci.nsIFileInputStream);
     // open for reading
     istream.init(jarFile, 0x01, 0444, 0);
     let ch = Cc["@mozilla.org/security/hash;1"]
                    .createInstance(Ci.nsICryptoHash);
-    // we want to use the MD5 algorithm
-    ch.init(ch.MD5);
+    // Use SHA256, it's more secure than MD5:
+    ch.init(ch.SHA256;
     // this tells updateFromStream to read the entire file
     const PR_UINT32_MAX = 0xffffffff;
     ch.updateFromStream(istream, PR_UINT32_MAX);
@@ -158,13 +158,12 @@ JarStore.prototype = {
     // s now contains your hash in hex
     dump("Hash of this jar is " + s + "\n");
 
-    return (s == expectedMD5);
+    return (s == expectedHash);
   },
 
-  setFile: function( filename, rawData, expectedMD5 ) {
-    dump("Saving a JAR file as " + filename + " md5 = " + expectedMD5 + "\n");
+  setFile: function( filename, rawData, expectedHash ) {
+    dump("Saving a JAR file as " + filename + " hash = " + expectedHash + "\n");
     // rawData is coming in from XHR
-    // metadata is {jarfile: x, studyfile: y, md5: z}
     try {
     let jarFile = this._baseDir.clone();
       // filename may have directories in it; use just the last part
@@ -183,16 +182,16 @@ JarStore.prototype = {
       stream.close();
     }
       dump("Saved file, now verifying...\n");
-    // Verify md5 hash; if it's good, extract and set last modified time.
+    // Verify hash; if it's good, extract and set last modified time.
     // If not good, remove it.
-    if (this._verifyJar(jarFile, expectedMD5)) {
+    if (this._verifyJar(jarFile, expectedHash)) {
       dump("Verification passed.\n");
       this._extractJar(jarFile);
       this._lastModified[jarFile.leafName] = jarFile.lastModifiedTime;
     } else {
       dump("Verification failed.\n");
-      console.warn("Bad JAR file, doesn't match md5: ");
-      //jarFile.remove(false);
+      console.warn("Bad JAR file, doesn't match hash: " + expectedHash);
+      jarFile.remove(false);
     }
     } catch(e) {
       dump("Error in saving jar file: " + e + "\n");

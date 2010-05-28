@@ -321,8 +321,8 @@ exports.RemoteExperimentLoader.prototype = {
 
         for each (let j in jarFiles) {
           let filename = j.jarfile;
-          let md5 = j.MD5;
-          dump("Downloading a jar file " + filename + ", md5 = " + md5 + "\n");
+          let hash = j.hash;
+          dump("Downloading a jar file " + filename + ", hash = " + hash + "\n");
           self._logger.trace("I'm gonna go try to get the code for " + filename);
           let modDate = self._jarStore.getFileModifiedDate(filename);
 
@@ -331,7 +331,7 @@ exports.RemoteExperimentLoader.prototype = {
               // code will be non-null if there is actually new code to download.
               if (code) {
                 self._logger.info("Downloaded jar file " + filename);
-                self._jarStore.setFile(filename, code, md5);
+                self._jarStore.setFile(filename, code, hash);
                 self._logger.trace("Saved code for: " + filename);
               } else {
                 self._logger.info("Nothing to download for " + filename);

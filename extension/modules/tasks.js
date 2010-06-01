@@ -55,9 +55,13 @@ const EXPIRATION_DATE_FOR_DATA_SUBMISSION_PREFIX =
 const DATE_FOR_DATA_DELETION_PREFIX =
   "extensions.testpilot.dateForDataDeletion.";
 const RETRY_INTERVAL_PREF = "extensions.testpilot.uploadRetryInterval";
-const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
 const TIME_FOR_DATA_DELETION = 7 * (24 * 60 * 60 * 1000); // 7 days
 const DEFAULT_THUMBNAIL_URL = "chrome://testpilot/skin/badge-default.png";
+
+const UPLOAD_FORMAT_PREF = "extensions.testpilot.uploadFormat";
+const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/upload/index.php";
+const DATA_UPLOAD_URL_2 = "https://testpilot.mozillalabs.com/submit/";
+
 
 const TaskConstants = {
  STATUS_NEW: 0, // It's new and you haven't seen it yet.
@@ -701,6 +705,11 @@ TestPilotExperiment.prototype = {
     return rows.join("\n");
   },
 
+  _prependMetadataToJson: function TestPilotExperiment__prependToJson() {
+    // TODO
+    return "";
+  },
+
   // Note: When we have multiple experiments running, the uploads
   // are separate files.
   upload: function TestPilotExperiment_upload(callback, retryCount) {
@@ -715,16 +724,28 @@ TestPilotExperiment.prototype = {
       return;
     }
 
-    let dataString = this._prependMetadataToCSV();
+    let uploadFormat = Application.prefs.getValue(UPLOAD_FORMAT_PREF, 2);
+    let url, params, contentType;
+    switch (uploadFormat) {
+    case 1:
+      url = DATA_UPLOAD_URL;
+      let dataString = this._prependMetadataToCSV();
+      params = "testid=" + this._id + "&data=" + encodeURI(dataString);
+      contentType = "application/x-www-form-urlencoded";
+      break;
+    case 2:
+      url = DATA_UPLOAD_URL_2 + this._id;
+      params = this._prependMetadataToJSON();
+      contentType = "application/json";
+    }
 
-    let params = "testid=" + this._id + "&data=" + encodeURI(dataString);
     // TODO note there is an 8MB max on POST data in PHP, so if we have a REALLY big
     // pile we may need to do multiple posts.
     var self = this;
 
     var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
-    req.open('POST', DATA_UPLOAD_URL, true);
-    req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    req.open('POST', url, true);
+    req.setRequestHeader("Content-type", contentType);
     req.setRequestHeader("Content-length", params.length);
     req.setRequestHeader("Connection", "close");
     req.onreadystatechange = function(aEvt) {

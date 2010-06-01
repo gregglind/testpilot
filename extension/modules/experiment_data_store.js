@@ -34,7 +34,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-EXPORTED_SYMBOLS = ["ExperimentDataStore", "TYPE_INT_32", "TYPE_DOUBLE"];
+EXPORTED_SYMBOLS = ["ExperimentDataStore", "TYPE_INT_32", "TYPE_DOUBLE",
+                   "TYPE_STRING"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -49,6 +50,7 @@ var _storSvc = Cc["@mozilla.org/storage/service;1"]
 
 const TYPE_INT_32 = 0;
 const TYPE_DOUBLE = 1;
+const TYPE_STRING = 2;
 
 function ExperimentDataStore(fileName, tableName, columns) {
   this._init(fileName, tableName, columns);
@@ -72,7 +74,10 @@ ExperimentDataStore.prototype = {
       case TYPE_INT_32: case TYPE_DOUBLE:
         colType = "INTEGER";
         break;
-        // TODO string types etc.
+      case TYPE_STRING:
+        colType = "TEXT";
+        break;
+
       }
       schemaClauses.push( colName + " " + colType );
     }
@@ -116,7 +121,9 @@ ExperimentDataStore.prototype = {
         case TYPE_DOUBLE:
           insStmt.bindDoubleParameter( i, datum);
         break;
-        // etc.  String types?
+        case TYPE_STRING:
+          insStmt.bindUTF8StringParameter( i, datum);
+        break;
       }
     }
     insStmt.execute();
@@ -149,7 +156,9 @@ ExperimentDataStore.prototype = {
           case TYPE_DOUBLE:
             value = selStmt.getDouble(i);
           break;
-          // etc. TODO: String types?
+          case TYPE_STRING:
+            value = selStmt.getUTF8String(i);
+          break;
         }
 
         /* The column may have a property called displayValue, which can be either

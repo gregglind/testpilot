@@ -36,16 +36,14 @@
 
 
 function JarStore() {
-  dump("Trying to instantiate jar store.\n");
   try {
   let baseDirName = "TestPilotExperimentFiles"; // this should go in pref?
   this._baseDir = null;
   this._index = {}; // tells us which jar file to look in for each module
   this._lastModified = {}; // tells us when each jar file was last modified
   this._init( baseDirName );
-  dump("done instantiating jar store.\n");
   } catch (e) {
-    dump("Error instantiating jar store: " + e + "\n");
+    console.warn("Error instantiating jar store: " + e);
   }
 }
 JarStore.prototype = {
@@ -55,16 +53,14 @@ JarStore.prototype = {
       getService(Ci.nsIProperties).get("ProfD", Ci.nsIFile);
     dir.append(baseDirectory);
     this._baseDir = dir;
-    dump("Directory is " + this._baseDir.path + "\n");
     if( !this._baseDir.exists() || !this._baseDir.isDirectory() ) {
       // if jar storage directory doesn't exist, create it:
-      dump("Creating: " + this._baseDir.path + "\n");
+      console.info("Creating: " + this._baseDir.path + "\n");
       this._baseDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
     } else {
       // Process any jar files already on disk from previous runs:
       // Build lookup index of module->jar file and modified dates
       let jarFiles = this._baseDir.directoryEntries;
-      dump("Listing directory...\n");
       while(jarFiles.hasMoreElements()) {
         let jarFile = jarFiles.getNext().QueryInterface(Ci.nsIFile);
         // Make sure this is actually a jar file:
@@ -72,9 +68,7 @@ JarStore.prototype = {
           continue;
         }
         // TODO should call _verifyJar here, but need a hash to compare it to...
-        dump("  --> " + jarFile.path + " (" + jarFile.leafName + ")\n");
         this._lastModified[jarFile.leafName] = jarFile.lastModifiedTime;
-        dump("  --> Last modified at " + jarFile.lastModifiedTime + "\n");
         this._indexJar(jarFile);
       }
     }
@@ -91,7 +85,6 @@ JarStore.prototype = {
       if (entry.indexOf(".js") == entry.length - 3) {
         // add entry to index
        let moduleName = entry.slice(0, entry.length - 3);
-       dump("Storing module in index as " + moduleName + "\n");
        this._index[moduleName] = jarFile.path;
       }
     }
@@ -102,7 +95,7 @@ JarStore.prototype = {
     // Compare the jar file's hash to the expected hash from the
     // index file.
     // from https://developer.mozilla.org/en/nsICryptoHash#Computing_the_Hash_of_a_File
-    dump("Attempting to verify jarfile vs hash = " + expectedHash + "\n");
+    console.info("Attempting to verify jarfile vs hash = " + expectedHash);
     let istream = Cc["@mozilla.org/network/file-input-stream;1"]
                         .createInstance(Ci.nsIFileInputStream);
     // open for reading
@@ -126,13 +119,12 @@ JarStore.prototype = {
     // convert the binary hash data to a hex string.
     let s = [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
     // s now contains your hash in hex
-    dump("Hash of this jar is " + s + "\n");
 
     return (s == expectedHash);
   },
 
   saveJarFile: function( filename, rawData, expectedHash ) {
-    dump("Saving a JAR file as " + filename + " hash = " + expectedHash + "\n");
+    console.info("Saving a JAR file as " + filename + " hash = " + expectedHash);
     // rawData is a string of binary data representing a jar file
     try {
     let jarFile = this._baseDir.clone();
@@ -151,31 +143,25 @@ JarStore.prototype = {
     } else {
       stream.close();
     }
-      dump("Saved file, now verifying...\n");
     // Verify hash; if it's good, index and set last modified time.
     // If not good, remove it.
     if (this._verifyJar(jarFile, expectedHash)) {
-      dump("Verification passed.\n");
       this._indexJar(jarFile);
       this._lastModified[jarFile.leafName] = jarFile.lastModifiedTime;
     } else {
-      dump("Verification failed.\n");
       console.warn("Bad JAR file, doesn't match hash: " + expectedHash);
       jarFile.remove(false);
     }
     } catch(e) {
-      dump("Error in saving jar file: " + e + "\n");
+      console.warn("Error in saving jar file: " + e);
     }
   },
 
   resolveModule: function(root, path) {
     // Root will be null if require() was done by absolute path.
     if (root != null) {
-      dump("Request to resolveModule with root... wut?\n");
-      dump("Root = " + root + " , path = " + path + "\n");
+      // TODO I don't think we need to do anything special here.
     }
-    dump("Jar loader is being asked to resolve module root = " +root);
-    dump(", path = " + path + "\n");
     // drop ".js" off end of path to get module
     let module;
     if (path.indexOf(".js") == path.length - 3) {
@@ -185,7 +171,6 @@ JarStore.prototype = {
     }
     if (this._index[module]) {
       let resolvedPath = this._index[module] + "!" + module + ".js";
-      dump("Resolving module as " + resolvedPath + "\n");
       return resolvedPath;
     }
     return null;
@@ -193,7 +178,6 @@ JarStore.prototype = {
   },
 
   getFile: function(path) {
-    dump("Jar loader is getting asked to getFile, with path = " + path + "\n");
     // used externally by cuddlefish; takes the path and returns
     // {contents: data}.
     let parts = path.split("!");
@@ -218,15 +202,12 @@ JarStore.prototype = {
       let data = new String();
       let chunk = {};
       do {
-        dump("Reading chunk.\n");
         chunk = stream.read(-1);
-        dump("Chunk has length " + chunk.length + "\n");
         data += chunk;
       } while (chunk.length > 0);
-      dump("Finished reading the stream.\n");
       return {contents: data};
     } catch(e) {
-      dump("Error reading from stream: " + e + "\n");
+      console.warn("Error reading entry from jar file: " + e );
     }
     return null;
   },
@@ -247,7 +228,6 @@ JarStore.prototype = {
     // used by remote experiment loader
     let x;
     let list = [x for (x in this._index)];
-    dump("Listing all files from jar store: " + list + "\n");
     return list;
   }
 };

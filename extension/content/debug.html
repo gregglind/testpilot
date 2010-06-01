@@ -68,7 +68,8 @@ dump("Debug page Requiring toolbar study.\n");
   }
 
   function loadExperimentCode() {
-    var filename = getSelectedFilename();
+    //var filename = getSelectedFilename();
+    var filename = "example/example_study.js";
     var textArea = document.getElementById("experiment-code-area");
     prefStore = getCodeStorage();
     code = prefStore.getFile(filename).contents;
@@ -76,7 +77,8 @@ dump("Debug page Requiring toolbar study.\n");
   }
 
   function saveAndRun() {
-    var filename = getSelectedFilename();
+    //var filename = getSelectedFilename();
+    var filename = "example/example_study.js";
     var textArea = document.getElementById("experiment-code-area");
     prefStore = getCodeStorage();
     code = prefStore.setFile(filename, textArea.value);

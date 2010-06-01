@@ -534,18 +534,20 @@ let TestPilotSetup = {
     // If the experiment doesn't specify minimum versions, attempt to run it.
     let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
     try {
-      let minTpVer, minFxVer;
+      let minTpVer, minFxVer, expName;
       if (experiment.experimentInfo) {
         minTpVer = experiment.experimentInfo.minTPVersion;
         minFxVer = experiment.experimentInfo.minFXVersion;
+        expName =  experiment.experimentInfo.testName;
       } else if (experiment.surveyInfo) {
         minTpVer = experiment.surveyInfo.minTPVersion;
         minFxVer = experiment.surveyInfo.minFXVersion;
+        expName = experiment.surveyInfo.surveyName;
       }
 
       // Minimum test pilot version:
       if (minTpVer && this._isNewerThanMe(minTpVer)) {
-        logger.warn("Not loading " + experiment.testName);
+        logger.warn("Not loading " + expName);
         logger.warn("Because it requires Test Pilot version " + minTpVer);
 
         // Let user know there is a newer version of Test Pilot available:
@@ -563,13 +565,12 @@ let TestPilotSetup = {
 
       // Minimum firefox version:
       if (minFxVer && this._isNewerThanFirefox(minFxVer)) {
-        logger.warn("Not loading " + experiment.testName);
+        logger.warn("Not loading " + expName);
         logger.warn("Because it requires Firefox version " + minFxVer);
         return false;
       }
     } catch (e) {
-      logger.warn("Error in requirements check " + experiment.testName + ": " +
-		  e);
+      logger.warn("Error in requirements check " + expName + ": " +  e);
     }
     return true;
   },

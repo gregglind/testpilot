@@ -326,7 +326,6 @@ exports.RemoteExperimentLoader.prototype = {
           if (j.studyfile) {
             self._experimentFileNames.push(j.studyfile);
           }
-          dump("Downloading a jar file " + filename + ", hash = " + hash + "\n");
           self._logger.trace("I'm gonna go try to get the code for " + filename);
           let modDate = self._jarStore.getFileModifiedDate(filename);
 

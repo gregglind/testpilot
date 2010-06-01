@@ -516,6 +516,63 @@ let TestPilotSetup = {
     }
   },
 
+  _isNewerThanFirefox: function TPS__isNewerThanFirefox(versionString) {
+    let result = Cc["@mozilla.org/xpcom/version-comparator;1"]
+                   .getService(Ci.nsIVersionComparator)
+                   .compare(Application.version, versionString);
+    if (result < 0) {
+      return true; // versionString is newer than Firefox
+    } else {
+      return false; // versionString is the same as or older than Firefox
+    }
+  },
+
+  _experimentRequirementsAreMet: function TPS__requirementsMet(experiment) {
+    // Returns true if we we meet the requirements to run this experiment
+    // (e.g. meet the minimum Test Pilot version and Firefox version)
+    // false if not.
+    // If the experiment doesn't specify minimum versions, attempt to run it.
+    try {
+      let minTpVer, minFxVer;
+      if (experiment.experimentInfo) {
+        minTpVer = experiment.experimentInfo.minTPVersion;
+        minFxVer = experiment.experimentInfo.minFXVersion;
+      } else if (experiment.surveyInfo) {
+        minTpVer = experiment.surveyInfo.minTPVersion;
+        minFxVer = experiment.surveyInfo.minFXVersion;
+      }
+
+      // Minimum test pilot version:
+      if (minTpVer && this._isNewerThanMe(minTpVer)) {
+        logger.warn("Not loading " + experiment.testName);
+        logger.warn("Because it requires Test Pilot version " + minTpVer);
+
+        // Let user know there is a newer version of Test Pilot available:
+        if (!this._isShowingUpdateNotification()) {
+          this._showNotification(
+	    null, false,
+	    this._stringBundle.GetStringFromName(
+	      "testpilot.notification.extensionUpdate.message"),
+	    this._stringBundle.GetStringFromName(
+	      "testpilot.notification.extensionUpdate"),
+	    "update-extension", true, false, "", "", true);
+	}
+        return false;
+      }
+
+      // Minimum firefox version:
+      if (minFxVer && this._isNewerThanFirefox(minFxVer)) {
+        logger.warn("Not loading " + experiment.testName);
+        logger.warn("Because it requires Firefox version " + minFxVer);
+        return false;
+      }
+    } catch (e) {
+      logger.warn("Error in requirements check " + experiment.testName + ": " +
+		  e);
+    }
+    return true;
+  },
+
   checkForTasks: function TPS_checkForTasks(callback) {
     let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
     if (! this._remoteExperimentLoader ) {
@@ -535,36 +592,9 @@ let TestPilotSetup = {
         let experiments = self._remoteExperimentLoader.getExperiments();
 
         for (let filename in experiments) {
-          /* If the experiment specifies a minimum version, and if that
-           * minimum version is higher than our version, don't try to
-           * load the experiment: */
-	  try {
-            let minVer;
-            if (experiments[filename].experimentInfo) {
-              minVer = experiments[filename].experimentInfo.minTPVersion;
-            } else if (experiments[filename].surveyInfo) {
-              minVer = experiments[filename].surveyInfo.minTPVersion;
-            }
-
-            if (minVer && self._isNewerThanMe(minVer)) {
-              logger.warn("Not loading " + filename);
-              logger.warn("Because it requires version " + minVer);
-
-              if (!self._isShowingUpdateNotification()) {
-                self._showNotification(
-		  null, false,
-		  this._stringBundle.GetStringFromName(
-		    "testpilot.notification.extensionUpdate.message"),
-		  this._stringBundle.GetStringFromName(
-		    "testpilot.notification.extensionUpdate"),
-		  "update-extension", true, false, "", "", true);
-	      }
-              continue;
-            }
-	  } catch (e) {
-            logger.warn("Min Test Pilot Version is not found " + filename + ": " +
-		 e);
-	  }
+          if (!self._experimentRequirementsAreMet(experiments[filename])) {
+            continue;
+          }
           try {
             // The try-catch ensures that if something goes wrong in loading one
             // experiment, the other experiments after that one still get loaded.

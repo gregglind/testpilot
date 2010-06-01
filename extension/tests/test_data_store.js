@@ -1,5 +1,5 @@
 EXPORTED_SYMBOLS = ["runAllTests"];
-
+var Cu = Components.utils;
 var testsRun = 0;
 var testsPassed = 0;
 
@@ -56,16 +56,16 @@ function cheapAssertFail(errorMsg) {
   dump(errorMsg + "\n");
 }
 
-function runAllTests() {
-  testTheDataStore();
-  //testTheCuddlefishPreferencesFilesystem();
-  //testRemoteLoader();
-  dump("TESTING COMPLETE.  " + testsPassed + " out of " + testsRun + " tests passed.");
+function testFirefoxVersionCheck() {
+  Cu.import("resource://testpilot/modules/setup.js");
+  cheapAssertEqual(true, TestPilotSetup._isNewerThanFirefox("4.0"));
+  cheapAssertEqual(false, TestPilotSetup._isNewerThanFirefox("3.5"));
+  cheapAssertEqual(false, TestPilotSetup._isNewerThanFirefox("3.6"));
 }
 
 function testTheDataStore() {
 
-  Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
+  Cu.import("resource://testpilot/modules/experiment_data_store.js");
 
   var columns =  [{property: "prop_a", type: TYPE_INT_32, displayName: "Length"},
                   {property: "prop_b", type: TYPE_INT_32, displayName: "Type",
@@ -131,7 +131,7 @@ function testTheCuddlefishPreferencesFilesystem() {
   // Shut it down, start it up, make sure it's still got the same code in it.
   // Put in new code; make sure we get the new code, not the old code.
   var Cuddlefish = {};
-  Components.utils.import("resource://testpilot/modules/lib/cuddlefish.js",
+  Cu.import("resource://testpilot/modules/lib/cuddlefish.js",
                           Cuddlefish);
   let cfl = new Cuddlefish.Loader({rootPaths: ["resource://testpilot/modules/",
                                                "resource://testpilot/modules/lib/"]});
@@ -182,7 +182,7 @@ function testRemoteLoader() {
   // this tests loading modules through cuddlefish from prefs store...
   // Need to make sure that a
   var Cuddlefish = {};
-  Components.utils.import("resource://testpilot/modules/lib/cuddlefish.js",
+  Cu.import("resource://testpilot/modules/lib/cuddlefish.js",
                           Cuddlefish);
   let cfl = new Cuddlefish.Loader({rootPaths: ["resource://testpilot/modules/",
                                                "resource://testpilot/modules/lib/"]});
@@ -248,6 +248,16 @@ function testRemotelyLoadTabsExperiment() {
   // something that will give us the files from the local repo on the disk.
   // (~/testpilot/website/testcases/tab-open-close/tabs_experiment.js)
 }
+
+function runAllTests() {
+  testTheDataStore();
+  testFirefoxVersionCheck();
+  //testTheCuddlefishPreferencesFilesystem();
+  //testRemoteLoader();
+  dump("TESTING COMPLETE.  " + testsPassed + " out of " + testsRun + " tests passed.");
+}
+
+//exports.runAllTests = runAllTests;
 
 
 // Test that observers get installed on any windows that are already open.

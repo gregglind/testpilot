@@ -532,6 +532,7 @@ let TestPilotSetup = {
     // (e.g. meet the minimum Test Pilot version and Firefox version)
     // false if not.
     // If the experiment doesn't specify minimum versions, attempt to run it.
+    let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
     try {
       let minTpVer, minFxVer;
       if (experiment.experimentInfo) {

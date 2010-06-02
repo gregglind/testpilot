@@ -709,6 +709,8 @@ TestPilotExperiment.prototype = {
 
   _prependMetadataToJSON: function TestPilotExperiment__prependToJson() {
     let json = {};
+    // TODO metadata has the surveyAnswers as a string already, so it
+    // gets escaped weirdly when put through JSON.stringify...
     json.metadata = MetadataCollector.getMetadata();
     json.metadata.event_headers = this._dataStore.getPropertyNames();
     json.events = this._dataStore.getJSONRows();

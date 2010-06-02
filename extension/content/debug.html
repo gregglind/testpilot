@@ -89,8 +89,8 @@ dump("Debug page Requiring toolbar study.\n");
   function showMetaData() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     let task = TestPilotSetup.getTaskById(getEid());
-    let csv = task._prependMetadataToCSV();
-    document.getElementById("debug").innerHTML = "<pre>" + csv + "</pre>";
+    let json = task._prependMetadataToJSON();
+    document.getElementById("debug").innerHTML = json;
   }
 
   function makeThereBeAPopup() {
@@ -121,7 +121,7 @@ dump("Debug page Requiring toolbar study.\n");
   function populateFileDropdown() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     var loader = TestPilotSetup._remoteExperimentLoader;
-    var files = loader._codeStorage.listAllFiles();
+    var files = loader._jarStore.listAllFiles();
     var selector = document.getElementById("file-selector");
     var opt, i;
     for (var i = 0; i < files.length; i++) {

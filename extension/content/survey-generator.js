@@ -26,6 +26,15 @@ function onBuiltinSurveyLoad() {
   let title = document.getElementById("survey-title");
   title.innerHTML = task.title;
 
+  let submitButton = document.getElementById("survey-submit");
+  if (task.relatedStudyId) {
+     submitButton.innerHTML =
+      stringBundle.GetStringFromName("testpilot.surveyPage.submitAnswers");
+  } else {
+    submitButton.innerHTML =
+      stringBundle.GetStringFromName("testpilot.surveyPage.saveAnswers");
+  }
+
   if (task.status == TaskConstants.STATUS_SUBMITTED) {
     contentDiv.innerHTML =
       "<p>" +
@@ -34,7 +43,6 @@ function onBuiltinSurveyLoad() {
       stringBundle.GetStringFromName(
         "testpilot.surveyPage.reviewOrChangeYourAnswers") + "</p>";
     explanation.innerHTML = "";
-    let submitButton = document.getElementById("survey-submit");
     submitButton.setAttribute("style", "display:none");
     let changeButton = document.getElementById("change-answers");
     changeButton.setAttribute("style", "");
@@ -275,9 +283,12 @@ function onBuiltinSurveySubmit() {
   }
   let surveyResults = { answers: answers };
   dump("Answers as json is " + JSON.stringify(surveyResults) + "\n");
-  task.store(surveyResults);
-  // Reload page to show submitted status:
-  onBuiltinSurveyLoad();
+  task.store(surveyResults, function(submitted) {
+    // Reload page to show submitted status:
+    if (submitted) {
+      onBuiltinSurveyLoad();
+    }
+  });
 }
 
 function onBuiltinSurveyChangeAnswers() {
@@ -301,8 +312,6 @@ function setStrings() {
       stringKey: "testpilot.page.proposeATest" },
     { id: "testpilot-twitter-link",
       stringKey: "testpilot.page.testpilotOnTwitter" },
-    { id: "survey-submit",
-      stringKey: "testpilot.surveyPage.saveAnswers" },
     { id: "change-answers",
       stringKey: "testpilot.surveyPage.changeAnswers" }
   ];

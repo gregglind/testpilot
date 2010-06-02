@@ -294,7 +294,7 @@ exports.RemoteExperimentLoader.prototype = {
     this._refreshLoader();
 
     // Check for surveys and studies
-    self._fileGetter(resolveUrl(BASE_URL, indexFileName), function onDone(data) {
+    self._fileGetter(resolveUrl(BASE_URL, indexFileName), function onDone(data) { 
       if (data) {
         try {
           data = JSON.parse(data);

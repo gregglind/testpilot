@@ -721,10 +721,10 @@ TestPilotExperiment.prototype = {
     header.push("accessibilities");
     header.push(accessibilityNames.join(", "));
     header.push(isAccEnabled.join(", "));
-    header.push("task_guid");
-    header.push(Application.prefs.getValue(GUID_PREF_PREFIX + this._id, ""));
     header.push("survey_answers");
     header.push(metadata.surveyAnswers);
+    header.push("task_guid");
+    header.push(Application.prefs.getValue(GUID_PREF_PREFIX + this._id, ""));
     this._dataStore.getAllDataAsCSV(false, function(rows) {
       header.push("experiment_data");
       rows = header.concat(rows);
@@ -734,9 +734,9 @@ TestPilotExperiment.prototype = {
 
   _prependMetadataToJSON: function TestPilotExperiment__prependToJson(callback) {
     let json = {};
-    // TODO metadata has the surveyAnswers as a string already, so it
-    // gets escaped weirdly when put through JSON.stringify...
     json.metadata = MetadataCollector.getMetadata();
+    let guid = Application.prefs.getValue(GUID_PREF_PREFIX + this._id, "");
+    json.metadata.task_guid = guid;
     json.metadata.event_headers = this._dataStore.getPropertyNames();
     this._dataStore.getJSONRows(function(rows) {
                                   json.events = rows;
@@ -775,12 +775,12 @@ TestPilotExperiment.prototype = {
 
     // TODO note there is an 8MB max on POST data in PHP, so if we have a REALLY big
     // pile we may need to do multiple posts.
-    var self = this;
+    let self = this;
 
     // TODO supporting old style data upload at this point would be way hard
     // and kinda pointless -- take it out?
     self._prependMetaDataToJSON( function(dataString) {
-      var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+      let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                   .createInstance( Ci.nsIXMLHttpRequest );
       req.open('POST', url, true);
       req.setRequestHeader("Content-type", contentType);
@@ -883,7 +883,7 @@ TestPilotBuiltinSurvey.prototype = {
                    surveyInfo.surveyUrl,
                    surveyInfo.summary,
                    surveyInfo.thumbnail);
-    this._studyId = resultsInfo.studyId; // what study do we belong to
+    this._studyId = surveyInfo.uploadWithExperiment; // what study do we belong to
     this._versionNumber = surveyInfo.versionNumber;
     this._questions = surveyInfo.surveyQuestions;
     this._explanation = surveyInfo.surveyExplanation;
@@ -924,8 +924,8 @@ TestPilotBuiltinSurvey.prototype = {
   },
 
   get oldAnswers() {
-    let prefName = SURVEY_ANSWER_PREFIX + this._id;
-    let surveyResults = Application.prefs.getValue(prefName, null);
+    let surveyResults =
+      Application.prefs.getValue(SURVEY_ANSWER_PREFIX + this._id, null);
     if (!surveyResults) {
       return null;
     } else {
@@ -935,8 +935,13 @@ TestPilotBuiltinSurvey.prototype = {
     }
   },
 
-  store: function(surveyResults) {
-    // Store answers in preferences store
+  store: function(surveyResults, callback) {
+    /* Store answers in preferences store; then, upload the survey data
+     * if this is a survey with an associated study (the matching GUIDs
+     * will be used to associate the two datasets server-side).
+     * If it's not one with an associated survey, just store and set status
+     * to submitted.  Either way, call the callback with true/false for
+     * success/failure.*/
     surveyResults = sanitizeJSONStrings(surveyResults);
     let prefName = SURVEY_ANSWER_PREFIX + this._id;
     // Also store survey version number
@@ -944,7 +949,113 @@ TestPilotBuiltinSurvey.prototype = {
       surveyResults["version_number"] = this._versionNumber;
     }
     Application.prefs.setValue(prefName, JSON.stringify(surveyResults));
-    this.changeStatus(TaskConstants.STATUS_SUBMITTED);
+
+    if (this._studyId) {
+      this._upload(callback, 0);
+    } else {
+      this.changeStatus(TaskConstants.STATUS_SUBMITTED);
+      callback(true);
+    }
+  },
+
+  // Data set for survey upload - TODO this duplicates a lot of code
+  // from study._prependMetadataToCSV.
+  _prependMetadataToCSV: function() {
+    let metadata = MetadataCollector.getMetadata();
+    let extLength = metadata.extensions.length;
+    let accLength = metadata.accessibilities.length;
+    let header = [];
+    let enabledExtensions = [];
+    let disabledExtensions = [];
+    let accessibilityNames = [];
+    let isAccEnabled = [];
+    let extension;
+    let accessibility;
+    let i;
+    let guid;
+
+    for (i = 0; i < extLength; i++) {
+      extension = metadata.extensions[i];
+      if (extension.isEnabled) {
+        enabledExtensions.push(extension.id);
+      } else {
+        disabledExtensions.push(extension.id);
+      }
+    }
+    for (i = 0; i < accLength; i++) {
+      accessibility = metadata.accessibilities[i];
+      accessibilityNames.push(accessibility.name);
+      isAccEnabled.push(accessibility.value);
+    }
+    header.push(
+      "fx_version, tp_version, exp_version, location, os, recurCount");
+    header.push([metadata.fxVersion, metadata.tpVersion,
+                 this._versionNumber, metadata.location,
+                 metadata.operatingSystem, this._numTimesRun].join(", "));
+    header.push("enabled_extensions");
+    header.push(enabledExtensions.join(", "));
+    header.push("disabled_extensions");
+    header.push(disabledExtensions.join(", "));
+    header.push("accessibilities");
+    header.push(accessibilityNames.join(", "));
+    header.push(isAccEnabled.join(", "));
+    header.push("survey_answers");
+    header.push(metadata.surveyAnswers);
+    header.push("task_guid");
+    header.push(
+      Application.prefs.getValue(GUID_PREF_PREFIX + this._studyId, ""));
+    header.push("survey_data");
+    header.push(
+      Application.prefs.getValue(SURVEY_ANSWER_PREFIX + this._id, ""));
+
+    return header.join("\n");
+  },
+
+  // Upload function for survey -- TODO this duplicates a lot of code
+  // from study._upload().
+  // also TODO this needs to use the new upload URL and new JSON format.
+  _upload: function TestPilotExperiment_upload(callback, retryCount) {
+    let self = this;
+    let dataString = this._prependMetadataToCSV();
+    let params = "testid=" + this._id + "&data=" + encodeURI(dataString);
+    let req =
+      Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+        createInstance(Ci.nsIXMLHttpRequest);
+    req.open("POST", DATA_UPLOAD_URL, true);
+    req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    req.setRequestHeader("Content-length", params.length);
+    req.setRequestHeader("Connection", "close");
+    req.onreadystatechange = function(aEvt) {
+      if (req.readyState == 4) {
+	if (req.status == 200) {
+	  self._logger.info(
+	    "DATA WAS POSTED SUCCESSFULLY " + req.responseText);
+	  if (self._uploadRetryTimer) {
+	    self._uploadRetryTimer.cancel(); // Stop retrying - it worked!
+	  }
+          self.changeStatus(TaskConstants.STATUS_SUBMITTED);
+	  callback(true);
+	} else {
+	  self._logger.warn("ERROR POSTING DATA: " + req.responseText);
+	  self._uploadRetryTimer =
+	    Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+
+	  if (!retryCount) {
+	    retryCount = 0;
+	  }
+	  let interval =
+	    Application.prefs.getValue(RETRY_INTERVAL_PREF, 3600000); // 1 hour
+	  let delay =
+	    parseInt(Math.random() * Math.pow(2, retryCount) * interval);
+	  self._uploadRetryTimer.initWithCallback(
+	    { notify: function(timer) {
+		self._upload(callback, retryCount++);
+	      } }, (interval + delay), Ci.nsITimer.TYPE_ONE_SHOT);
+	  callback(false);
+	}
+      }
+    };
+    req.send(params);
   }
 };
 TestPilotBuiltinSurvey.prototype.__proto__ = TestPilotTask;

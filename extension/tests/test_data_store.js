@@ -63,6 +63,14 @@ function testFirefoxVersionCheck() {
   cheapAssertEqual(false, TestPilotSetup._isNewerThanFirefox("3.6"));
 }
 
+function testStringSanitizer() {
+  Cu.import("resource://testpilot/modules/string_sanitizer.js");
+  var evilString = "I *have* (evil) ^characters^ [hahaha];";
+  dump("Sanitized evil string is " + sanitizeString(evilString) + "\n");
+  cheapAssertEqual(sanitizeString(evilString),
+                   "I ?have? ?evil? ?characters? ?hahaha??");
+}
+
 function testTheDataStore() {
 
   Cu.import("resource://testpilot/modules/experiment_data_store.js");
@@ -252,6 +260,7 @@ function testRemotelyLoadTabsExperiment() {
 function runAllTests() {
   testTheDataStore();
   testFirefoxVersionCheck();
+  testStringSanitizer();
   //testTheCuddlefishPreferencesFilesystem();
   //testRemoteLoader();
   dump("TESTING COMPLETE.  " + testsPassed + " out of " + testsRun + " tests passed.");

@@ -44,6 +44,7 @@ const Ci = Components.interfaces;
 Components.utils.import("resource://testpilot/modules/Observers.js");
 Components.utils.import("resource://testpilot/modules/metadata.js");
 Components.utils.import("resource://testpilot/modules/log4moz.js");
+Components.utils.import("resource://testpilot/modules/string_sanitizer.js");
 
 const STATUS_PREF_PREFIX = "extensions.testpilot.taskstatus.";
 const START_DATE_PREF_PREFIX = "extensions.testpilot.startDate.";
@@ -892,12 +893,14 @@ TestPilotBuiltinSurvey.prototype = {
       return null;
     } else {
       this._logger.info("Trying to json.parse this: " + surveyResults);
-      return JSON.parse(surveyResults)["answers"];
+      let surveyJson = sanitizeJSONStrings( JSON.parse(surveyResults) );
+      return surveyJson["answers"];
     }
   },
 
   store: function(surveyResults) {
     // Store answers in preferences store
+    surveyResults = sanitizeJSONStrings(surveyResults);
     let prefName = SURVEY_ANSWER_PREFIX + this._id;
     // Also store survey version number
     if (this._versionNumber) {

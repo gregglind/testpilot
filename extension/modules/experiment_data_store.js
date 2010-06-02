@@ -43,6 +43,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://testpilot/modules/dbutils.js");
 Cu.import("resource://testpilot/modules/log4moz.js");
+Cu.import("resource://testpilot/modules/string_sanitizer.js");
 var _dirSvc = Cc["@mozilla.org/file/directory_service;1"]
                 .getService(Ci.nsIProperties);
 var _storSvc = Cc["@mozilla.org/storage/service;1"]
@@ -122,7 +123,7 @@ ExperimentDataStore.prototype = {
           insStmt.bindDoubleParameter( i, datum);
         break;
         case TYPE_STRING:
-          insStmt.bindUTF8StringParameter( i, datum);
+          insStmt.bindUTF8StringParameter( i, sanitizeString(datum));
         break;
       }
     }
@@ -151,7 +152,7 @@ ExperimentDataStore.prototype = {
             value = selStmt.getDouble(i);
           break;
           case TYPE_STRING:
-            value = selStmt.getUTF8String(i);
+            value = sanitizeString(selStmt.getUTF8String(i));
           break;
         }
         newRecord.push(value);
@@ -189,7 +190,7 @@ ExperimentDataStore.prototype = {
             value = selStmt.getDouble(i);
           break;
           case TYPE_STRING:
-            value = selStmt.getUTF8String(i);
+            value = sanitizeString(selStmt.getUTF8String(i));
           break;
         }
 

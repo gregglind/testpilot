@@ -39,6 +39,9 @@ EXPORTED_SYMBOLS = ["MetadataCollector"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
+
+Cu.import("resource://testpilot/modules/string_sanitizer.js");
 
 const LOCALE_PREF = "general.useragent.locale";
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
@@ -149,7 +152,12 @@ let MetadataCollector = {
   },
 
   getSurveyAnswers: function MetadataCollector_getSurveyAnswers() {
-    return Application.prefs.getValue(SURVEY_ANS, "");
+    let answers = Application.prefs.getValue(SURVEY_ANS, "");
+    if (answers == "") {
+      return "";
+    } else {
+      return sanitizeJSONStrings( JSON.parse(answers) );
+    }
   },
 
   getTestPilotVersion: function MetadataCollector_getTestPilotVersion() {

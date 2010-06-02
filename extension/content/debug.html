@@ -89,8 +89,9 @@ dump("Debug page Requiring toolbar study.\n");
   function showMetaData() {
     Components.utils.import("resource://testpilot/modules/setup.js");
     let task = TestPilotSetup.getTaskById(getEid());
-    let json = task._prependMetadataToJSON();
-    document.getElementById("debug").innerHTML = json;
+    let json = task._prependMetadataToJSON(function(json) {
+      document.getElementById("debug").innerHTML = json;
+    });
   }
 
   function makeThereBeAPopup() {

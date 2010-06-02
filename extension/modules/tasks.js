@@ -55,6 +55,7 @@ const EXPIRATION_DATE_FOR_DATA_SUBMISSION_PREFIX =
   "extensions.testpilot.expirationDateForDataSubmission.";
 const DATE_FOR_DATA_DELETION_PREFIX =
   "extensions.testpilot.dateForDataDeletion.";
+const GUID_PREF_PREFIX = "extensions.testpilot.taskGUID.";
 const RETRY_INTERVAL_PREF = "extensions.testpilot.uploadRetryInterval";
 const TIME_FOR_DATA_DELETION = 7 * (24 * 60 * 60 * 1000); // 7 days
 const DEFAULT_THUMBNAIL_URL = "chrome://testpilot/skin/badge-default.png";
@@ -145,7 +146,6 @@ var TestPilotTask = {
   },
 
   // urls:
-
   get infoPageUrl() {
     return this._url;
   },
@@ -308,10 +308,6 @@ TestPilotExperiment.prototype = {
     return this._dataStore;
   },
 
-  get dataStoreAsJSON() {
-    return this._dataStore.getAllDataAsJSON();
-  },
-
   get currentStatusUrl() {
     let param = "?eid=" + this._id;
     return "chrome://testpilot/content/status.html" + param;
@@ -326,37 +322,46 @@ TestPilotExperiment.prototype = {
     return Application.prefs.getValue(prefName, TaskConstants.ASK_EACH_TIME);
   },
 
-  getWebContent: function TestPilotExperiment_getWebContent() {
-    let content;
+  getDataStoreAsJSON: function(callback) {
+    this._dataStore.getAllDataAsJSON(false, callback);
+  },
+
+  getWebContent: function TestPilotExperiment_getWebContent(callback) {
+    let content = "";
+    let waitForData = false;
+    let self = this;
 
     switch (this._status) {
       case TaskConstants.STATUS_NEW:
       case TaskConstants.STATUS_PENDING:
-        return this.webContent.upcomingHtml;
+        content = this.webContent.upcomingHtml;
       break;
       case TaskConstants.STATUS_STARTING:
       case TaskConstants.STATUS_IN_PROGRESS:
-        return this.webContent.inProgressHtml;
+        content = this.webContent.inProgressHtml;
       break;
       case TaskConstants.STATUS_FINISHED:
-	if (this._dataStore.haveData()) {
-	  content = this.webContent.completedHtml;
-	} else {
-	  // for after deleting data manually by user.
-          let stringBundle =
-            Components.classes["@mozilla.org/intl/stringbundle;1"].
-              getService(Components.interfaces.nsIStringBundleService).
-	        createBundle("chrome://testpilot/locale/main.properties");
-	  let link =
-	    '<a href="' + this.infoPageUrl + '">&quot;' + this.title +
-	    '&quot;</a>';
-	  content =
-	    '<h2>' + stringBundle.formatStringFromName(
-	      "testpilot.finishedTask.finishedStudy", [link], 1) + '</h2>' +
-	    '<p>' + stringBundle.GetStringFromName(
-	      "testpilot.finishedTask.allRelatedDataDeleted") + '</p>';
-	}
-        return content;
+	waitForData = true;
+	this._dataStore.haveData(function(withData) {
+	  if (withData) {
+	    content = self.webContent.completedHtml;
+	  } else {
+	    // for after deleting data manually by user.
+            let stringBundle =
+              Components.classes["@mozilla.org/intl/stringbundle;1"].
+                getService(Components.interfaces.nsIStringBundleService).
+	          createBundle("chrome://testpilot/locale/main.properties");
+	    let link =
+	      '<a href="' + this.infoPageUrl + '">&quot;' + this.title +
+	      '&quot;</a>';
+	    content =
+	      '<h2>' + stringBundle.formatStringFromName(
+	        "testpilot.finishedTask.finishedStudy", [link], 1) + '</h2>' +
+	      '<p>' + stringBundle.GetStringFromName(
+	        "testpilot.finishedTask.allRelatedDataDeleted") + '</p>';
+	  }
+	  callback(content);
+	});
       break;
       case TaskConstants.STATUS_CANCELLED:
 	if (this._expirationDateForDataSubmission.length == 0) {
@@ -364,7 +369,6 @@ TestPilotExperiment.prototype = {
 	} else {
           content = this.webContent.dataExpiredHtml;
 	}
-	return content;
       break;
       case TaskConstants.STATUS_SUBMITTED:
 	if (this._dateForDataDeletion.length > 0) {
@@ -372,23 +376,32 @@ TestPilotExperiment.prototype = {
 	} else {
           content = this.webContent.deletedRemainDataHtml;
 	}
-        return content;
       break;
     }
     // TODO what to do if status is cancelled, submitted, results, or archived?
-    return "";
+    if (!waitForData) {
+      callback(content);
+    }
   },
 
-  getDataPrivacyContent: function() {
+  getDataPrivacyContent: function(callback) {
+    let content = "";
+    let waitForData = false;
+    let self = this;
+
     switch (this._status) {
       case TaskConstants.STATUS_STARTING:
       case TaskConstants.STATUS_IN_PROGRESS:
-        return this.webContent.inProgressDataPrivacyHtml;
+        content = this.webContent.inProgressDataPrivacyHtml;
       break;
       case TaskConstants.STATUS_FINISHED:
-	if (this._dataStore.haveData()) {
-	  return this.webContent.completedDataPrivacyHtml;
-	}
+	waitForData = true;
+	this._dataStore.haveData(function(withData) {
+	  if (withData) {
+	    content = self.webContent.completedDataPrivacyHtml;
+	  }
+	  callback(content);
+	});
       break;
       case TaskConstants.STATUS_CANCELLED:
 	if (this._expirationDateForDataSubmission.length == 0) {
@@ -396,7 +409,6 @@ TestPilotExperiment.prototype = {
 	} else {
           content = this.webContent.dataExpiredDataPrivacyHtml;
 	}
-	return content;
       break;
       case TaskConstants.STATUS_SUBMITTED:
 	if (this._dateForDataDeletion.length > 0) {
@@ -404,16 +416,17 @@ TestPilotExperiment.prototype = {
 	} else {
           content = this.webContent.deletedRemainDataDataPrivacyHtml;
 	}
-        return content;
       break;
     }
-    return "";
+    if (!waitForData) {
+      callback(content);
+    }
   },
 
   experimentIsRunning: function TestPilotExperiment_isRunning() {
     if (this._optInRequired) {
       return (this._status == TaskConstants.STATUS_STARTING ||
-              this._status == TaskConstants.STATUS_IN_PROGRESS );
+              this._status == TaskConstants.STATUS_IN_PROGRESS);
     } else {
       // Tests that don't require extra opt-in should start running even
       // if you haven't seen them yet.
@@ -571,9 +584,17 @@ TestPilotExperiment.prototype = {
         this._status < TaskConstants.STATUS_STARTING &&
         currentDate >= this._startDate &&
         currentDate <= this._endDate) {
+      let uuidGenerator =
+        Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+      let uuid = uuidGenerator.generateUUID().toString();
+      // remove the brackets from the generated UUID
+      if (uuid.indexOf("{") == 0) {
+        uuid = uuid.substring(1, (uuid.length - 1));
+      }
       // clear the data before starting.
       this._dataStore.wipeAllData();
       this.changeStatus(TaskConstants.STATUS_STARTING);
+      Application.prefs.setValue(GUID_PREF_PREFIX + this._id, uuid);
       this.onExperimentStartup();
     }
 
@@ -661,10 +682,9 @@ TestPilotExperiment.prototype = {
     }
   },
 
-  _prependMetadataToCSV: function TestPilotExperiment__prependMetadata() {
+  _prependMetadataToCSV: function TestPilotExperiment__metadataCSV(callback) {
     // TODO this function implements the old upload format - it is to be
     // phased out.
-    let rows = this._dataStore.getAllDataAsCSV();
     let metadata = MetadataCollector.getMetadata();
     let extLength = metadata.extensions.length;
     let accLength = metadata.accessibilities.length;
@@ -701,21 +721,27 @@ TestPilotExperiment.prototype = {
     header.push("accessibilities");
     header.push(accessibilityNames.join(", "));
     header.push(isAccEnabled.join(", "));
+    header.push("task_guid");
+    header.push(Application.prefs.getValue(GUID_PREF_PREFIX + this._id, ""));
     header.push("survey_answers");
     header.push(metadata.surveyAnswers);
-    header.push("experiment_data");
-    rows = header.concat(rows);
-    return rows.join("\n");
+    this._dataStore.getAllDataAsCSV(false, function(rows) {
+      header.push("experiment_data");
+      rows = header.concat(rows);
+      callback(rows.join("\n"));
+    });
   },
 
-  _prependMetadataToJSON: function TestPilotExperiment__prependToJson() {
+  _prependMetadataToJSON: function TestPilotExperiment__prependToJson(callback) {
     let json = {};
     // TODO metadata has the surveyAnswers as a string already, so it
     // gets escaped weirdly when put through JSON.stringify...
     json.metadata = MetadataCollector.getMetadata();
     json.metadata.event_headers = this._dataStore.getPropertyNames();
-    json.events = this._dataStore.getJSONRows();
-    return JSON.stringify(json);
+    this._dataStore.getJSONRows(function(rows) {
+                                  json.events = rows;
+                                  callback( JSON.stringify(json) );
+                                });
   },
 
   // Note: When we have multiple experiments running, the uploads
@@ -737,13 +763,13 @@ TestPilotExperiment.prototype = {
     switch (uploadFormat) {
     case 1:
       url = DATA_UPLOAD_URL;
-      let dataString = this._prependMetadataToCSV();
-      params = "testid=" + this._id + "&data=" + encodeURI(dataString);
+      //let dataString = this._prependMetadataToCSV();
+      //params = "testid=" + this._id + "&data=" + encodeURI(dataString);
       contentType = "application/x-www-form-urlencoded";
       break;
     case 2:
       url = DATA_UPLOAD_URL_2 + this._id;
-      params = this._prependMetadataToJSON();
+      //params = this._prependMetadataToJSON();
       contentType = "application/json";
     }
 
@@ -751,24 +777,27 @@ TestPilotExperiment.prototype = {
     // pile we may need to do multiple posts.
     var self = this;
 
-    var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
-    req.open('POST', url, true);
-    req.setRequestHeader("Content-type", contentType);
-    req.setRequestHeader("Content-length", params.length);
-    req.setRequestHeader("Connection", "close");
-    req.onreadystatechange = function(aEvt) {
-      if (req.readyState == 4) {
-	if (req.status == 200) {
-	  self._logger.info("DATA WAS POSTED SUCCESSFULLY " + req.responseText);
-          if (self._uploadRetryTimer) {
-            self._uploadRetryTimer.cancel(); // Stop retrying - it worked!
-          }
-          self.changeStatus(TaskConstants.STATUS_SUBMITTED);
-	  self._dateForDataDeletion = Date.now() + TIME_FOR_DATA_DELETION;
-	  self._expirationDateForDataSubmission = null;
-
-          callback(true);
-	} else {
+    // TODO supporting old style data upload at this point would be way hard
+    // and kinda pointless -- take it out?
+    self._prependMetaDataToJSON( function(dataString) {
+      var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                  .createInstance( Ci.nsIXMLHttpRequest );
+      req.open('POST', url, true);
+      req.setRequestHeader("Content-type", contentType);
+      req.setRequestHeader("Content-length", params.length);
+      req.setRequestHeader("Connection", "close");
+      req.onreadystatechange = function(aEvt) {
+        if (req.readyState == 4) {
+          if (req.status == 200) {
+  	    self._logger.info("DATA WAS POSTED SUCCESSFULLY " + req.responseText);
+            if (self._uploadRetryTimer) {
+              self._uploadRetryTimer.cancel(); // Stop retrying - it worked!
+            }
+            self.changeStatus(TaskConstants.STATUS_SUBMITTED);
+            self._dateForDataDeletion = Date.now() + TIME_FOR_DATA_DELETION;
+            self._expirationDateForDataSubmission = null;
+            callback(true);
+          } else {
           /* If something went wrong with the upload, give up for now,
            * but start a timer to try again later.  Maybe the network will
            * be better by then.  "later" starts at 1 hour, but increases
@@ -776,26 +805,27 @@ TestPilotExperiment.prototype = {
            * in cases where a lot of users are trying to submit data at
            * the same time and the network or server can't handle it.
            */
-	  self._logger.warn("ERROR POSTING DATA: " + req.responseText);
-          self._uploadRetryTimer =
-	    Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+            self._logger.warn("ERROR POSTING DATA: " + req.responseText);
+            self._uploadRetryTimer = Cc["@mozilla.org/timer;1"]
+              .createInstance(Ci.nsITimer);
 
-	  if (!retryCount) {
-	    retryCount = 0;
-	  }
-          let interval =
-	    Application.prefs.getValue(RETRY_INTERVAL_PREF, 3600000); // 1 hour
-	  let delay =
-	    parseInt(Math.random() * Math.pow(2, retryCount) * interval);
-          self._uploadRetryTimer.initWithCallback(
-            { notify: function(timer) {
+            if (!retryCount) {
+	      retryCount = 0;
+            }
+            let interval =
+	      Application.prefs.getValue(RETRY_INTERVAL_PREF, 3600000); // 1 hour
+            let delay =
+              parseInt(Math.random() * Math.pow(2, retryCount) * interval);
+            self._uploadRetryTimer.initWithCallback(
+              { notify: function(timer) {
 		self.upload(callback, retryCount++);
 	      } }, (interval + delay), Ci.nsITimer.TYPE_ONE_SHOT);
-	  callback(false);
-	}
-      }
-    };
-    req.send(params);
+            callback(false);
+          }
+        }
+      };
+      req.send(params);
+    });
   },
 
   optOut: function TestPilotExperiment_optOut(reason, callback) {
@@ -808,7 +838,9 @@ TestPilotExperiment.prototype = {
     if (reason) {
       // Send us the reason...
       let params = "testid=" + this._id + "&data=" + encodeURI(reason);
-      var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
+      var req =
+        Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+	  createInstance(Ci.nsIXMLHttpRequest);
       logger.trace("Posting " + params + " to " + DATA_UPLOAD_URL);
       req.open('POST', DATA_UPLOAD_URL, true);
       req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -826,7 +858,7 @@ TestPilotExperiment.prototype = {
 	}
       };
       logger.trace("Sending quit reason.");
-      req.send( params );
+      req.send(params);
     } else {
       callback(false);
     }
@@ -851,6 +883,7 @@ TestPilotBuiltinSurvey.prototype = {
                    surveyInfo.surveyUrl,
                    surveyInfo.summary,
                    surveyInfo.thumbnail);
+    this._studyId = resultsInfo.studyId; // what study do we belong to
     this._versionNumber = surveyInfo.versionNumber;
     this._questions = surveyInfo.surveyQuestions;
     this._explanation = surveyInfo.surveyExplanation;
@@ -875,6 +908,10 @@ TestPilotBuiltinSurvey.prototype = {
 
   get defaultUrl() {
     return this.currentStatusUrl;
+  },
+
+  get relatedStudyId() {
+    return this._studyId;
   },
 
   onUrlLoad: function TPS_onUrlLoad(url) {

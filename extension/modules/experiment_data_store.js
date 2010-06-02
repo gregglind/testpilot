@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Jono X <jono@mozilla.com>
+ *   Raymond Lee <raymond@appcoast.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -103,7 +104,9 @@ ExperimentDataStore.prototype = {
     }
   },
 
-  storeEvent: function EDS_storeEvent( uiEvent ) {
+  storeEvent: function EDS_storeEvent(uiEvent, callback) {
+    // Stores event asynchronously; callback will be called back with
+    // true or false on success or failure.
     let columnNumbers = [];
     for (let i = 1; i <= this._columns.length; i++) {
       // the i = 1 is so that we'll start with 1 instead of 0... we want
@@ -117,53 +120,83 @@ ExperimentDataStore.prototype = {
       let datum =  uiEvent[this._columns[i].property];
       switch (this._columns[i].type) {
         case TYPE_INT_32:
-          insStmt.bindInt32Parameter( i, datum);
+          insStmt.bindInt32Parameter(i, datum);
         break;
         case TYPE_DOUBLE:
-          insStmt.bindDoubleParameter( i, datum);
+          insStmt.bindDoubleParameter(i, datum);
         break;
         case TYPE_STRING:
-          insStmt.bindUTF8StringParameter( i, sanitizeString(datum));
+          insStmt.bindUTF8StringParameter(i, sanitizeString(datum));
         break;
       }
     }
-    insStmt.execute();
+    insStmt.executeAsync({
+      handleResult: function(aResultSet) {
+      },
+      handleError: function(aError) {
+        if (callback) {
+          callback(false);
+        }
+      },
+      handleCompletion: function(aReason) {
+        if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
+          if (callback) {
+            callback(true);
+          }
+        } else {
+          if (callback) {
+            callback(false);
+          }
+        }
+      }
+    });
     insStmt.finalize();
   },
 
-  getJSONRows: function EDS_getJSONRows() {
-    let selectSql = "SELECT * FROM " + this._tableName;
+  getJSONRows: function EDS_getJSONRows(callback) {
+        let selectSql = "SELECT * FROM " + this._tableName;
     let selStmt = this._createStatement(selectSql);
     let records = [];
-    let i;
-    while (selStmt.executeStep()) {
-      let newRecord = [];
-      let numCols = selStmt.columnCount;
-      for (i = 0; i < numCols; i++) {
-        let column = this._columns[i];
-        let value = 0;
-        // The type property of the column tells us what data type binding to use when
-        // pulling the value from the database.
-        switch (column.type) {
-          case TYPE_INT_32:
-            value = selStmt.getInt32(i);
-          break;
-          case TYPE_DOUBLE:
-            value = selStmt.getDouble(i);
-          break;
-          case TYPE_STRING:
-            value = sanitizeString(selStmt.getUTF8String(i));
-          break;
+    let self = this;
+    let numCols = selStmt.columnCount;
+
+    selStmt.executeAsync({
+      handleResult: function(aResultSet) {
+        for (let row = aResultSet.getNextRow(); row;
+             row = aResultSet.getNextRow()) {
+          let newRecord = [];
+          for (let i = 0; i < numCols; i++) {
+            let column = self._columns[i];
+            //let value = row.getResultByIndex(i);
+            let value = 0;
+            switch (column.type) {
+              case TYPE_INT_32:
+                value = selStmt.getInt32(i);
+              break;
+              case TYPE_DOUBLE:
+                value = selStmt.getDouble(i);
+              break;
+              case TYPE_STRING:
+                value = sanitizeString(selStmt.getUTF8String(i));
+              break;
+            }
+            newRecord.push(value);
+          }
+          records.push(newRecord);
         }
-        newRecord.push(value);
+      },
+      handleError: function(aError) {
+        callback(records);
+      },
+
+      handleCompletion: function(aReason) {
+        callback(records);
       }
-      records.push(newRecord);
-    }
+    });
     selStmt.finalize();
-    return records;
   },
 
-  getAllDataAsJSON: function EDS_getAllDataAsJSON( useDisplayValues ) {
+  getAllDataAsJSON: function EDS_getAllDataAsJSON( useDisplayValues, callback ) {
     /* if useDisplayValues is true, the values in the returned JSON are translated to
      * their human-readable equivalents, using the mechanism provided in the columns
      * set.  If it's false, the values in the returned JSON are straight numerical
@@ -173,93 +206,141 @@ ExperimentDataStore.prototype = {
     let selectSql = "SELECT * FROM " + this._tableName;
     let selStmt = this._createStatement(selectSql);
     let records = [];
-    let i;
-    while (selStmt.executeStep()) {
-      let newRecord = {};
-      let numCols = selStmt.columnCount;
-      for (i = 0; i < numCols; i++) {
-        let column = this._columns[i];
-        let value = 0;
-        // The type property of the column tells us what data type binding to use when
-        // pulling the value from the database.
-        switch (column.type) {
-          case TYPE_INT_32:
-            value = selStmt.getInt32(i);
-          break;
-          case TYPE_DOUBLE:
-            value = selStmt.getDouble(i);
-          break;
-          case TYPE_STRING:
-            value = sanitizeString(selStmt.getUTF8String(i));
-          break;
-        }
+    let self = this;
+    let numCols = selStmt.columnCount;
 
-        /* The column may have a property called displayValue, which can be either
-         * a function returning a string or an array of strings.  If we're called
-         * with useDisplayValues, then take the raw numeric value and either use it as
-         * an index to the array of strings or use it as input to the function in order
-         * to get the human-readable display name of the value. */
-        if ( useDisplayValues && column.displayValue != undefined) {
-          if (typeof( column.displayValue) == "function") {
-            newRecord[column.property] = column.displayValue( value );
-          } else {
-            newRecord[column.property] = column.displayValue[value];
+    selStmt.executeAsync({
+      handleResult: function(aResultSet) {
+        for (let row = aResultSet.getNextRow(); row;
+             row = aResultSet.getNextRow()) {
+          let newRecord = {};
+          for (let i = 0; i < numCols; i++) {
+            let column = self._columns[i];
+            //let value = row.getResultByIndex(i);
+            let value = 0;
+            switch (column.type) {
+              case TYPE_INT_32:
+                value = selStmt.getInt32(i);
+              break;
+              case TYPE_DOUBLE:
+                value = selStmt.getDouble(i);
+              break;
+              case TYPE_STRING:
+                value = sanitizeString(selStmt.getUTF8String(i));
+              break;
+            }
+            /* The column may have a property called displayValue, which can be either
+             * a function returning a string or an array of strings.  If we're called
+             * with useDisplayValues, then take the raw numeric value and either use it as
+             * an index to the array of strings or use it as input to the function in order
+             * to get the human-readable display name of the value. */
+            if (useDisplayValues && column.displayValue != undefined) {
+              if (typeof( column.displayValue) == "function") {
+                newRecord[column.property] = column.displayValue(value);
+              } else {
+                newRecord[column.property] = column.displayValue[value];
+              }
+            } else {
+              newRecord[column.property] = value;
+            }
           }
-        } else {
-          newRecord[column.property] = value;
+          records.push(newRecord);
         }
+      },
+      handleError: function(aError) {
+        callback(records);
+      },
+
+      handleCompletion: function(aReason) {
+        callback(records);
       }
-      records.push(newRecord);
-    }
+    });
     selStmt.finalize();
-    return records;
   },
 
-  getAllDataAsCSV: function EDS_getAllDataAsCSV( useDisplayValues ) {
+  getAllDataAsCSV: function EDS_getAllDataAsCSV( useDisplayValues, callback ) {
     /* Same as getAllDataAsJSON, but returns array of CSV rows instead. */
+    let self = this;
     let rows = [];
-    let i, j;
     let colNames = [ this._columns[i].property for (i in this._columns) ];
-    rows.push( colNames.join(", ") );
-    let contentData = this.getAllDataAsJSON(useDisplayValues);
-    for (i = 0; i < contentData.length; i++) {
-      let jsonRow = contentData[i];
-      let cells = [];
-      for (j = 0; j < this._columns.length; j++) {
-        cells.push( jsonRow[ this._columns[j].property ] );
+    rows.push(colNames.join(", "));
+
+    this.getAllDataAsJSON(useDisplayValues, function(contentData) {
+      for (let i = 0; i < contentData.length; i++) {
+        let jsonRow = contentData[i];
+        let cells = [];
+        for (let j = 0; j < self._columns.length; j++) {
+          cells.push( jsonRow[ self._columns[j].property ] );
+        }
+        rows.push( cells.join(",") );
       }
-      rows.push( cells.join(",") );
-    }
-    return rows;
+      callback(rows);
+    });
     // Note it returns rows unjoined, so that metadata can be easily inserted.
   },
 
-  wipeAllData: function EDS_wipeAllData() {
+  wipeAllData: function EDS_wipeAllData(callback) {
     let logger = Log4Moz.repository.getLogger("TestPilot.Database");
     logger.trace("ExperimentDataStore.wipeAllData called.\n");
     let wipeSql = "DELETE FROM " + this._tableName;
     let wipeStmt = this._createStatement(wipeSql);
-    wipeStmt.execute();
+    wipeStmt.executeAsync({
+      handleResult: function(aResultSet) {
+      },
+      handleError: function(aError) {
+        if (callback) {
+          callback(false);
+        }
+      },
+      handleCompletion: function(aReason) {
+        if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED) {
+          logger.trace("ExperimentDataStore.wipeAllData complete.\n");
+          if (callback) {
+            callback(true);
+          }
+        } else {
+          if (callback) {
+            callback(false);
+          }
+        }
+      }
+    });
     wipeStmt.finalize();
-    logger.trace("ExperimentDataStore.wipeAllData complete.\n");
   },
 
   nukeTable: function EDS_nukeTable() {
     // Should never be called, except if schema needs to be changed
     // during debugging/development.
     let nuke = this._createStatement("DROP TABLE " + this._tableName);
-    nuke.execute();
+    nuke.executeAsync();
     nuke.finalize();
   },
 
-  haveData: function EDS_haveData() {
-    let countSql = "SELECT * FROM "  + this._tableName;
+  haveData: function EDS_haveData(callback) {
+    let countSql = "SELECT * FROM " + this._tableName;
     let countStmt = this._createStatement(countSql);
-    let haveData = false;
-    if (countStmt.executeStep()) {
-      haveData = true;
-    }
-    return haveData;
+    let hasData = false;
+    countStmt.executeAsync({
+      handleResult: function(aResultSet) {
+        if (aResultSet.getNextRow()) {
+          hasData = true;
+        }
+      },
+
+      handleError: function(aError) {
+        callback(false);
+      },
+
+      handleCompletion: function(aReason) {
+        if (aReason == Ci.mozIStorageStatementCallback.REASON_FINISHED &&
+            hasData) {
+          callback(true);
+        } else {
+          callback(false);
+        }
+      }
+    });
+    countStmt.finalize();
   },
 
   getHumanReadableColumnNames: function EDS_getHumanReadableColumnNames() {
@@ -271,5 +352,4 @@ ExperimentDataStore.prototype = {
     let i;
     return [ this._columns[i].property for (i in this._columns) ];
   }
-
 };

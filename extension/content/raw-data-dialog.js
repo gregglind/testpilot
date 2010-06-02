@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  *   Jono X <jono@mozilla.com>
+ *   Raymond Lee <raymond@appcoast.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,7 +45,6 @@ function showdbcontents() {
   var experiment = TestPilotSetup.getTaskById(experimentId);
   var dataStore = experiment.dataStore;
   var experimentTitle = experiment.title;
-  var rawData = dataStore.getAllDataAsJSON(true);
   var listbox = document.getElementById("raw-data-listbox");
   var columnNames = dataStore.getHumanReadableColumnNames();
   var propertyNames = dataStore.getPropertyNames();
@@ -67,17 +67,19 @@ function showdbcontents() {
     listhead.appendChild(newHeader);
   }
 
-  // Convert each object in the JSON into a row of the listbox.
-  for (i = 0; i < rawData.length; i++) {
-    var row = document.createElement("listitem");
-    for (j = 0; j < columnNames.length; j++) {
-      var cell = document.createElement("listcell");
-      var value = rawData[i][propertyNames[j]];
-      cell.setAttribute("label", value);
-      row.appendChild(cell);
+  dataStore.getAllDataAsJSON(true, function(rawData) {
+    // Convert each object in the JSON into a row of the listbox.
+    for (i = 0; i < rawData.length; i++) {
+      var row = document.createElement("listitem");
+      for (j = 0; j < columnNames.length; j++) {
+        var cell = document.createElement("listcell");
+        var value = rawData[i][propertyNames[j]];
+        cell.setAttribute("label", value);
+        row.appendChild(cell);
+      }
+      listbox.appendChild(row);
     }
-    listbox.appendChild(row);
-  }
+  });
 }
 
 // OK button for dialog box.

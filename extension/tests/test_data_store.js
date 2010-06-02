@@ -84,51 +84,76 @@ function testTheDataStore() {
 
   var fileName = "testpilot_storage_unit_test.sqlite";
   var tableName = "testpilot_storage_unit_test";
-
+  var storedCount = 0;
   var store = new ExperimentDataStore(fileName, tableName, columns);
 
-  store.storeEvent({prop_a: 13, prop_b: 3, prop_c: 0.001, prop_s: "How"});
-  store.storeEvent({prop_a: 26, prop_b: 2, prop_c: 0.002, prop_s: " do"});
-  store.storeEvent({prop_a: 39, prop_b: 1, prop_c: 0.003, prop_s: " you"});
-  store.storeEvent({prop_a: 52, prop_b: 0, prop_c: 0.004, prop_s: " do?"});
-
-  var json = store.getAllDataAsJSON(); // test output
-  var expectedJson = [{prop_a: 13, prop_b: 3, prop_c: 0.001, prop_s: "How"},
+  function _testTheDataStore(store) {
+    cheapAssertEqualArrays(store.getHumanReadableColumnNames(), ["Length", "Type", "Depth", "Text"],
+                   "Human readable column names are not correct.");
+    cheapAssertEqualArrays(store.getPropertyNames(), ["prop_a", "prop_b", "prop_c", "prop_s"],
+                        "Property names are not correct.");
+    store.getAllDataAsJSON(false, function(json) {
+      var expectedJson = [{prop_a: 13, prop_b: 3, prop_c: 0.001, prop_s: "How"},
                       {prop_a: 26, prop_b: 2, prop_c: 0.002, prop_s: " do"},
                       {prop_a: 39, prop_b: 1, prop_c: 0.003, prop_s: " you"},
                       {prop_a: 52, prop_b: 0, prop_c: 0.004, prop_s: " do?"}];
+      cheapAssertEqual(JSON.stringify(json),
+                       JSON.stringify(expectedJson),
+                       "Stringified JSON does not match expectations.");
+    });
+  }
 
-  cheapAssertEqualArrays(store.getHumanReadableColumnNames(), ["Length", "Type", "Depth", "Text"],
-                   "Human readable column names are not correct.");
-
-  cheapAssertEqualArrays(store.getPropertyNames(), ["prop_a", "prop_b", "prop_c", "prop_s"],
-                        "Property names are not correct.");
-
-  cheapAssertEqual(JSON.stringify(json),
-                   JSON.stringify(expectedJson),
-                   "Stringified JSON does not match expectations.");
+  store.storeEvent({prop_a: 13, prop_b: 3, prop_c: 0.001, prop_s: "How"},
+                   function(stored) {
+                     storedCount++;
+                     if (storedCount == 4) {
+                       _testTheDataStore(store);
+                     }
+                   });
+  store.storeEvent({prop_a: 26, prop_b: 2, prop_c: 0.002, prop_s: " do"},
+                    function(stored) {
+                     storedCount++;
+                     if (storedCount == 4) {
+                       _testTheDataStore(store);
+                     }
+                   });
+  store.storeEvent({prop_a: 39, prop_b: 1, prop_c: 0.003, prop_s: " you"},
+                    function(stored) {
+                     storedCount++;
+                     if (storedCount == 4) {
+                       _testTheDataStore(store);
+                     }
+                   });
+  store.storeEvent({prop_a: 52, prop_b: 0, prop_c: 0.004, prop_s: " do?"},
+                    function(stored) {
+                     storedCount++;
+                     if (storedCount == 4) {
+                       _testTheDataStore(store);
+                     }
+                   });
 
   // Let's ask for the human-readable values now...
-  json = store.getAllDataAsJSON(true);
-
-  expectedJson = [{prop_a: 13, prop_b: "Baked Beans", prop_c: 0.001, prop_s: "How"},
-                  {prop_a: 26, prop_b: "Sausage", prop_c: 0.002, prop_s: " do"},
-                  {prop_a: 39, prop_b: "Egg", prop_c: 0.003, prop_s: " you"},
-                  {prop_a: 52, prop_b: "Spam", prop_c: 0.004, prop_s: " do?"}];
-  cheapAssertEqual(JSON.stringify(json),
-                   JSON.stringify(expectedJson),
-                   "JSON with human-radable values does not match expectations.");
-
+  store.getAllDataAsJSON(true, function(json) {
+    var expectedJson = [{prop_a: 13, prop_b: "Baked Beans", prop_c: 0.001, prop_s: "How"},
+                    {prop_a: 26, prop_b: "Sausage", prop_c: 0.002, prop_s: " do"},
+                    {prop_a: 39, prop_b: "Egg", prop_c: 0.003, prop_s: " you"},
+                    {prop_a: 52, prop_b: "Spam", prop_c: 0.004, prop_s: " do?"}];
+    cheapAssertEqual(JSON.stringify(json),
+                     JSON.stringify(expectedJson),
+                     "JSON with human-radable values does not match expectations.");
+  });
 
   // TODO test getAllDataAsCSV as well.
 
   // Wipe all data and ensure that we get back blanks:
-  store.wipeAllData();
-  json = store.getAllDataAsJSON();
-  expectedJson = [];
-  cheapAssertEqual(JSON.stringify(json),
-                   JSON.stringify(expectedJson),
-                   "JSON after wipe fails to be empty.");
+  store.wipeAllData(function(wiped) {
+    store.getAllDataAsJSON(false, function(json) {
+      var expectedJson = [];
+      cheapAssertEqual(JSON.stringify(json),
+                       JSON.stringify(expectedJson),
+                      "JSON after wipe fails to be empty.");
+    });
+  });
 };
 
 
@@ -263,7 +288,8 @@ function runAllTests() {
   testStringSanitizer();
   //testTheCuddlefishPreferencesFilesystem();
   //testRemoteLoader();
-  dump("TESTING COMPLETE.  " + testsPassed + " out of " + testsRun + " tests passed.");
+  dump("TESTING COMPLETE.  " + testsPassed + " out of " + testsRun +
+       " tests passed.");
 }
 
 //exports.runAllTests = runAllTests;

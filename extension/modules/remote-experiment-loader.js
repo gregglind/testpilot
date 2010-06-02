@@ -339,7 +339,7 @@ exports.RemoteExperimentLoader.prototype = {
               } else {
                 self._logger.info("Nothing to download for " + filename);
               }
-              numFilesToDload --;
+              numFilesToDload--;
               if (numFilesToDload == 0) {
                 self._logger.trace("Calling callback.");
                 callback(true);

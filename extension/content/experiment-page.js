@@ -163,7 +163,6 @@ var stringBundle;
 	  createInstance(Components.interfaces.nsIConverterOutputStream);
       let file = filePicker.file;
       let dataStore = task.dataStore;
-      let rawData = dataStore.getAllDataAsJSON(true);
       let columnNames = dataStore.getHumanReadableColumnNames();
       let propertyNames = dataStore.getPropertyNames();
       let csvString = "";
@@ -176,20 +175,23 @@ var stringBundle;
 	csvString = csvString.substring(0, (csvString.length - 1));
         csvString += "\n";
       }
-      // data
-      for (let i = 0; i < rawData.length; i++) {
-        for (let j = 0; j < columnNames.length; j++) {
-	  csvString += "\"" + rawData[i][propertyNames[j]] + "\",";
-        }
-	csvString = csvString.substring(0, (csvString.length - 1));
-        csvString += "\n";
-      }
 
-      // write, create, truncate
-      foStream.init(file, 0x02 | 0x08 | 0x20, 0664, 0);
-      converter.init(foStream, "UTF-8", 0, 0);
-      converter.writeString(csvString);
-      converter.close();
+      dataStore.getAllDataAsJSON(true, function(rawData) {
+        // data
+        for (let i = 0; i < rawData.length; i++) {
+          for (let j = 0; j < columnNames.length; j++) {
+	    csvString += "\"" + rawData[i][propertyNames[j]] + "\",";
+          }
+	  csvString = csvString.substring(0, (csvString.length - 1));
+          csvString += "\n";
+        }
+
+        // write, create, truncate
+        foStream.init(file, 0x02 | 0x08 | 0x20, 0664, 0);
+        converter.init(foStream, "UTF-8", 0, 0);
+        converter.writeString(csvString);
+        converter.close();
+      });
     }
   }
 
@@ -211,30 +213,6 @@ var stringBundle;
     var task = TestPilotSetup.getTaskById(experimentId);
     var endDate = new Date(task.endDate);
     var diff = (endDate - Date.now());
-    var days = [
-      stringBundle.GetStringFromName("testpilot.dayShortName.sunday"),
-      stringBundle.GetStringFromName("testpilot.dayShortName.monday"),
-      stringBundle.GetStringFromName("testpilot.dayShortName.tuesday"),
-      stringBundle.GetStringFromName("testpilot.dayShortName.wednesday"),
-      stringBundle.GetStringFromName("testpilot.dayShortName.thursday"),
-      stringBundle.GetStringFromName("testpilot.dayShortName.friday"),
-      stringBundle.GetStringFromName("testpilot.dayShortName.saturday")
-    ];
-    var months = [
-      stringBundle.GetStringFromName("testpilot.monthShortName.january"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.february"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.march"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.april"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.may"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.june"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.july"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.august"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.saturday"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.october"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.november"),
-      stringBundle.GetStringFromName("testpilot.monthShortName.december")
-    ];
-
     var span = document.getElementById("test-end-time");
     if (!span) {
       return;
@@ -252,9 +230,7 @@ var stringBundle;
     } else {
       span.innerHTML =
         stringBundle.formatStringFromName(
-	  "testpilot.statusPage.endOn",
-	  [days[endDate.getDay()], months[endDate.getMonth()],
-	   endDate.getDate(), endDate.getFullYear()], 4);
+	  "testpilot.statusPage.endOn", [endDate.toLocaleString()], 1);
     }
   }
 
@@ -396,13 +372,16 @@ var stringBundle;
       window.setTimeout(function() { loadExperimentPage(); }, 2000);
       return;
     }
-    contentDiv.innerHTML = experiment.getWebContent();
+    experiment.getWebContent(function(webContent) {
+      contentDiv.innerHTML = webContent;
+    });
 
-    var dataPrivacyContent = experiment.getDataPrivacyContent();
-    if (dataPrivacyContent && dataPrivacyContent.length > 0) {
-      dataPrivacyDiv.innerHTML = dataPrivacyContent;
-      dataPrivacyDiv.removeAttribute("hidden");
-    }
+    experiment.getDataPrivacyContent(function(dataPrivacyContent) {
+      if (dataPrivacyContent && dataPrivacyContent.length > 0) {
+        dataPrivacyDiv.innerHTML = dataPrivacyContent;
+        dataPrivacyDiv.removeAttribute("hidden");
+      }
+    });
 
     // Metadata and start/end date should be filled in for every experiment:
     showMetaData();

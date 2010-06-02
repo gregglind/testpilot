@@ -661,6 +661,8 @@ TestPilotExperiment.prototype = {
   },
 
   _prependMetadataToCSV: function TestPilotExperiment__prependMetadata() {
+    // TODO this function implements the old upload format - it is to be
+    // phased out.
     let rows = this._dataStore.getAllDataAsCSV();
     let metadata = MetadataCollector.getMetadata();
     let extLength = metadata.extensions.length;
@@ -705,9 +707,12 @@ TestPilotExperiment.prototype = {
     return rows.join("\n");
   },
 
-  _prependMetadataToJson: function TestPilotExperiment__prependToJson() {
-    // TODO
-    return "";
+  _prependMetadataToJSON: function TestPilotExperiment__prependToJson() {
+    let json = {};
+    json.metadata = MetadataCollector.getMetadata();
+    json.metadata.event_headers = this._dataStore.getPropertyNames();
+    json.events = this._dataStore.getJSONRows();
+    return JSON.stringify(json);
   },
 
   // Note: When we have multiple experiments running, the uploads

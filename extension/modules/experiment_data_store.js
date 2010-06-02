@@ -130,6 +130,38 @@ ExperimentDataStore.prototype = {
     insStmt.finalize();
   },
 
+  getJSONRows: function EDS_getJSONRows() {
+    let selectSql = "SELECT * FROM " + this._tableName;
+    let selStmt = this._createStatement(selectSql);
+    let records = [];
+    let i;
+    while (selStmt.executeStep()) {
+      let newRecord = [];
+      let numCols = selStmt.columnCount;
+      for (i = 0; i < numCols; i++) {
+        let column = this._columns[i];
+        let value = 0;
+        // The type property of the column tells us what data type binding to use when
+        // pulling the value from the database.
+        switch (column.type) {
+          case TYPE_INT_32:
+            value = selStmt.getInt32(i);
+          break;
+          case TYPE_DOUBLE:
+            value = selStmt.getDouble(i);
+          break;
+          case TYPE_STRING:
+            value = selStmt.getUTF8String(i);
+          break;
+        }
+        newRecord.push(value);
+      }
+      records.push(newRecord);
+    }
+    selStmt.finalize();
+    return records;
+  },
+
   getAllDataAsJSON: function EDS_getAllDataAsJSON( useDisplayValues ) {
     /* if useDisplayValues is true, the values in the returned JSON are translated to
      * their human-readable equivalents, using the mechanism provided in the columns

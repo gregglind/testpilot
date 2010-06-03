@@ -171,13 +171,13 @@ ExperimentDataStore.prototype = {
             let value = 0;
             switch (column.type) {
               case TYPE_INT_32:
-                value = selStmt.getInt32(i);
+                value = row.getInt32(i);
               break;
               case TYPE_DOUBLE:
-                value = selStmt.getDouble(i);
+                value = row.getDouble(i);
               break;
               case TYPE_STRING:
-                value = sanitizeString(selStmt.getUTF8String(i));
+                value = sanitizeString(row.getUTF8String(i));
               break;
             }
             newRecord.push(value);
@@ -220,13 +220,13 @@ ExperimentDataStore.prototype = {
             let value = 0;
             switch (column.type) {
               case TYPE_INT_32:
-                value = selStmt.getInt32(i);
+                value = row.getInt32(i);
               break;
               case TYPE_DOUBLE:
-                value = selStmt.getDouble(i);
+                value = row.getDouble(i);
               break;
               case TYPE_STRING:
-                value = sanitizeString(selStmt.getUTF8String(i));
+                value = sanitizeString(row.getUTF8String(i));
               break;
             }
             /* The column may have a property called displayValue, which can be either

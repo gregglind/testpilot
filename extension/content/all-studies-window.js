@@ -72,7 +72,7 @@ var TestPilotXulWindow = {
         // TODO a better error message?
         self.addLabel(
           parent,
-          this._stringBundle.getString(
+          self._stringBundle.getString(
             "testpilot.studiesWindow.unableToReachServer"));
       }
     });

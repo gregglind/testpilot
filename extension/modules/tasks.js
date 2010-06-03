@@ -710,10 +710,9 @@ TestPilotExperiment.prototype = {
 
     // note the server will reject any upload over 5MB - shouldn't be a problem
     let self = this;
-
-    // TODO supporting old style data upload at this point would be way hard
-    // and kinda pointless -- take it out?
-    self._prependMetaDataToJSON( function(dataString) {
+    let url = DATA_UPLOAD_URL_2 + this._id;
+    dump("Posting data to url " + url + "\n");
+    self._prependMetadataToJSON( function(dataString) {
       let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                   .createInstance( Ci.nsIXMLHttpRequest );
       req.open('POST', url, true);
@@ -724,6 +723,8 @@ TestPilotExperiment.prototype = {
         if (req.readyState == 4) {
           if (req.status == 200) {
   	    self._logger.info("DATA WAS POSTED SUCCESSFULLY " + req.responseText);
+            dump("Uploaded data; location response header was ");
+            dump(req.getResponseHeader("Location") + "\n");
             if (self._uploadRetryTimer) {
               self._uploadRetryTimer.cancel(); // Stop retrying - it worked!
             }
@@ -739,6 +740,7 @@ TestPilotExperiment.prototype = {
            * in cases where a lot of users are trying to submit data at
            * the same time and the network or server can't handle it.
            */
+            dump("Error posting data: " + req.responseText + "\n");
             self._logger.warn("ERROR POSTING DATA: " + req.responseText);
             self._uploadRetryTimer = Cc["@mozilla.org/timer;1"]
               .createInstance(Ci.nsITimer);

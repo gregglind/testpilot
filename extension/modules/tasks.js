@@ -763,7 +763,9 @@ TestPilotExperiment.prototype = {
   },
 
   optOut: function TestPilotExperiment_optOut(reason, callback) {
-    // TODO post opt-outs to new URL using new JSON format
+    // Regardless of study ID, post the opt-out message to a special
+    // database table of just opt-out messages; include study ID in metadata.
+    let url = DATA_UPLOAD_URL_2 + "opt-out";
     let logger = this._logger;
     this.changeStatus(TaskConstants.STATUS_CANCELLED);
     this._dataStore.wipeAllData();
@@ -772,14 +774,17 @@ TestPilotExperiment.prototype = {
     logger.info("Opting out of test with reason " + reason);
     if (reason) {
       // Send us the reason...
-      let params = "testid=" + this._id + "&data=" + encodeURI(reason);
+      // (TODO: include metadata?)
+      let answer = {id: this._id,
+                    reason: reason};
+      let dataString = JSON.stringify(answer);
       var req =
         Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
 	  createInstance(Ci.nsIXMLHttpRequest);
-      logger.trace("Posting " + params + " to " + DATA_UPLOAD_URL);
-      req.open('POST', DATA_UPLOAD_URL, true);
-      req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-      req.setRequestHeader("Content-length", params.length);
+      logger.trace("Posting " + dataString + " to " + url);
+      req.open('POST', url, true);
+      req.setRequestHeader("Content-type", "application/json");
+      req.setRequestHeader("Content-length", dataString.length);
       req.setRequestHeader("Connection", "close");
       req.onreadystatechange = function(aEvt) {
         if (req.readyState == 4) {
@@ -793,7 +798,7 @@ TestPilotExperiment.prototype = {
 	}
       };
       logger.trace("Sending quit reason.");
-      req.send(params);
+      req.send(dataString);
     } else {
       callback(false);
     }

@@ -682,56 +682,6 @@ TestPilotExperiment.prototype = {
     }
   },
 
-  _prependMetadataToCSV: function TestPilotExperiment__metadataCSV(callback) {
-    // TODO this function implements the old upload format - it is to be
-    // phased out.
-    let metadata = MetadataCollector.getMetadata();
-    let extLength = metadata.extensions.length;
-    let accLength = metadata.accessibilities.length;
-    let header = [];
-    let enabledExtensions = [];
-    let disabledExtensions = [];
-    let accessibilityNames = [];
-    let isAccEnabled = [];
-    let extension;
-    let accessibility;
-    let i;
-
-    for (i = 0; i < extLength; i++) {
-      extension = metadata.extensions[i];
-      if (extension.isEnabled) {
-        enabledExtensions.push(extension.id);
-      } else {
-        disabledExtensions.push(extension.id);
-      }
-    }
-    for (i = 0; i < accLength; i++) {
-      accessibility = metadata.accessibilities[i];
-      accessibilityNames.push(accessibility.name);
-      isAccEnabled.push(accessibility.value);
-    }
-    header.push("fx_version, tp_version, exp_version, location, os, recurCount");
-    header.push([metadata.fxVersion, metadata.tpVersion,
-                 this._versionNumber, metadata.location,
-                 metadata.operatingSystem, this._numTimesRun].join(", "));
-    header.push("enabled_extensions");
-    header.push(enabledExtensions.join(", "));
-    header.push("disabled_extensions");
-    header.push(disabledExtensions.join(", "));
-    header.push("accessibilities");
-    header.push(accessibilityNames.join(", "));
-    header.push(isAccEnabled.join(", "));
-    header.push("survey_answers");
-    header.push(metadata.surveyAnswers);
-    header.push("task_guid");
-    header.push(Application.prefs.getValue(GUID_PREF_PREFIX + this._id, ""));
-    this._dataStore.getAllDataAsCSV(false, function(rows) {
-      header.push("experiment_data");
-      rows = header.concat(rows);
-      callback(rows.join("\n"));
-    });
-  },
-
   _prependMetadataToJSON: function TestPilotExperiment__prependToJson(callback) {
     let json = {};
     json.metadata = MetadataCollector.getMetadata();
@@ -758,23 +708,7 @@ TestPilotExperiment.prototype = {
       return;
     }
 
-    let uploadFormat = Application.prefs.getValue(UPLOAD_FORMAT_PREF, 2);
-    let url, params, contentType;
-    switch (uploadFormat) {
-    case 1:
-      url = DATA_UPLOAD_URL;
-      //let dataString = this._prependMetadataToCSV();
-      //params = "testid=" + this._id + "&data=" + encodeURI(dataString);
-      contentType = "application/x-www-form-urlencoded";
-      break;
-    case 2:
-      url = DATA_UPLOAD_URL_2 + this._id;
-      //params = this._prependMetadataToJSON();
-      contentType = "application/json";
-    }
-
-    // TODO note there is an 8MB max on POST data in PHP, so if we have a REALLY big
-    // pile we may need to do multiple posts.
+    // note the server will reject any upload over 5MB - shouldn't be a problem
     let self = this;
 
     // TODO supporting old style data upload at this point would be way hard
@@ -783,8 +717,8 @@ TestPilotExperiment.prototype = {
       let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                   .createInstance( Ci.nsIXMLHttpRequest );
       req.open('POST', url, true);
-      req.setRequestHeader("Content-type", contentType);
-      req.setRequestHeader("Content-length", params.length);
+      req.setRequestHeader("Content-type", "application/json");
+      req.setRequestHeader("Content-length", dataString.length);
       req.setRequestHeader("Connection", "close");
       req.onreadystatechange = function(aEvt) {
         if (req.readyState == 4) {
@@ -824,7 +758,7 @@ TestPilotExperiment.prototype = {
           }
         }
       };
-      req.send(params);
+      req.send(dataString);
     });
   },
 
@@ -957,59 +891,6 @@ TestPilotBuiltinSurvey.prototype = {
       this.changeStatus(TaskConstants.STATUS_SUBMITTED);
       callback(true);
     }
-  },
-
-  // Data set for survey upload - TODO this duplicates a lot of code
-  // from study._prependMetadataToCSV.
-  _prependMetadataToCSV: function TestPilotSurvey__prependToCSV() {
-    let metadata = MetadataCollector.getMetadata();
-    let extLength = metadata.extensions.length;
-    let accLength = metadata.accessibilities.length;
-    let header = [];
-    let enabledExtensions = [];
-    let disabledExtensions = [];
-    let accessibilityNames = [];
-    let isAccEnabled = [];
-    let extension;
-    let accessibility;
-    let i;
-    let guid;
-
-    for (i = 0; i < extLength; i++) {
-      extension = metadata.extensions[i];
-      if (extension.isEnabled) {
-        enabledExtensions.push(extension.id);
-      } else {
-        disabledExtensions.push(extension.id);
-      }
-    }
-    for (i = 0; i < accLength; i++) {
-      accessibility = metadata.accessibilities[i];
-      accessibilityNames.push(accessibility.name);
-      isAccEnabled.push(accessibility.value);
-    }
-    header.push(
-      "fx_version, tp_version, exp_version, location, os, recurCount");
-    header.push([metadata.fxVersion, metadata.tpVersion,
-                 this._versionNumber, metadata.location,
-                 metadata.operatingSystem, this._numTimesRun].join(", "));
-    header.push("enabled_extensions");
-    header.push(enabledExtensions.join(", "));
-    header.push("disabled_extensions");
-    header.push(disabledExtensions.join(", "));
-    header.push("accessibilities");
-    header.push(accessibilityNames.join(", "));
-    header.push(isAccEnabled.join(", "));
-    header.push("survey_answers");
-    header.push(metadata.surveyAnswers);
-    header.push("task_guid");
-    header.push(
-      Application.prefs.getValue(GUID_PREF_PREFIX + this._studyId, ""));
-    header.push("survey_data");
-    header.push(
-      Application.prefs.getValue(SURVEY_ANSWER_PREFIX + this._id, ""));
-
-    return header.join("\n");
   },
 
   _prependMetadataToJSON: function TestPilotSurvey__prependToJson() {

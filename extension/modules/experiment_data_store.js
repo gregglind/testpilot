@@ -258,27 +258,6 @@ ExperimentDataStore.prototype = {
     selStmt.finalize();
   },
 
-  getAllDataAsCSV: function EDS_getAllDataAsCSV( useDisplayValues, callback ) {
-    /* Same as getAllDataAsJSON, but returns array of CSV rows instead. */
-    let self = this;
-    let rows = [];
-    let colNames = [ this._columns[i].property for (i in this._columns) ];
-    rows.push(colNames.join(", "));
-
-    this.getAllDataAsJSON(useDisplayValues, function(contentData) {
-      for (let i = 0; i < contentData.length; i++) {
-        let jsonRow = contentData[i];
-        let cells = [];
-        for (let j = 0; j < self._columns.length; j++) {
-          cells.push( jsonRow[ self._columns[j].property ] );
-        }
-        rows.push( cells.join(",") );
-      }
-      callback(rows);
-    });
-    // Note it returns rows unjoined, so that metadata can be easily inserted.
-  },
-
   wipeAllData: function EDS_wipeAllData(callback) {
     let logger = Log4Moz.repository.getLogger("TestPilot.Database");
     logger.trace("ExperimentDataStore.wipeAllData called.\n");

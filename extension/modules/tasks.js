@@ -829,6 +829,7 @@ TestPilotExperiment.prototype = {
   },
 
   optOut: function TestPilotExperiment_optOut(reason, callback) {
+    // TODO post opt-outs to new URL using new JSON format
     let logger = this._logger;
     this.changeStatus(TaskConstants.STATUS_CANCELLED);
     this._dataStore.wipeAllData();
@@ -935,7 +936,7 @@ TestPilotBuiltinSurvey.prototype = {
     }
   },
 
-  store: function(surveyResults, callback) {
+  store: function TestPilotSurvey_store(surveyResults, callback) {
     /* Store answers in preferences store; then, upload the survey data
      * if this is a survey with an associated study (the matching GUIDs
      * will be used to associate the two datasets server-side).
@@ -960,7 +961,7 @@ TestPilotBuiltinSurvey.prototype = {
 
   // Data set for survey upload - TODO this duplicates a lot of code
   // from study._prependMetadataToCSV.
-  _prependMetadataToCSV: function() {
+  _prependMetadataToCSV: function TestPilotSurvey__prependToCSV() {
     let metadata = MetadataCollector.getMetadata();
     let extLength = metadata.extensions.length;
     let accLength = metadata.accessibilities.length;
@@ -1011,18 +1012,31 @@ TestPilotBuiltinSurvey.prototype = {
     return header.join("\n");
   },
 
+  _prependMetadataToJSON: function TestPilotSurvey__prependToJson() {
+    let json = {};
+    json.metadata = MetadataCollector.getMetadata();
+    // Include guid of the study that this survey is related to, so we
+    // can match them up server-side.
+    let guid = Application.prefs.getValue(GUID_PREF_PREFIX + this._studyId, "");
+    json.metadata.task_guid = guid;
+    let pref = SURVEY_ANSWER_PREFIX + this._id;
+    let surveyAnswers = JSON.parse(Application.prefs.getValue(pref, ""));
+    json.survey_data = sanitizeJSONStrings(surveyAnswers);
+    return JSON.stringify(json);
+  },
+
   // Upload function for survey -- TODO this duplicates a lot of code
   // from study._upload().
-  // also TODO this needs to use the new upload URL and new JSON format.
-  _upload: function TestPilotExperiment_upload(callback, retryCount) {
+  _upload: function TestPilotSurveyt_upload(callback, retryCount) {
     let self = this;
-    let dataString = this._prependMetadataToCSV();
-    let params = "testid=" + this._id + "&data=" + encodeURI(dataString);
+    let params = this._prependMetadataToJSON();
     let req =
       Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
         createInstance(Ci.nsIXMLHttpRequest);
-    req.open("POST", DATA_UPLOAD_URL, true);
-    req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    let url = DATA_UPLOAD_URL_2 + this._id;
+
+    req.open("POST", url, true);
+    req.setRequestHeader("Content-type", "application/json");
     req.setRequestHeader("Content-length", params.length);
     req.setRequestHeader("Connection", "close");
     req.onreadystatechange = function(aEvt) {

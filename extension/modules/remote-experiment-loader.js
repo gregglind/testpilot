@@ -34,63 +34,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+const BASE_URL = "https://testpilot.mozillalabs.com/testcases/";
+var Cuddlefish = require("cuddlefish");
+var resolveUrl = require("url").resolve;
+var SecurableModule = require("securable-module");
 let JarStore = require("jar-code-store").JarStore;
-
-function PreferencesStore(prefName) {
-  var prefs = require("preferences-service");
-
-  this.get = function get() {
-    return JSON.parse(prefs.get(prefName, "{}"));
-  };
-
-  this.set = function set(newStore) {
-    prefs.set(prefName, JSON.stringify(newStore));
-  };
-
-  this.setFile = function setFile(filename, contents) {
-    let data = this.get();
-    if (!("fs" in data))
-      data.fs = {};
-    if (!("modifiedDates" in data))
-      data.modifiedDates = {};
-    data.fs[filename] = contents;
-    data.modifiedDates[filename] = (new Date).getTime();
-    this.set(data);
-  };
-
-  this.resolveModule = function resolveModule(root, path) {
-    let data = this.get();
-    let fs = data["fs"] || {};
-    if (path.slice(-3) != ".js") {
-      path = path + ".js";
-    }
-    if (path in fs) {
-      return path;
-    }
-    return null;
-  };
-
-  this.getFile = function(path) {
-    let data = this.get();
-    let fs = data["fs"] || {};
-    return {contents: fs[path]};
-
-  };
-
-  this.getFileModifiedDate = function(path) {
-    let data = this.get();
-    let dates = data["modifiedDates"] || {};
-    return dates[path];
-  };
-
-  this.listAllFiles = function() {
-    let data = this.get();
-    let filename;
-    return [filename for (filename in data.fs)];
-  };
-}
-
-exports.PreferencesStore = PreferencesStore;
 
 /* Security info should look like this:
  * Security Info:
@@ -210,14 +158,6 @@ function downloadFile(url, cb, lastModified) {
   req.send();
 }
 
-const BASE_URL = "https://testpilot.mozillalabs.com/testcases/";
-var Cuddlefish = require("cuddlefish");
-// Cuddlefish.Loader and Cuddlefish.loader (.parentLoader ?)
-// .fs property exposes filesystem object.
-
-var resolveUrl = require("url").resolve;
-
-var SecurableModule = require("securable-module");
 // example contents of extensions.testpilot.experiment.codeFs:
 // {'fs': {"bookmark01/experiment": "<plain-text code @ bookmarks.js>"}}
 // sample code
@@ -245,9 +185,7 @@ exports.RemoteExperimentLoader.prototype = {
     this._logger.trace("About to instantiate preferences store.");
     // Make both a pref store (for backwards compatibility with the old code
     // storage method) and a jar store (for the new and better one)
-    this._prefStore = new PreferencesStore("extensions.testpilot.experiment.codeFs");
     this._jarStore = new JarStore();
-    this._libraryNames = [];
     this._experimentFileNames = [];
     let self = this;
     this._logger.trace("About to instantiate cuddlefish loader.");
@@ -275,7 +213,7 @@ exports.RemoteExperimentLoader.prototype = {
     let self = this;
     this._loader = Cuddlefish.Loader(
       {fs: new SecurableModule.CompositeFileSystem(
-         [self._prefStore, self._jarStore, Cuddlefish.parentLoader.fs]),
+         [self._jarStore, Cuddlefish.parentLoader.fs]),
        console: this._expLogger
       });
   },
@@ -294,7 +232,7 @@ exports.RemoteExperimentLoader.prototype = {
     this._refreshLoader();
 
     // Check for surveys and studies
-    self._fileGetter(resolveUrl(BASE_URL, indexFileName), function onDone(data) { 
+    self._fileGetter(resolveUrl(BASE_URL, indexFileName), function onDone(data) {
       if (data) {
         try {
           data = JSON.parse(data);
@@ -309,16 +247,9 @@ exports.RemoteExperimentLoader.prototype = {
 
         /* Go through each file indicated in index.json, attempt to load it into
          * codeStorage (replacing any older version there).
-         * Note there's three kinds of files to download: libraries, raw
-         * experiment files, and jar files.
          */
-        let libNames = [ x.filename for each (x in data.libraries)];
-        self._libraryNames = libNames;
-        let expNames = [ x.filename for each (x in data.experiments)];
-        let oldStyleFilenames = libNames.concat(expNames);
-
         let jarFiles = data.experiment_jars;
-        let numFilesToDload = jarFiles.length + oldStyleFilenames.length;
+        let numFilesToDload = jarFiles.length;
 
         for each (let j in jarFiles) {
           let filename = j.jarfile;
@@ -347,30 +278,6 @@ exports.RemoteExperimentLoader.prototype = {
             }, modDate);
         }
 
-        // This whole thing here is for the legacy file format... can be
-        // deleted as we phase that out.
-        for each (let f in oldStyleFilenames) {
-          let filename = f;
-          self._logger.trace("I'm gonna go try to get the code for " + filename);
-          let modDate = self._prefStore.getFileModifiedDate(filename);
-
-          self._fileGetter(resolveUrl(BASE_URL, filename),
-            function onDone(code) {
-              // code will be non-null if there is actually new code to download.
-              if (code) {
-                self._logger.info("Downloaded new code for " + filename);
-                self._prefStore.setFile(filename, code);
-                self._logger.trace("Saved code for: " + filename);
-              } else {
-                self._logger.info("Nothing to download for " + filename);
-              }
-              numFilesToDload --;
-              if (numFilesToDload == 0) {
-                self._logger.trace("Calling callback.");
-                callback(true);
-              }
-            }, modDate);
-        }
       } else {
         self._logger.warn("Could not download index.json from test pilot server.");
         callback(false);
@@ -381,33 +288,10 @@ exports.RemoteExperimentLoader.prototype = {
   // Filename might be something like "bookmarks01/experiment.js"
 
   getExperiments: function() {
-    // TODO this needs to also get experiment module names from
-    // jar code store.  Jar files can also contain dependency files that aren't
-    // experiments.  So we have to keep the list of which ones ARE experiments
-    // either here or there.
     // Load up and return all experiments (not libraries)
     // already stored in codeStorage
     this._logger.trace("GetExperiments called.");
 
-    // Old style:
-    let remoteExperiments = {};
-    let filename;
-    for each (filename in this._prefStore.listAllFiles()) {
-      if (this._libraryNames.indexOf(filename) != -1) {
-        continue;
-      }
-      this._logger.debug("GetExperiments is loading " + filename);
-      try {
-        remoteExperiments[filename] = this._loader.require(filename);
-        this._logger.info("Loaded " + filename + " OK.");
-      } catch(e) {
-        this._logger.warn("Error loading " + filename);
-        dump("Error loading " + filename + " : " + e + "\n");
-        this._logger.warn(e);
-      }
-    }
-
-    // New style:
     for each (filename in this._experimentFileNames) {
       this._logger.debug("GetExperiments is loading " + filename);
       try {

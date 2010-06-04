@@ -328,3 +328,10 @@ exports.RemoteExperimentLoader.prototype = {
 // file itself somehow?  Like calling one of the files "study.js".  Or
 // "survey.js"  Hey, that would be neat - one .jar file containing both
 // the study.js and the survey.js.
+
+// TODO Also, if user has a study id foo that is not expired yet, and
+// a LegacyStudy appears with the same id, they should keep their "real"
+// version of id foo and not load the LegacyStudy version.
+
+// TODO but once the study is expired, should delete the jar for it and
+// just load the LegacyStudy version.

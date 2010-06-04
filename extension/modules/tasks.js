@@ -1018,5 +1018,8 @@ TestPilotLegacyStudy.prototype = {
     return TaskConstants.TYPE_LEGACY;
   }
   // TODO use prefs to get endDate so we can sort...
+
+  // TODO test that they don't say "thanks for contributing" if the
+  // user didn't actually complete them...
 };
 TestPilotLegacyStudy.prototype.__proto__ = TestPilotTask;

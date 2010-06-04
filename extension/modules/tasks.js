@@ -721,8 +721,9 @@ TestPilotExperiment.prototype = {
       req.setRequestHeader("Connection", "close");
       req.onreadystatechange = function(aEvt) {
         if (req.readyState == 4) {
-          if (req.status == 200) {
-  	    self._logger.info("DATA WAS POSTED SUCCESSFULLY " + req.responseText);
+          if (req.status == 201) {
+            let location = req.getResponseHeader("Location");
+  	    self._logger.info("DATA WAS POSTED SUCCESSFULLY " + location);
             dump("Uploaded data; location response header was ");
             dump(req.getResponseHeader("Location") + "\n");
             if (self._uploadRetryTimer) {
@@ -740,7 +741,9 @@ TestPilotExperiment.prototype = {
            * in cases where a lot of users are trying to submit data at
            * the same time and the network or server can't handle it.
            */
-            dump("Error posting data: " + req.responseText + "\n");
+
+            // TODO don't retry if status code is 401, 404, or...
+            // any others?
             self._logger.warn("ERROR POSTING DATA: " + req.responseText);
             self._uploadRetryTimer = Cc["@mozilla.org/timer;1"]
               .createInstance(Ci.nsITimer);

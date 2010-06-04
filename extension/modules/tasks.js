@@ -79,6 +79,7 @@ const TaskConstants = {
  STATUS_SUBMITTED : 6, // You've submitted your data.
  STATUS_RESULTS : 7, // Test finished AND final results visible somewhere
  STATUS_ARCHIVED: 8, // You've seen the results; there's nothing more to do.
+ STATUS_MISSED: 9, // You never ran this study.
 
  TYPE_EXPERIMENT : 1,
  TYPE_SURVEY : 2,
@@ -1003,22 +1004,34 @@ function TestPilotLegacyStudy(studyInfo) {
 };
 TestPilotLegacyStudy.prototype = {
   _init: function TestPilotLegacyStudy__init(studyInfo) {
-    dump("Instantiating legacy study task...\n");
-    // TODO if user doesn't already have status for this, set
-    // status to MISSED.  (I know we don't have a MISSED yet...)
-    // need to make sure the status is such that it can't accidently
-    // try to start or run...
+    /* If user doesn't already have status for this, it means they didn't
+     * run it when it was a live study, so set status to MISSED so that
+     * it won't get mistaken for a new study (and so we won't try to run it)*/
+
+    let stat = Application.prefs.getValue(STATUS_PREF_PREFIX + studyInfo.id,
+                                          null);
     this._taskInit( studyInfo.id,
                     studyInfo.name,
                     studyInfo.url,
                     studyInfo.summary,
                     studyInfo.thumbnail );
+    if (stat == null) {
+      this._status = TaskConstants.STATUS_MISSED;
+    }
+
+    if (studyInfo.duration) {
+      let prefName = START_DATE_PREF_PREFIX + this._id;
+      let startDateString = Application.prefs.getValue(prefName, null);
+      if (startDateString) {
+        this._startDate = Date.parse(startDateString);
+        this._endDate = this._startDate + duration * (24 * 60 * 60 * 1000);
+      }
+    }
   },
+
   get taskType() {
     return TaskConstants.TYPE_LEGACY;
   }
-  // TODO use prefs to get endDate so we can sort...
-
   // TODO test that they don't say "thanks for contributing" if the
   // user didn't actually complete them...
 };

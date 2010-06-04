@@ -641,13 +641,8 @@ let TestPilotSetup = {
          * if the user participated in it we want to keep that metadata. */
         let legacyStudies = self._remoteExperimentLoader.getLegacyStudies();
         for (let l in legacyStudies) {
-          dump("Legacy study: " + legacyStudies[l].name + "\n");
-          try {
           let legacyStudy = new TestPilotLegacyStudy(legacyStudies[l]);
           self.addTask(legacyStudy);
-          } catch(e) {
-            dump("Wut happened? " + e + "\n");
-          }
         }
 
         if (callback) {

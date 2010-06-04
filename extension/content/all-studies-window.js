@@ -337,8 +337,12 @@ var TestPilotXulWindow = {
             this.addThanksMessage(statusVbox);
           }
         } else {
-          this.addThanksMessage(statusVbox);
-          numFinishedStudies ++;
+          if (task.status == TaskConstants.STATUS_MISSED) {
+            // TODO use Sean's icon for missed studies
+          } else {
+            this.addThanksMessage(statusVbox);
+            numFinishedStudies ++;
+          }
         }
       }
       let spacer = document.createElement("spacer");

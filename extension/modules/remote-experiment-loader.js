@@ -177,6 +177,7 @@ exports.RemoteExperimentLoader.prototype = {
     this._logger = log4moz.repository.getLogger("TestPilot.Loader");
     this._expLogger = log4moz.repository.getLogger("TestPilot.RemoteCode");
     this._studyResults = [];
+    this._legacyStudies = [];
     if (fileGetterFunction != undefined) {
       this._fileGetter = fileGetterFunction;
     } else {
@@ -244,6 +245,7 @@ exports.RemoteExperimentLoader.prototype = {
 
         // Cache study results...
         self._studyResults = data.results;
+        self._legacyStudies = data.legacy;
 
         /* Go through each file indicated in index.json, attempt to load it into
          * codeStorage (replacing any older version there).
@@ -285,13 +287,12 @@ exports.RemoteExperimentLoader.prototype = {
     });
   },
 
-  // Filename might be something like "bookmarks01/experiment.js"
-
   getExperiments: function() {
-    // Load up and return all experiments (not libraries)
-    // already stored in codeStorage
+    /* Load up and return all studies/surveys (not libraries)
+     * already stored in codeStorage.  Returns a dict with key =
+     * the module name and value = the module object. */
     this._logger.trace("GetExperiments called.");
-
+    let remoteExperiments = {};
     for each (filename in this._experimentFileNames) {
       this._logger.debug("GetExperiments is loading " + filename);
       try {
@@ -308,6 +309,22 @@ exports.RemoteExperimentLoader.prototype = {
 
   getStudyResults: function() {
     return this._studyResults;
+  },
+
+  getLegacyStudies: function() {
+    return this._legacyStudies;
   }
 };
 
+// TODO purge the pref store of anybody who has one.
+
+// TODO i realized that right now there is no way for experiments
+// on disk to get loaded if the index file is not accessible for
+// any reason. getExperiments needs to be able to return names of
+// experiment modules on disk even if connection to server fails.  But
+// we can't just load everything; some modules in the jar are not
+// experiments.  Right now the information as to which modules are
+// experiments lives ONLY in index.json.  What if we put it into the .jar
+// file itself somehow?  Like calling one of the files "study.js".  Or
+// "survey.js"  Hey, that would be neat - one .jar file containing both
+// the study.js and the survey.js.

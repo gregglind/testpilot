@@ -36,7 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 EXPORTED_SYMBOLS = ["TaskConstants", "TestPilotBuiltinSurvey",
-                    "TestPilotExperiment", "TestPilotStudyResults"];
+                    "TestPilotExperiment", "TestPilotStudyResults",
+                    "TestPilotLegacyStudy"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -66,6 +67,9 @@ const DATA_UPLOAD_URL_2 = "https://testpilot.mozillalabs.com/submit/";
 
 
 const TaskConstants = {
+  // TODO status RESULTS and ARCHIVED don't make sense for studies anymore;
+  // we need a status MISSED and a status EXPIRED.  (can you be cancelled and
+  // expired?)
  STATUS_NEW: 0, // It's new and you haven't seen it yet.
  STATUS_PENDING : 1,  // You've seen it but it hasn't started.
  STATUS_STARTING: 2,  // Data collection started but notification not shown.
@@ -79,6 +83,7 @@ const TaskConstants = {
  TYPE_EXPERIMENT : 1,
  TYPE_SURVEY : 2,
  TYPE_RESULTS : 3,
+ TYPE_LEGACY: 4,
 
  ALWAYS_SUBMIT: 1,
  NEVER_SUBMIT: -1,
@@ -224,7 +229,7 @@ var TestPilotTask = {
 };
 
 function TestPilotExperiment(expInfo, dataStore, handlers, webContent) {
-  // All four of these are objects defined in the remoet experiment file
+  // All four of these are objects defined in the remote experiment file
   this._init(expInfo, dataStore, handlers, webContent);
 }
 TestPilotExperiment.prototype = {
@@ -992,3 +997,26 @@ TestPilotStudyResults.prototype = {
   }
 };
 TestPilotStudyResults.prototype.__proto__ = TestPilotTask;
+
+function TestPilotLegacyStudy(studyInfo) {
+  this._init(studyInfo);
+};
+TestPilotLegacyStudy.prototype = {
+  _init: function TestPilotLegacyStudy__init(studyInfo) {
+    dump("Instantiating legacy study task...\n");
+    // TODO if user doesn't already have status for this, set
+    // status to MISSED.  (I know we don't have a MISSED yet...)
+    // need to make sure the status is such that it can't accidently
+    // try to start or run...
+    this._taskInit( studyInfo.id,
+                    studyInfo.name,
+                    studyInfo.url,
+                    studyInfo.summary,
+                    studyInfo.thumbnail );
+  },
+  get taskType() {
+    return TaskConstants.TYPE_LEGACY;
+  }
+  // TODO use prefs to get endDate so we can sort...
+};
+TestPilotLegacyStudy.prototype.__proto__ = TestPilotTask;

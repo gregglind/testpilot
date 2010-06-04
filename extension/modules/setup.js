@@ -623,7 +623,7 @@ let TestPilotSetup = {
                                              experiments[filename].handlers,
                                              webContent);
             }
-            TestPilotSetup.addTask(task);
+            self.addTask(task);
             logger.info("Loaded task " + filename);
           } catch (e) {
             logger.warn("Failed to load task " + filename + ": " + e);
@@ -634,7 +634,20 @@ let TestPilotSetup = {
         let results = self._remoteExperimentLoader.getStudyResults();
         for (let r in results) {
           let studyResult = new TestPilotStudyResults(results[r]);
-          TestPilotSetup.addTask(studyResult);
+          self.addTask(studyResult);
+        }
+
+        /* Legacy studies = stuff we no longer have the code for, but
+         * if the user participated in it we want to keep that metadata. */
+        let legacyStudies = self._remoteExperimentLoader.getLegacyStudies();
+        for (let l in legacyStudies) {
+          dump("Legacy study: " + legacyStudies[l].name + "\n");
+          try {
+          let legacyStudy = new TestPilotLegacyStudy(legacyStudies[l]);
+          self.addTask(legacyStudy);
+          } catch(e) {
+            dump("Wut happened? " + e + "\n");
+          }
         }
 
         if (callback) {

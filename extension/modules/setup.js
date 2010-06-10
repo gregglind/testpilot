@@ -54,6 +54,7 @@ Components.utils.import("resource://testpilot/modules/log4moz.js");
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
 const VERSION_PREF ="extensions.testpilot.lastversion";
 const FIRST_RUN_PREF ="extensions.testpilot.firstRunUrl";
+const RUN_AT_ALL_PREF = "extension.testpilot.runStudies";
 const POPUP_SHOW_ON_NEW = "extensions.testpilot.popup.showOnNewStudy";
 const POPUP_SHOW_ON_FINISH = "extensions.testpilot.popup.showOnStudyFinished";
 const POPUP_SHOW_ON_RESULTS = "extensions.testpilot.popup.showOnNewResults";
@@ -69,7 +70,6 @@ let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
 
 let TestPilotSetup = {
-  isNewlyInstalledOrUpgraded: false,
   didReminderAfterStartup: false,
   startupComplete: false,
   _shortTimer: null,
@@ -79,7 +79,7 @@ let TestPilotSetup = {
   _obs: null,
   _stringBundle: null,
   taskList: [],
-
+  version: "",
 
   _initLogging: function TPS__initLogging() {
     let props = Cc["@mozilla.org/file/directory_service;1"].
@@ -114,18 +114,6 @@ let TestPilotSetup = {
       });
     logger.trace("Made new cuddlefish loader.");
     this._obs = this._loader.require("observer-service");
-
-    // Show first run page (in front window) if newly installed or upgraded.
-    let currVersion = Application.prefs.getValue(VERSION_PREF, "firstrun");
-    if (currVersion != this.version) {
-      Application.prefs.setValue(VERSION_PREF, this.version);
-      this.isNewlyInstalledOrUpgraded = true;
-      let browser = this._getFrontBrowserWindow().getBrowser();
-      let url = Application.prefs.getValue(FIRST_RUN_PREF, "");
-      let tab = browser.addTab(url);
-      browser.selectedTab = tab;
-    }
-
     // Set up observation for task state changes
     var self = this;
     this._obs.add("testpilot:task:changed", this.onTaskStatusChanged, self);
@@ -156,22 +144,36 @@ let TestPilotSetup = {
       }}, Application.prefs.getValue(POPUP_REMINDER_INTERVAL, 86400000),
       Ci.nsITimer.TYPE_REPEATING_SLACK);
 
-    // Install tasks.
-    this.checkForTasks(function() {
-      /* Callback to complete startup after we finish
-       * checking for tasks. */
-      self.startupComplete = true;
-      logger.trace("I'm in the callback from checkForTasks.");
-      // Send startup message to each task:
-      for (let i = 0; i < self.taskList.length; i++) {
-        self.taskList[i].onAppStartup();
-      }
-      self._obs.notify("testpilot:startup:complete", "", null);
-      /* onWindowLoad gets called once for each window,
-       * but only after we fire this notification. */
+      this.getVersion(function() {
+      // Show first run page (in front window) if newly installed or upgraded.
+        let currVersion = Application.prefs.getValue(VERSION_PREF, "firstrun");
+        if (currVersion != self.version) {
+          Application.prefs.setValue(VERSION_PREF, self.version); //errors here?
+          let browser = self._getFrontBrowserWindow().getBrowser();
+          let url = Application.prefs.getValue(FIRST_RUN_PREF, "");
+          let tab = browser.addTab(url);
+          browser.selectedTab = tab;
+        }
+
+        // Install tasks. (This requires knowing the version, so it is
+        // inside the callback from getVersion.)
+        self.checkForTasks(function() {
+          /* Callback to complete startup after we finish
+           * checking for tasks. */
+         self.startupComplete = true;
+         logger.trace("I'm in the callback from checkForTasks.");
+         // Send startup message to each task:
+         for (let i = 0; i < self.taskList.length; i++) {
+           self.taskList[i].onAppStartup();
+         }
+         self._obs.notify("testpilot:startup:complete", "", null);
+         /* onWindowLoad gets called once for each window,
+          * but only after we fire this notification. */
+         logger.trace("Testpilot startup complete.");
+      });
     });
-    logger.trace("Testpilot startup complete.");
     } catch(e) {
+      dump("Error in TestPilot startup: " + e + "\n");
       logger.error("Error in testPilot startup: " + e);
     }
   },
@@ -500,8 +502,20 @@ let TestPilotSetup = {
       subject.defaultUrl);
   },
 
-  get version() {
-    return Application.extensions.get(EXTENSION_ID).version;
+  getVersion: function TPS_getVersion(callback) {
+    // Application.extensions undefined in Firefox 4; will use the new
+    // asynchrounous API, store string in this.version, and call the
+    // callback when done.
+    if (Application.extensions) {
+      this.version = Application.extensions.get(EXTENSION_ID).version;
+      callback();
+    } else {
+      let self = this;
+      Application.getExtensions(function(extensions) {
+        self.version = extensions.get(EXTENSION_ID).version;
+        callback();
+      });
+    }
   },
 
   _isNewerThanMe: function TPS__isNewerThanMe(versionString) {

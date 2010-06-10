@@ -20,3 +20,7 @@
 
 <!-- notification -->
 <!ENTITY testpilot.notification.close.tooltip            "Close">
+
+<!-- Firefox 4 beta version UI -->
+<!ENTITY testpilot.enable.label                        "Turn On User Studies">
+<!ENTITY testpilot.feedbackbutton.label                "Feedback">

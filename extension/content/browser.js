@@ -74,14 +74,21 @@ var TestPilotMenuUtils = {
     }
   },
 
-  onMenuButtonMouseDown: function() {
+  onMenuButtonMouseDown: function(attachPointId) {
+    try {
+    if (!attachPointId) {
+      attachPointId = "pilot-notifications-button";
+    }
     var menuPopup = document.getElementById("pilot-menu-popup");
-    var menuButton = document.getElementById("pilot-notifications-button");
+    var menuButton = document.getElementById(attachPointId);
 
     if (menuPopup.parentNode != menuButton)
       menuButton.appendChild(menuPopup);
 
     menuPopup.openPopup(menuButton, "before_start", 0, 0, true);
+    } catch(e) {
+      dump("Error in onMenuButtonMouseDown: " + e + "\n");
+    }
   }
 };
 

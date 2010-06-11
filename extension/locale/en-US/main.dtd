@@ -24,3 +24,5 @@
 <!-- Firefox 4 beta version UI -->
 <!ENTITY testpilot.enable.label                        "Turn On User Studies">
 <!ENTITY testpilot.feedbackbutton.label                "Feedback">
+<!ENTITY testpilot.happy.label        "Leave Happy Feedback">
+<!ENTITY testpilot.sad.label          "Leave Sad Feedback">

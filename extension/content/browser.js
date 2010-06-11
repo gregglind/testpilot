@@ -20,6 +20,7 @@
  * Contributor(s):
  *   Atul Varma <atul@mozilla.com>
  *   Jono X <jono@mozilla.com>
+ *   Jorge Villalobos <jorge@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -74,6 +75,32 @@ var TestPilotMenuUtils = {
     }
   },
 
+  _setMenuImages: function() {
+    var happyItem = document.getElementById("feedback-menu-happy-button");
+
+    if (happyItem == null) {
+      return;
+    }
+    if (happyItem.getAttribute("image") == "") {
+      var makeImgUrl = function(os, mood) {
+        return "chrome://testpilot/skin/Firefox-Feedback-(" + os
+          + ")-(" + mood + ")-16x16.png";
+      };
+      var sadItem = document.getElementById("feedback-menu-sad-button");
+      var os = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
+      if (os.indexOf("Darwin") != -1) {
+        happyItem.setAttribute("image", makeImgUrl("Mac", "Smile"));
+        sadItem.setAttribute("image", makeImgUrl("Mac", "Frown"));
+      } else if (os.indexOf("Win") != -1) {
+        happyItem.setAttribute("image", makeImgUrl("Windows", "Smile"));
+        sadItem.setAttribute("image", makeImgUrl("Windows", "Frown"));
+      } else if (os.indexOf("Linux") != -1) {
+        happyItem.setAttribute("image", makeImgUrl("Linux", "Smile"));
+        sadItem.setAttribute("image", makeImgUrl("Linux", "Frown"));
+      }
+    }
+  },
+
   onMenuButtonMouseDown: function(attachPointId) {
     try {
     if (!attachPointId) {
@@ -82,6 +109,8 @@ var TestPilotMenuUtils = {
     var menuPopup = document.getElementById("pilot-menu-popup");
     var menuButton = document.getElementById(attachPointId);
 
+    this._setMenuImages();
+
     if (menuPopup.parentNode != menuButton)
       menuButton.appendChild(menuPopup);
 
@@ -89,6 +118,19 @@ var TestPilotMenuUtils = {
     } catch(e) {
       dump("Error in onMenuButtonMouseDown: " + e + "\n");
     }
+  },
+
+  openFeedbackPage : function (aIsHappy) {
+    /* Copied from the MozReporterButtons extension */
+    let url =
+      Application.prefs.get(
+        "extensions.testpilot." + (aIsHappy ? "happyURL" : "sadURL")).value;
+    url =
+      url.replace(
+        "${USER_AGENT}", encodeURIComponent(window.navigator.userAgent));
+    url = url.replace("${URL}", encodeURIComponent(gBrowser.contentDocument.location.href));
+
+    window.openUILinkIn(url, "tab");
   }
 };
 

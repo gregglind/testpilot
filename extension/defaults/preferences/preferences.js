@@ -9,3 +9,5 @@ pref("extensions.testpilot.popup.showOnStudyFinished", true);
 pref("extensions.testpilot.popup.showOnNewResults", false);
 pref("extensions.testpilot.alwaysSubmitData", false);
 pref("extensions.testpilot.runStudies", true);
+pref("extensions.testpilot.happyURL", "http://feedback.mozilla.org/happy.html?ua=${USER_AGENT}&url=${URL}");
+pref("extensions.testpilot.sadURL", "http://feedback.mozilla.org/sad.html?ua=${USER_AGENT}&url=${URL}");

@@ -50,58 +50,27 @@
   </panel>
 </toolbar>
 
-
-
-<menu id="pilot-menu" class="menu-iconic" label="&testpilot.brand.label;"
-      insertafter="addonsManager"
-      image="chrome://testpilot/skin/testpilot_16x16.png">
+<menu id="pilot-menu" class="menu-iconic"
+      label="&testpilot.feedbackbutton.label;"
+      insertafter="addonsManager">
   <menupopup id="pilot-menu-popup"
+             onpopupshowing="TestPilotMenuUtils.onPopupShowing(event);"
              onpopuphiding="TestPilotMenuUtils.onPopupHiding(event);">
-    <menu id="pilot-notification-settings" label="&testpilot.settings.label;">
-      <menupopup onpopupshowing="TestPilotMenuUtils.updateSubmenu();">
-        <menuitem class="pilot-notify-me-when"
-                  label="&testpilot.settings.notifyMeWhen.label;..."
-                  disabled="true"/>
-        <menuitem id="pilot-menu-notify-finished"
-                  label="&testpilot.settings.readyToSubmit.label;"
-                  type="checkbox"
-                  oncommand="
-                    TestPilotMenuUtils.togglePref('popup.showOnStudyFinished');"/>
-        <menuitem id="pilot-menu-notify-new"
-                  label="&testpilot.settings.newStudy.label;" type="checkbox"
-                  oncommand="
-                    TestPilotMenuUtils.togglePref('popup.showOnNewStudy');"/>
-        <menuitem id="pilot-menu-notify-results"
-                  label="&testpilot.settings.hasNewResults.label;"
-                  type="checkbox"
-                  oncommand="
-                    TestPilotMenuUtils.togglePref('popup.showOnNewResults');"/>
-        <menuseparator />
-        <menuitem id="pilot-menu-always-submit-data"
-                  label="&testpilot.settings.alwaysSubmitData.label;"
-                  type="checkbox"
-                  oncommand="
-                    TestPilotMenuUtils.togglePref('alwaysSubmitData');"/>
-      </menupopup>
-    </menu>
-    <menuitem label="&testpilot.allStudies.label;..."
-              oncommand="TestPilotWindowUtils.openAllStudiesWindow();"/>
-    <menuitem label="&testpilot.about.label;"
-              oncommand="
-                TestPilotWindowUtils.openInTab('https://testpilot.mozillalabs.com/');"/>
-    <menuitem id="feedback-menu-enable-studies" 
-              label="&testpilot.enable.label;"
-              oncommand="TestPilotMenuUtils.togglePref('runStudies');"/>
     <menuitem id="feedback-menu-happy-button"
-              class="menu-iconic"
+              class="menuitem-iconic"
               image=""
               label = "&testpilot.happy.label;"
               oncommand="TestPilotMenuUtils.openFeedbackPage(true);"/>
     <menuitem id="feedback-menu-sad-button"
-              class="menu-iconic"
+              class="menuitem-iconic"
               image=""
               label = "&testpilot.sad.label;"
               oncommand="TestPilotMenuUtils.openFeedbackPage(false);"/>
+    <menuitem label="&testpilot.allStudies.label;..."
+              oncommand="TestPilotWindowUtils.openAllStudiesWindow();"/>
+    <menuitem id="feedback-menu-enable-studies" 
+              label="&testpilot.enable.label;"
+              oncommand="TestPilotMenuUtils.togglePref('runStudies');"/>
   </menupopup>
 </menu>
 </overlay>

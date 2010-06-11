@@ -65,6 +65,11 @@ var TestPilotMenuUtils = {
     Application.prefs.setValue( prefName, !oldVal);
   },
 
+  onPopupShowing: function(event) {
+    this._setMenuImages();
+    this._setMenuLabels();
+  },
+
   onPopupHiding: function(event) {
     var target = event.target;
     if (target.id == "pilot-menu-popup") {
@@ -101,6 +106,22 @@ var TestPilotMenuUtils = {
     }
   },
 
+  _setMenuLabels: function() {
+    // Make the enable/disable User Studies menu item show the right label
+    // for the current status...
+    var runStudiesToggle = document.getElementById("feedback-menu-enable-studies");
+    if (runStudiesToggle) {
+      var currSetting = Application.prefs.getValue("extensions.testpilot.runStudies",
+                                                   true);
+      // TODO those two labels should be pulled from properties
+      if (currSetting) {
+        runStudiesToggle.setAttribute("label", "Turn Off User Studies");
+      } else {
+        runStudiesToggle.setAttribute("label", "Turn On User Studies");
+      }
+    }
+  },
+
   onMenuButtonMouseDown: function(attachPointId) {
     try {
     if (!attachPointId) {
@@ -108,8 +129,6 @@ var TestPilotMenuUtils = {
     }
     var menuPopup = document.getElementById("pilot-menu-popup");
     var menuButton = document.getElementById(attachPointId);
-
-    this._setMenuImages();
 
     if (menuPopup.parentNode != menuButton)
       menuButton.appendChild(menuPopup);

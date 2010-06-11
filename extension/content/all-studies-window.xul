@@ -52,6 +52,10 @@
           <label class="paneButtonLabel"
             value="&testpilot.studiesWindow.studyFindings.label;"/>
         </radio>
+        <radio pane="settings-pane-button" orient="vertical">
+          <label class="paneButtonLabel"
+            value="&testpilot.studiesWindow.settings.label;"/>
+        </radio>
       </radiogroup>
     </windowdragbox>
 
@@ -69,6 +73,30 @@
       <prefpane id="study-results-pane" class="tp-tab-panel">
         <richlistbox id="study-results-listbox" class="tp-study-list"
           disabled="true" />
+      </prefpane>
+
+      <prefpane id="settings-pane" class="tp-tab-panel">
+        <preferences>
+          <preference id="notify-finished" type="bool"
+                      name="extensions.testpilot.popup.showOnStudyFinished"/>
+          <preference id="notify-new" type="bool"
+                      name="extensions.testpilot.popup.showOnNewStudy"/>
+          <preference id="notify-results" type="bool"
+                      name="extensions.testpilot.popup.showOnNewResults"/>
+          <preference id="always-submit-data" type="bool"
+                      name="extensions.testpilot.alwaysSubmitData"/>
+        </preferences>
+        <vbox>
+        <label value="&testpilot.settings.notifyMeWhen.label;"/>
+        <checkbox label="&testpilot.settings.readyToSubmit.label;"
+                  preference="notify-finished"/>
+        <checkbox label="&testpilot.settings.newStudy.label;"
+                  preference="notify-new"/>
+        <checkbox label="&testpilot.settings.hasNewResults.label;"
+                  preference="notify-results"/>
+        <checkbox label="&testpilot.settings.alwaysSubmitData.label;"
+                  preference="always-submit-data"/>
+        </vbox>
       </prefpane>
     </deck>
   </vbox>

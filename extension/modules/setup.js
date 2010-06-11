@@ -38,7 +38,7 @@
 
 EXPORTED_SYMBOLS = ["TestPilotSetup", "POPUP_SHOW_ON_NEW",
                     "POPUP_SHOW_ON_FINISH", "POPUP_SHOW_ON_RESULTS",
-                    "ALWAYS_SUBMIT_DATA"];
+                    "ALWAYS_SUBMIT_DATA", "RUN_AT_ALL_PREF"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -54,7 +54,7 @@ Components.utils.import("resource://testpilot/modules/log4moz.js");
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
 const VERSION_PREF ="extensions.testpilot.lastversion";
 const FIRST_RUN_PREF ="extensions.testpilot.firstRunUrl";
-const RUN_AT_ALL_PREF = "extension.testpilot.runStudies";
+const RUN_AT_ALL_PREF = "extensions.testpilot.runStudies";
 const POPUP_SHOW_ON_NEW = "extensions.testpilot.popup.showOnNewStudy";
 const POPUP_SHOW_ON_FINISH = "extensions.testpilot.popup.showOnStudyFinished";
 const POPUP_SHOW_ON_RESULTS = "extensions.testpilot.popup.showOnNewResults";
@@ -93,9 +93,24 @@ let TestPilotSetup = {
     root.addAppender(appender);
   },
 
+  _isFfx4BetaVersion: function TPS__isFfx4BetaVersion() {
+    let result = Cc["@mozilla.org/xpcom/version-comparator;1"]
+                   .getService(Ci.nsIVersionComparator)
+                   .compare("3.7a1pre", Application.version);
+    if (result < 0) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+
   globalStartup: function TPS__doGlobalSetup() {
     // Only ever run this stuff ONCE, on the first window restore.
     // Should get called by the Test Pilot component.
+    if (!Application.prefs.getValue(RUN_AT_ALL_PREF, true)) {
+      // User has disabled test pilot; don't start up.
+      return;
+    }
     this._initLogging();
     let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
     logger.trace("TestPilotSetup.globalStartup was called.");
@@ -147,8 +162,9 @@ let TestPilotSetup = {
       this.getVersion(function() {
       // Show first run page (in front window) if newly installed or upgraded.
         let currVersion = Application.prefs.getValue(VERSION_PREF, "firstrun");
-        if (currVersion != self.version) {
-          Application.prefs.setValue(VERSION_PREF, self.version); //errors here?
+        // Don't show first run page in ffx4 beta version
+        if (currVersion != self.version && !self._isFfx4BetaVersion()) {
+          Application.prefs.setValue(VERSION_PREF, self.version);
           let browser = self._getFrontBrowserWindow().getBrowser();
           let url = Application.prefs.getValue(FIRST_RUN_PREF, "");
           let tab = browser.addTab(url);

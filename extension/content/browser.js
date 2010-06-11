@@ -63,6 +63,17 @@ var TestPilotMenuUtils = {
     var prefName = "extensions.testpilot." + id;
     var oldVal = Application.prefs.getValue(prefName, false);
     Application.prefs.setValue( prefName, !oldVal);
+
+    // If you turn on or off the global pref, startup or shutdown test pilot
+    // accordingly:
+    if (prefName == RUN_AT_ALL_PREF) {
+      if (oldVal == true) {
+        TestPilotSetup.globalShutdown();
+      }
+      if (oldVal == false) {
+        TestPilotSetup.globalStartup();
+      }
+    }
   },
 
   onPopupShowing: function(event) {
@@ -120,6 +131,10 @@ var TestPilotMenuUtils = {
         runStudiesToggle.setAttribute("label", "Turn On User Studies");
       }
     }
+
+    var studiesMenuItem = document.getElementById("feedback-menu-show-studies");
+    studiesMenuItem.setAttribute("disabled",
+                                 !Application.prefs.getValue(RUN_AT_ALL_PREF, true));
   },
 
   onMenuButtonMouseDown: function(attachPointId) {

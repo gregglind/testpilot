@@ -978,9 +978,6 @@ TestPilotWebSurvey.prototype = {
                    surveyInfo.surveyName,
                    surveyInfo.surveyUrl);
     this._logger.info("Initing survey.  This._status is " + this._status);
-    if (this._status < TaskConstants.STATUS_RESULTS) {
-      this.checkForCompletion();
-    }
   },
 
   get taskType() {
@@ -991,43 +988,18 @@ TestPilotWebSurvey.prototype = {
     return this.infoPageUrl;
   },
 
-  checkForCompletion: function TestPilotWebSurvey_checkForCompletion() {
-    var self = this;
-    self._logger.trace("Checking for survey completion...");
-    // Note, the following depends on SurveyMonkey and will break if
-    // SurveyMonkey changes their 'survey complete' page.
-    let surveyCompletedText = "Thank you for completing our survey!";
-    var req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance( Ci.nsIXMLHttpRequest );
-    req.open('GET', self._url, true);
-    req.onreadystatechange = function (aEvt) {
-      if (req.readyState == 4) {
-        if (req.status == 200) {
-          if (req.responseText.indexOf(surveyCompletedText) > -1) {
-            self._logger.trace("Survey is completed.");
-            self._logger.trace("Setting survey status to SUBMITTED");
-            self.changeStatus( TaskConstants.STATUS_SUBMITTED, true );
-            self._logger.trace("Survey status is now " + self._status);
-	  }
-        } else {
-          self._logger.warn("Error loading page");
-	}
-      }
-    };
-    req.send(null);
-  },
-
   onUrlLoad: function TPS_onUrlLoad(url) {
-    /* Viewing the appropriate URL makes survey status progress from
-     * NEW (havent' seen survey) to PENDING (seen it but not done it).
-     * So we can stop notifying people about the survey once they've seen it.*/
+    /* Once you view the URL of the survey, we'll assume you've taken it.
+     * There's no reliable way to tell whether you have or not, so let's
+     * default to not bugging the user about it again.
+     */
     if (url == this._url && this._status == TaskConstants.STATUS_NEW) {
-      this.changeStatus( TaskConstants.STATUS_PENDING );
+      this.changeStatus( TaskConstants.STATUS_SUBMITTED );
     }
   }
 
 };
 TestPilotWebSurvey.prototype.__proto__ = TestPilotTask;
-
 
 
 function TestPilotStudyResults(resultsInfo) {

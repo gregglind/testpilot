@@ -274,9 +274,19 @@ let TestPilotSetup = {
     // If there are multiple windows, show notifications in the frontmost
     // window.
     let doc = this._getFrontBrowserWindow().document;
-
     let popup = doc.getElementById("pilot-notification-popup");
-    let taskbarIcon = doc.getElementById("pilot-notifications-button");
+
+    let anchor;
+    if (this._isFfx4BetaVersion()) {
+      /* If we're in the Ffx4Beta version, popups come down from feedback
+       * button, but if we're in the standalone extension version, they
+       * come up from status bar icon. */
+      anchor = doc.getElementById("feedback-menu-button");
+      popup.setAttribute("class", "tail-up");
+    } else {
+      anchor = doc.getElementById("pilot-notifications-button");
+      popup.setAttribute("class", "tail-down");
+    }
     let textLabel = doc.getElementById("pilot-notification-text");
     let titleLabel = doc.getElementById("pilot-notification-title");
     let icon = doc.getElementById("pilot-notification-icon");
@@ -367,7 +377,7 @@ let TestPilotSetup = {
     // Show the popup:
     popup.hidden = false;
     popup.setAttribute("open", "true");
-    popup.openPopup( taskbarIcon, "after_end");
+    popup.openPopup( anchor, "after_end");
   },
 
   _openChromeless: function TPS__openChromeless(url) {

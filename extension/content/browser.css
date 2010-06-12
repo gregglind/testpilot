@@ -10,7 +10,14 @@
   margin-top: -4px;
   margin-right: -24px;
   width: 480px;
-  -moz-border-image: url(chrome://testpilot/skin/hud-panel.png) 26 50 22 18 / 26px 50px 22px 18px repeat;
+}
+
+.tail-up {
+ -moz-border-image: url(chrome://testpilot/skin/notification-tail-up.png) 26 50 22 18 / 26px 50px 22px 18px repeat;
+}
+
+.tail-down {
+ -moz-border-image: url(chrome://testpilot/skin/notification-tail-down.png) 26 50 22 18 / 26px 50px 22px 18px repeat;
 }
 
 .pilot-notification-popup-container {

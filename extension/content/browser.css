@@ -133,10 +133,13 @@ image.study-result {
 .paneSelector radio[pane="finished-studies-pane-button"] .paneButtonIcon {
     list-style-image: url("chrome://testpilot/skin/tp-completedstudies-32x32.png");
     padding-top: 3px;
-
 }
 .paneSelector radio[pane="study-results-pane-button"] .paneButtonIcon {
     list-style-image: url("chrome://testpilot/skin/tp-learned-32x32.png");
+    padding-top: 3px;
+}
+.paneSelector radio[pane="settings-pane-button"] .paneButtonIcon {
+    list-style-image: url("chrome://testpilot/skin/tp-settings-32x32.png");
     padding-top: 3px;
 }
 

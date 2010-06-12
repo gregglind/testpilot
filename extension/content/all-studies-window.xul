@@ -53,6 +53,7 @@
             value="&testpilot.studiesWindow.studyFindings.label;"/>
         </radio>
         <radio pane="settings-pane-button" orient="vertical">
+          <image class="paneButtonIcon" />
           <label class="paneButtonLabel"
             value="&testpilot.studiesWindow.settings.label;"/>
         </radio>
@@ -86,8 +87,8 @@
           <preference id="always-submit-data" type="bool"
                       name="extensions.testpilot.alwaysSubmitData"/>
         </preferences>
-        <hbox pack="start">
-            <vbox pack="start">
+        <hbox pack="center">
+            <vbox pack="center">
         <checkbox label="&testpilot.settings.alwaysSubmitData.label;"
                   preference="always-submit-data"/>
         <groupbox>

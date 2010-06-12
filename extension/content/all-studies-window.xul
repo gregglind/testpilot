@@ -86,7 +86,11 @@
           <preference id="always-submit-data" type="bool"
                       name="extensions.testpilot.alwaysSubmitData"/>
         </preferences>
-        <vbox>
+        <hbox pack="start">
+            <vbox pack="start">
+        <checkbox label="&testpilot.settings.alwaysSubmitData.label;"
+                  preference="always-submit-data"/>
+        <groupbox>
         <label value="&testpilot.settings.notifyMeWhen.label;"/>
         <checkbox label="&testpilot.settings.readyToSubmit.label;"
                   preference="notify-finished"/>
@@ -94,9 +98,9 @@
                   preference="notify-new"/>
         <checkbox label="&testpilot.settings.hasNewResults.label;"
                   preference="notify-results"/>
-        <checkbox label="&testpilot.settings.alwaysSubmitData.label;"
-                  preference="always-submit-data"/>
-        </vbox>
+        </groupbox>
+            </vbox>
+        </hbox>
       </prefpane>
     </deck>
   </vbox>

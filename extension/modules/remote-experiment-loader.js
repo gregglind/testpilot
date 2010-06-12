@@ -327,7 +327,8 @@ exports.RemoteExperimentLoader.prototype = {
 // experiments lives ONLY in index.json.  What if we put it into the .jar
 // file itself somehow?  Like calling one of the files "study.js".  Or
 // "survey.js"  Hey, that would be neat - one .jar file containing both
-// the study.js and the survey.js.
+// the study.js and the survey.js.  Or there could be a mini-manifest in the
+// jar telling which files are experiments.
 
 // TODO Also, if user has a study id foo that is not expired yet, and
 // a LegacyStudy appears with the same id, they should keep their "real"

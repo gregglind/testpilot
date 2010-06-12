@@ -148,7 +148,15 @@ var TestPilotMenuUtils = {
     if (menuPopup.parentNode != menuButton)
       menuButton.appendChild(menuPopup);
 
-    menuPopup.openPopup(menuButton, "before_start", 0, 0, true);
+      let alignment;
+      // Menu should appear above status bar icon, but below Feedback button
+      if (attachPointId == "pilot-notifications-button") {
+        alignment = "before_start";
+      } else {
+        alignment = "after_end";
+      }
+
+    menuPopup.openPopup(menuButton, alignment, 0, 0, true);
     } catch(e) {
       dump("Error in onMenuButtonMouseDown: " + e + "\n");
     }

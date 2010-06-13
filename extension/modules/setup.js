@@ -104,9 +104,28 @@ let TestPilotSetup = {
     }
   },
 
+  _setPrefDefaultsForVersion: function TPS__setPrefDefaultsForVersion() {
+    /* A couple of preferences need different default values depending on
+     * whether we're in the Firefox 4 beta version or the standalone TP version
+     */
+    let ps = Cc["@mozilla.org/preferences-service;1"]
+                    .getService(Ci.nsIPrefService);
+    let prefBranch = ps.getDefaultBranch("");
+    /* note we're setting default values, not current values -- these
+     * get overridden by any user set values. */
+    if (this._isFfx4BetaVersion()) {
+      prefBranch.setBoolPref(POPUP_SHOW_ON_NEW, true);
+      prefBranch.setIntPref(POPUP_CHECK_INTERVAL, 600000);
+    } else {
+      prefBranch.setBoolPref(POPUP_SHOW_ON_NEW, false);
+      prefBranch.setIntPref(POPUP_CHECK_INTERVAL, 180000);
+    }
+  },
+
   globalStartup: function TPS__doGlobalSetup() {
     // Only ever run this stuff ONCE, on the first window restore.
     // Should get called by the Test Pilot component.
+    this._setPrefDefaultsForVersion();
     if (!Application.prefs.getValue(RUN_AT_ALL_PREF, true)) {
       // User has disabled test pilot; don't start up.
       return;

@@ -258,10 +258,12 @@ function drawSurveyForm(task, contentDiv) {
 }
 
 function onBuiltinSurveySubmit() {
-  dump("Submitting survey...\n");
   Components.utils.import("resource://testpilot/modules/setup.js");
+  Components.utils.import("resource://testpilot/modules/log4moz.js");
+  let logger = Log4Moz.repository.getLogger("TestPilot.Survey");
   let eid = getUrlParam("eid");
   let task = TestPilotSetup.getTaskById(eid);
+  logger.info("Storing survey answers for survey id " + eid);
 
   // Read all values from form...
   let answers = [];
@@ -282,7 +284,7 @@ function onBuiltinSurveySubmit() {
     answers.push(anAnswer);
   }
   let surveyResults = { answers: answers };
-  dump("Answers as json is " + JSON.stringify(surveyResults) + "\n");
+  logger.info("Storing survey answers " + JSON.stringify(surveyResults));
   task.store(surveyResults, function(submitted) {
     // Reload page to show submitted status:
     if (submitted) {

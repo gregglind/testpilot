@@ -208,7 +208,6 @@ let TestPilotSetup = {
       });
     });
     } catch(e) {
-      dump("Error in TestPilot startup: " + e + "\n");
       logger.error("Error in testPilot startup: " + e);
     }
   },

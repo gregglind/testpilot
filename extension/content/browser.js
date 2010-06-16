@@ -138,7 +138,6 @@ var TestPilotMenuUtils = {
   },
 
   onMenuButtonMouseDown: function(attachPointId) {
-    try {
     if (!attachPointId) {
       attachPointId = "pilot-notifications-button";
     }
@@ -157,9 +156,6 @@ var TestPilotMenuUtils = {
       }
 
     menuPopup.openPopup(menuButton, alignment, 0, 0, true);
-    } catch(e) {
-      dump("Error in onMenuButtonMouseDown: " + e + "\n");
-    }
   },
 
   openFeedbackPage : function (aIsHappy) {

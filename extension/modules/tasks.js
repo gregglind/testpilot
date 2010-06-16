@@ -715,7 +715,7 @@ TestPilotExperiment.prototype = {
     // note the server will reject any upload over 5MB - shouldn't be a problem
     let self = this;
     let url = DATA_UPLOAD_URL + this._id;
-    dump("Posting data to url " + url + "\n");
+    self._logger.info("Posting data to url " + url + "\n");
     self._prependMetadataToJSON( function(dataString) {
       let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                   .createInstance( Ci.nsIXMLHttpRequest );
@@ -728,8 +728,6 @@ TestPilotExperiment.prototype = {
           if (req.status == 201) {
             let location = req.getResponseHeader("Location");
   	    self._logger.info("DATA WAS POSTED SUCCESSFULLY " + location);
-            dump("Uploaded data; location response header was ");
-            dump(req.getResponseHeader("Location") + "\n");
             if (self._uploadRetryTimer) {
               self._uploadRetryTimer.cancel(); // Stop retrying - it worked!
             }

@@ -69,6 +69,7 @@
               image=""
               label = "&testpilot.sad.label;"
               oncommand="TestPilotMenuUtils.openFeedbackPage(false);"/>
+    <menuseparator/>
     <menuitem id="feedback-menu-show-studies"
               label="&testpilot.allStudies.label;..."
               oncommand="TestPilotWindowUtils.openAllStudiesWindow();"/>

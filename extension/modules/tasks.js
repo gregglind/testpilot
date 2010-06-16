@@ -59,9 +59,10 @@ const DATE_FOR_DATA_DELETION_PREFIX =
 const GUID_PREF_PREFIX = "extensions.testpilot.taskGUID.";
 const RETRY_INTERVAL_PREF = "extensions.testpilot.uploadRetryInterval";
 const TIME_FOR_DATA_DELETION = 7 * (24 * 60 * 60 * 1000); // 7 days
+const DATA_UPLOAD_PREF = "extensions.testpilot.dataUploadURL";
 const DEFAULT_THUMBNAIL_URL = "chrome://testpilot/skin/badge-default.png";
 
-const DATA_UPLOAD_URL = "https://testpilot.mozillalabs.com/submit/";
+
 
 
 const TaskConstants = {
@@ -160,6 +161,11 @@ var TestPilotTask = {
 
   get defaultUrl() {
     return this.infoPageUrl;
+  },
+
+  get uploadUrl() {
+    let url = Application.prefs.getValue(DATA_UPLOAD_PREF, "");
+    return url + this._id;
   },
 
   // event handlers:
@@ -714,7 +720,7 @@ TestPilotExperiment.prototype = {
 
     // note the server will reject any upload over 5MB - shouldn't be a problem
     let self = this;
-    let url = DATA_UPLOAD_URL + this._id;
+    let url = self.uploadUrl;
     self._logger.info("Posting data to url " + url + "\n");
     self._prependMetadataToJSON( function(dataString) {
       let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
@@ -772,7 +778,7 @@ TestPilotExperiment.prototype = {
   optOut: function TestPilotExperiment_optOut(reason, callback) {
     // Regardless of study ID, post the opt-out message to a special
     // database table of just opt-out messages; include study ID in metadata.
-    let url = DATA_UPLOAD_URL + "opt-out";
+    let url = Application.prefs.getValue(DATA_UPLOAD_PREF, "") + "opt-out";
     let logger = this._logger;
     this.changeStatus(TaskConstants.STATUS_CANCELLED);
     this._dataStore.wipeAllData();
@@ -926,7 +932,7 @@ TestPilotBuiltinSurvey.prototype = {
     let req =
       Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
         createInstance(Ci.nsIXMLHttpRequest);
-    let url = DATA_UPLOAD_URL + this._id;
+    let url = self.uploadUrl;
 
     req.open("POST", url, true);
     req.setRequestHeader("Content-type", "application/json");

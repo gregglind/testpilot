@@ -158,7 +158,7 @@ var TestPilotMenuUtils = {
     menuPopup.openPopup(menuButton, alignment, 0, 0, true);
   },
 
-  openFeedbackPage : function (aIsHappy) {
+  openFeedbackPage: function(aIsHappy) {
     /* Copied from the MozReporterButtons extension */
     let url =
       Application.prefs.get(

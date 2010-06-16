@@ -34,7 +34,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const BASE_URL = "https://testpilot.mozillalabs.com/testcases/";
+const BASE_URL_PREF = "extensions.testpilot.indexBaseURL";
 var Cuddlefish = require("cuddlefish");
 var resolveUrl = require("url").resolve;
 var SecurableModule = require("securable-module");
@@ -178,6 +178,8 @@ exports.RemoteExperimentLoader.prototype = {
     this._expLogger = log4moz.repository.getLogger("TestPilot.RemoteCode");
     this._studyResults = [];
     this._legacyStudies = [];
+    let prefs = require("preferences-service");
+    this._baseUrl = prefs.get(BASE_URL_PREF, "");
     if (fileGetterFunction != undefined) {
       this._fileGetter = fileGetterFunction;
     } else {
@@ -233,7 +235,8 @@ exports.RemoteExperimentLoader.prototype = {
     this._refreshLoader();
 
     // Check for surveys and studies
-    self._fileGetter(resolveUrl(BASE_URL, indexFileName), function onDone(data) {
+    let url = resolveUrl(self._baseUrl, indexFileName);
+    self._fileGetter(url, function onDone(data) {
       if (data) {
         try {
           data = JSON.parse(data);
@@ -262,7 +265,7 @@ exports.RemoteExperimentLoader.prototype = {
           self._logger.trace("I'm gonna go try to get the code for " + filename);
           let modDate = self._jarStore.getFileModifiedDate(filename);
 
-          self._fileGetter(resolveUrl(BASE_URL, filename),
+          self._fileGetter(resolveUrl(self._baseUrl, filename),
             function onDone(code) {
               // code will be non-null if there is actually new code to download.
               if (code) {

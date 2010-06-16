@@ -63,9 +63,6 @@ const POPUP_REMINDER_INTERVAL = "extensions.testpilot.popup.timeBetweenChecks";
 const ALWAYS_SUBMIT_DATA = "extensions.testpilot.alwaysSubmitData";
 const LOG_FILE_NAME = "TestPilotErrorLog.log";
 
-// TODO move homepage to a pref?
-const TEST_PILOT_HOME_PAGE = "http://testpilot.mozillalabs.com";
-
 let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
 

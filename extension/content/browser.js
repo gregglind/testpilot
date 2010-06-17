@@ -41,13 +41,13 @@ Cu.import("resource://testpilot/modules/setup.js");
 // Namespace object
 var TestPilotMenuUtils = {
   updateSubmenu: function() {
-    var ntfyMenuFinished =
+    let ntfyMenuFinished =
       document.getElementById("pilot-menu-notify-finished");
-    var ntfyMenuNew = document.getElementById("pilot-menu-notify-new");
-    var ntfyMenuResults = document.getElementById("pilot-menu-notify-results");
-    var alwaysSubmitData =
+    let ntfyMenuNew = document.getElementById("pilot-menu-notify-new");
+    let ntfyMenuResults = document.getElementById("pilot-menu-notify-results");
+    let alwaysSubmitData =
       document.getElementById("pilot-menu-always-submit-data");
-    var Application = Cc["@mozilla.org/fuel/application;1"]
+    let Application = Cc["@mozilla.org/fuel/application;1"]
                     .getService(Ci.fuelIApplication);
     ntfyMenuFinished.setAttribute("checked", Application.prefs.getValue(
                                   POPUP_SHOW_ON_FINISH, false));
@@ -60,8 +60,8 @@ var TestPilotMenuUtils = {
   },
 
   togglePref: function(id) {
-    var prefName = "extensions.testpilot." + id;
-    var oldVal = Application.prefs.getValue(prefName, false);
+    let prefName = "extensions.testpilot." + id;
+    let oldVal = Application.prefs.getValue(prefName, false);
     Application.prefs.setValue( prefName, !oldVal);
 
     // If you turn on or off the global pref, startup or shutdown test pilot
@@ -82,9 +82,9 @@ var TestPilotMenuUtils = {
   },
 
   onPopupHiding: function(event) {
-    var target = event.target;
+    let target = event.target;
     if (target.id == "pilot-menu-popup") {
-      var menu = document.getElementById("pilot-menu");
+      let menu = document.getElementById("pilot-menu");
       if (target.parentNode != menu) {
         menu.appendChild(target);
       }
@@ -92,18 +92,18 @@ var TestPilotMenuUtils = {
   },
 
   _setMenuImages: function() {
-    var happyItem = document.getElementById("feedback-menu-happy-button");
+    let happyItem = document.getElementById("feedback-menu-happy-button");
 
     if (happyItem == null) {
       return;
     }
     if (happyItem.getAttribute("image") == "") {
-      var makeImgUrl = function(os, mood) {
+      let makeImgUrl = function(os, mood) {
         return "chrome://testpilot/skin/Firefox-Feedback-(" + os
           + ")-(" + mood + ")-16x16.png";
       };
-      var sadItem = document.getElementById("feedback-menu-sad-button");
-      var os = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
+      let sadItem = document.getElementById("feedback-menu-sad-button");
+      let os = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
       if (os.indexOf("Darwin") != -1) {
         happyItem.setAttribute("image", makeImgUrl("Mac", "Smile"));
         sadItem.setAttribute("image", makeImgUrl("Mac", "Frown"));
@@ -120,9 +120,9 @@ var TestPilotMenuUtils = {
   _setMenuLabels: function() {
     // Make the enable/disable User Studies menu item show the right label
     // for the current status...
-    var runStudiesToggle = document.getElementById("feedback-menu-enable-studies");
+    let runStudiesToggle = document.getElementById("feedback-menu-enable-studies");
     if (runStudiesToggle) {
-      var currSetting = Application.prefs.getValue("extensions.testpilot.runStudies",
+      let currSetting = Application.prefs.getValue("extensions.testpilot.runStudies",
                                                    true);
       // TODO those two labels should be pulled from properties
       if (currSetting) {
@@ -132,7 +132,7 @@ var TestPilotMenuUtils = {
       }
     }
 
-    var studiesMenuItem = document.getElementById("feedback-menu-show-studies");
+    let studiesMenuItem = document.getElementById("feedback-menu-show-studies");
     studiesMenuItem.setAttribute("disabled",
                                  !Application.prefs.getValue(RUN_AT_ALL_PREF, true));
   },
@@ -141,8 +141,8 @@ var TestPilotMenuUtils = {
     if (!attachPointId) {
       attachPointId = "pilot-notifications-button";
     }
-    var menuPopup = document.getElementById("pilot-menu-popup");
-    var menuButton = document.getElementById(attachPointId);
+    let menuPopup = document.getElementById("pilot-menu-popup");
+    let menuButton = document.getElementById(attachPointId);
 
     if (menuPopup.parentNode != menuButton)
       menuButton.appendChild(menuPopup);
@@ -182,9 +182,9 @@ var TestPilotWindowHandlers = {
     if (TestPilotSetup.startupComplete) {
       TestPilotSetup.onWindowLoad(window);
     } else {
-      var observerSvc = Cc["@mozilla.org/observer-service;1"]
+      let observerSvc = Cc["@mozilla.org/observer-service;1"]
                            .getService(Ci.nsIObserverService);
-      var observer = {
+      let observer = {
         observe: function(subject, topic, data) {
           observerSvc.removeObserver(this, "testpilot:startup:complete");
           TestPilotSetup.onWindowLoad(window);

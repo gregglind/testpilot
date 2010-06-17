@@ -63,8 +63,6 @@ const DATA_UPLOAD_PREF = "extensions.testpilot.dataUploadURL";
 const DEFAULT_THUMBNAIL_URL = "chrome://testpilot/skin/badge-default.png";
 
 
-
-
 const TaskConstants = {
   // TODO status RESULTS and ARCHIVED don't make sense for studies anymore;
   // we need a status MISSED and a status EXPIRED.  (can you be cancelled and

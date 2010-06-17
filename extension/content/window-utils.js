@@ -37,13 +37,13 @@
 const ALL_STUDIES_WINDOW_NAME = "TestPilotAllStudiesWindow";
 const ALL_STUDIES_WINDOW_TYPE = "extensions:testpilot:all_studies_window";
 
-var TestPilotWindowUtils = {
+let TestPilotWindowUtils = {
   openAllStudiesWindow: function() {
     // If the window is not already open, open it; but if it is open,
     // focus it instead.
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
+    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
                getService(Components.interfaces.nsIWindowMediator);
-    var allStudiesWindow = wm.getMostRecentWindow(ALL_STUDIES_WINDOW_TYPE);
+    let allStudiesWindow = wm.getMostRecentWindow(ALL_STUDIES_WINDOW_TYPE);
 
     if (allStudiesWindow) {
       allStudiesWindow.focus();
@@ -55,19 +55,19 @@ var TestPilotWindowUtils = {
   },
 
   openInTab: function(url) {
-    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                    .getService(Components.interfaces.nsIWindowMediator);
-    var enumerator = wm.getEnumerator("navigator:browser");
-    var found = false;
+    let enumerator = wm.getEnumerator("navigator:browser");
+    let found = false;
 
     while(enumerator.hasMoreElements()) {
-      var win = enumerator.getNext();
-      var tabbrowser = win.getBrowser();
+      let win = enumerator.getNext();
+      let tabbrowser = win.getBrowser();
 
       // Check each tab of this browser instance
-      var numTabs = tabbrowser.browsers.length;
-      for (var i = 0; i < numTabs; i++) {
-        var currentBrowser = tabbrowser.getBrowserAtIndex(i);
+      let numTabs = tabbrowser.browsers.length;
+      for (let i = 0; i < numTabs; i++) {
+        let currentBrowser = tabbrowser.getBrowserAtIndex(i);
         if (url == currentBrowser.currentURI.spec) {
           tabbrowser.selectedTab = tabbrowser.tabContainer.childNodes[i];
           found = true;
@@ -78,10 +78,10 @@ var TestPilotWindowUtils = {
     }
 
     if (!found) {
-      var win = wm.getMostRecentWindow("navigator:browser");
+      let win = wm.getMostRecentWindow("navigator:browser");
       if (win) {
-        var browser = win.getBrowser();
-        var tab = browser.addTab(url);
+        let browser = win.getBrowser();
+        let tab = browser.addTab(url);
         browser.selectedTab = tab;
         win.focus();
       } else {
@@ -91,9 +91,9 @@ var TestPilotWindowUtils = {
   },
 
   openHomepage: function() {
-    var Application = Cc["@mozilla.org/fuel/application;1"]
+    let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
-    var url = Application.prefs.getValue("extensions.testpilot.homepageURL",
+    let url = Application.prefs.getValue("extensions.testpilot.homepageURL",
                                          "");
     this.openInTab(url);
   },
@@ -107,7 +107,7 @@ var TestPilotWindowUtils = {
     // TODO this window opening triggers studies' window-open code.
     // Is that what we want or not?
 
-    var win = window.open(url, "TestPilotStudyDetailWindow",
+    let win = window.open(url, "TestPilotStudyDetailWindow",
                          "chrome,centerscreen,resizable=yes,scrollbars=yes," +
                          "status=no,width=1000,height=800");
     win.focus();

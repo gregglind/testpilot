@@ -51,8 +51,7 @@
     <menuitem label="&testpilot.allStudies.label;..."
               oncommand="TestPilotWindowUtils.openAllStudiesWindow();"/>
     <menuitem label="&testpilot.about.label;"
-              oncommand="
-                TestPilotWindowUtils.openInTab('https://testpilot.mozillalabs.com/');"/>
+              oncommand="TestPilotWindowUtils.openHomepage();"/>
   </menupopup>
 </menu>
 

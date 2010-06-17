@@ -78,7 +78,7 @@ var TestPilotWindowUtils = {
     }
 
     if (!found) {
-      win = wm.getMostRecentWindow("navigator:browser");
+      var win = wm.getMostRecentWindow("navigator:browser");
       if (win) {
         var browser = win.getBrowser();
         var tab = browser.addTab(url);
@@ -88,6 +88,14 @@ var TestPilotWindowUtils = {
         window.open(url);
       }
     }
+  },
+
+  openHomepage: function() {
+    var Application = Cc["@mozilla.org/fuel/application;1"]
+                  .getService(Ci.fuelIApplication);
+    var url = Application.prefs.getValue("extensions.testpilot.homepageURL",
+                                         "");
+    this.openInTab(url);
   },
 
   openChromeless: function(url) {

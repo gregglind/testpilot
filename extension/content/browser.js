@@ -36,7 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-Cu.import("resource://testpilot/modules/setup.js");
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+
+Components.utils.import("resource://testpilot/modules/setup.js");
 
 // Namespace object
 var TestPilotMenuUtils = {

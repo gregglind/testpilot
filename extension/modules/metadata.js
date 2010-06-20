@@ -83,6 +83,13 @@ let MetadataCollector = {
   getExtensions: function MetadataCollector_getExtensions() {
     //http://lxr.mozilla.org/aviarybranch/source/toolkit/mozapps/extensions/public/nsIExtensionManager.idl
     //http://lxr.mozilla.org/aviarybranch/source/toolkit/mozapps/update/public/nsIUpdateService.idl#45
+
+    if (!Cc["@mozilla.org/extensions/manager;1"]) {
+      // TODO the above is undefined if we're operating in Firefox 4 land;
+      // need to use the async API of Application.getExtensions.
+      return [];
+    }
+
     let extManager = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);
     let rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
     let datasource = extManager.datasource;

@@ -56,9 +56,8 @@ dump("Debug page Requiring toolbar study.\n");
 
   function getCodeStorage() {
     Components.utils.import("resource://testpilot/modules/setup.js");
-    var loader = TestPilotSetup._loader;
-    var module = loader.require("remote-experiment-loader");
-    return new module.PreferencesStore("extensions.testpilot.experiment.codeFs");
+    var loader = TestPilotSetup._remoteExperimentLoader;
+    return loader._jarStore;
   }
 
   function getSelectedFilename() {
@@ -68,20 +67,20 @@ dump("Debug page Requiring toolbar study.\n");
   }
 
   function loadExperimentCode() {
-    //var filename = getSelectedFilename();
-    var filename = "example/example_study.js";
+    var filename = getSelectedFilename();
+    var codeStore = getCodeStorage();
     var textArea = document.getElementById("experiment-code-area");
-    prefStore = getCodeStorage();
-    code = prefStore.getFile(filename).contents;
+    var path = codeStore.resolveModule(null, filename);
+    code = codeStore.getFile(path).contents;
     textArea.value = code;
   }
 
   function saveAndRun() {
-    //var filename = getSelectedFilename();
-    var filename = "example/example_study.js";
+    var filename = getSelectedFilename();
+    var codeStore = getCodeStorage();
+    var path = codeStore.resolveModule(null, filename);
     var textArea = document.getElementById("experiment-code-area");
-    prefStore = getCodeStorage();
-    code = prefStore.setFile(filename, textArea.value);
+    codeStore.setLocalOverride(path, textArea.value);
     reloadAllExperiments(function(success) {
       document.getElementById("debug").innerHTML = "Success? " + success;});
   }
@@ -120,9 +119,8 @@ dump("Debug page Requiring toolbar study.\n");
   }
 
   function populateFileDropdown() {
-    Components.utils.import("resource://testpilot/modules/setup.js");
-    var loader = TestPilotSetup._remoteExperimentLoader;
-    var files = loader._jarStore.listAllFiles();
+    var codeStore = getCodeStorage();
+    var files = codeStore.listAllFiles();
     var selector = document.getElementById("file-selector");
     var opt, i;
     for (var i = 0; i < files.length; i++) {

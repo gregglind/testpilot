@@ -39,6 +39,7 @@ function JarStore() {
   try {
   let baseDirName = "TestPilotExperimentFiles"; // this should go in pref?
   this._baseDir = null;
+  this._localOverrides = {}; //override with code for debugging purposes
   this._index = {}; // tells us which jar file to look in for each module
   this._lastModified = {}; // tells us when each jar file was last modified
   this._init( baseDirName );
@@ -49,6 +50,10 @@ function JarStore() {
 JarStore.prototype = {
 
   _init: function( baseDirectory ) {
+    let prefs = require("preferences-service");
+    this._localOverrides = JSON.parse(
+      prefs.get("extensions.testpilot.codeOverride", "{}"));
+
     let dir = Cc["@mozilla.org/file/directory_service;1"].
       getService(Ci.nsIProperties).get("ProfD", Ci.nsIFile);
     dir.append(baseDirectory);
@@ -67,7 +72,6 @@ JarStore.prototype = {
         if (jarFile.leafName.indexOf(".jar") != jarFile.leafName.length - 4) {
           continue;
         }
-        // TODO should call _verifyJar here, but need a hash to compare it to...
         this._lastModified[jarFile.leafName] = jarFile.lastModifiedTime;
         this._indexJar(jarFile);
       }
@@ -131,8 +135,12 @@ JarStore.prototype = {
       // filename may have directories in it; use just the last part
       jarFile.append(filename.split("/").pop());
 
+      // If a file of that name already exists, remove it!
+      if (jarFile.exists()) {
+        jarFile.remove(false);
+      }
     // From https://developer.mozilla.org/en/Code_snippets/File_I%2f%2fO#Getting_special_files
-    jarFile.createUnique( Ci.nsIFile.NORMAL_FILE_TYPE, 600);
+    jarFile.create( Ci.nsIFile.NORMAL_FILE_TYPE, 600);
     let stream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
                     createInstance(Ci.nsIFileOutputStream);
     stream.init(jarFile, 0x04 | 0x08 | 0x20, 0600, 0); // readwrite, create, truncate
@@ -180,6 +188,9 @@ JarStore.prototype = {
   getFile: function(path) {
     // used externally by cuddlefish; takes the path and returns
     // {contents: data}.
+    if (this._localOverrides[path]) {
+      return this._localOverrides[path];
+    }
     let parts = path.split("!");
     let filePath = parts[0];
     let entryName = parts[1];
@@ -229,7 +240,17 @@ JarStore.prototype = {
     let x;
     let list = [x for (x in this._index)];
     return list;
+  },
+
+  setLocalOverride: function(path, code) {
+    let prefs = require("preferences-service");
+    this._localOverrides[path] = code;
+    prefs.set("extensions.testpilot.codeOverride",
+              JSON.stringify(this._localOverrides));
   }
 };
 
 exports.JarStore = JarStore;
+
+// TODO evidently we are re-downloading the jar file every time!!!!
+// Horror of horrors!!

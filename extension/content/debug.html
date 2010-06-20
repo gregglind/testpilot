@@ -43,7 +43,7 @@
     var clientLoader = Cuddlefish.Loader(
       {fs: new SecurableModule.CompositeFileSystem(
          [jarStore, loader.fs])});
-dump("Debug page Requiring toolbar study.\n");
+    dump("Debug page Requiring toolbar study.\n");
     var toolbarStudy = clientLoader.require("toolbar-study");
     
   }

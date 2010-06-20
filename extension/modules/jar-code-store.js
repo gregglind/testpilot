@@ -189,7 +189,8 @@ JarStore.prototype = {
     // used externally by cuddlefish; takes the path and returns
     // {contents: data}.
     if (this._localOverrides[path]) {
-      return this._localOverrides[path];
+      let code = this._localOverrides[path];
+      return {contents: code};
     }
     let parts = path.split("!");
     let filePath = parts[0];
@@ -251,6 +252,3 @@ JarStore.prototype = {
 };
 
 exports.JarStore = JarStore;
-
-// TODO evidently we are re-downloading the jar file every time!!!!
-// Horror of horrors!!

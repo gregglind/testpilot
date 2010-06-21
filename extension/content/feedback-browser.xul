@@ -59,12 +59,12 @@
              onpopuphiding="TestPilotMenuUtils.onPopupHiding(event);">
     <menuitem id="feedback-menu-happy-button"
               class="menuitem-iconic"
-              image=""
+              image="chrome://testpilot-os/skin/feedback-smile-16x16.png"
               label = "&testpilot.happy.label;"
               oncommand="TestPilotMenuUtils.openFeedbackPage(true);"/>
     <menuitem id="feedback-menu-sad-button"
               class="menuitem-iconic"
-              image=""
+              image="chrome://testpilot-os/skin/feedback-frown-16x16.png"
               label = "&testpilot.sad.label;"
               oncommand="TestPilotMenuUtils.openFeedbackPage(false);"/>
     <menuseparator/>

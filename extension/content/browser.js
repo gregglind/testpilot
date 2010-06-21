@@ -81,7 +81,6 @@ var TestPilotMenuUtils = {
   },
 
   onPopupShowing: function(event) {
-    this._setMenuImages();
     this._setMenuLabels();
   },
 
@@ -91,32 +90,6 @@ var TestPilotMenuUtils = {
       let menu = document.getElementById("pilot-menu");
       if (target.parentNode != menu) {
         menu.appendChild(target);
-      }
-    }
-  },
-
-  _setMenuImages: function() {
-    let happyItem = document.getElementById("feedback-menu-happy-button");
-
-    if (happyItem == null) {
-      return;
-    }
-    if (happyItem.getAttribute("image") == "") {
-      let makeImgUrl = function(os, mood) {
-        return "chrome://testpilot/skin/Firefox-Feedback-(" + os
-          + ")-(" + mood + ")-16x16.png";
-      };
-      let sadItem = document.getElementById("feedback-menu-sad-button");
-      let os = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
-      if (os.indexOf("Darwin") != -1) {
-        happyItem.setAttribute("image", makeImgUrl("Mac", "Smile"));
-        sadItem.setAttribute("image", makeImgUrl("Mac", "Frown"));
-      } else if (os.indexOf("Win") != -1) {
-        happyItem.setAttribute("image", makeImgUrl("Windows", "Smile"));
-        sadItem.setAttribute("image", makeImgUrl("Windows", "Frown"));
-      } else if (os.indexOf("Linux") != -1) {
-        happyItem.setAttribute("image", makeImgUrl("Linux", "Smile"));
-        sadItem.setAttribute("image", makeImgUrl("Linux", "Frown"));
       }
     }
   },

@@ -21,6 +21,7 @@
  *   Atul Varma <atul@mozilla.com>
  *   Jono X <jono@mozilla.com>
  *   Raymond Lee <raymond@appcoast.com>
+ *   Jorge Villalobos <jorge@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -120,17 +121,47 @@ let TestPilotSetup = {
     }
   },
 
+  _setUpToolbarFeedbackButton: function TPS_toolbarFeedbackButton() {
+    /* If this is first run, and it's ffx4 beta version, and the feedback
+     * button is not in the expected place, put it there!
+     * (copied from MozReporterButtons extension) */
+    let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
+    try {
+      let win = this._getFrontBrowserWindow();
+      let firefoxnav = win.document.getElementById("nav-bar");
+      let curSet = firefoxnav.currentSet;
+
+      if (-1 == curSet.indexOf("feedback-menu-button")) {
+        logger.info("Feedback toolbar button not present: Adding it.");
+        // place the buttons after the search box.
+        let newSet = curSet + ",feedback-menu-button";
+
+        firefoxnav.setAttribute("currentset", newSet);
+        firefoxnav.currentSet = newSet;
+        win.document.persist("nav-bar", "currentset");
+        // if you don't do the following call, funny things happen.
+        try {
+          BrowserToolboxCustomizeDone(true);
+        } catch (e) {
+        }
+      }
+    } catch (e) {
+      logger.warn("Error in setUpToolbarFeedbackButton: " + e);
+    }
+  },
+
   globalStartup: function TPS__doGlobalSetup() {
     // Only ever run this stuff ONCE, on the first window restore.
     // Should get called by the Test Pilot component.
-    this._setPrefDefaultsForVersion();
-    if (!Application.prefs.getValue(RUN_AT_ALL_PREF, true)) {
-      // User has disabled test pilot; don't start up.
-      return;
-    }
     this._initLogging();
     let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
     logger.trace("TestPilotSetup.globalStartup was called.");
+
+    this._setPrefDefaultsForVersion();
+    if (!Application.prefs.getValue(RUN_AT_ALL_PREF, true)) {
+      logger.trace("Test Pilot globally disabled: Not starting up.");
+      return;
+    }
 
     this._stringBundle =
       Cc["@mozilla.org/intl/stringbundle;1"].
@@ -179,13 +210,19 @@ let TestPilotSetup = {
       this.getVersion(function() {
       // Show first run page (in front window) if newly installed or upgraded.
         let currVersion = Application.prefs.getValue(VERSION_PREF, "firstrun");
-        // Don't show first run page in ffx4 beta version
-        if (currVersion != self.version && !self._isFfx4BetaVersion()) {
-          Application.prefs.setValue(VERSION_PREF, self.version);
-          let browser = self._getFrontBrowserWindow().getBrowser();
-          let url = Application.prefs.getValue(FIRST_RUN_PREF, "");
-          let tab = browser.addTab(url);
-          browser.selectedTab = tab;
+
+        if (currVersion != self.version) {
+          if(!self._isFfx4BetaVersion()) {
+            Application.prefs.setValue(VERSION_PREF, self.version);
+            let browser = self._getFrontBrowserWindow().getBrowser();
+            let url = Application.prefs.getValue(FIRST_RUN_PREF, "");
+            let tab = browser.addTab(url);
+            browser.selectedTab = tab;
+          } else {
+            // Don't show first run page in ffx4 beta version... but do
+            // set up the Feedback button in the toolbar.
+            self._setUpToolbarFeedbackButton();
+          }
         }
 
         // Install tasks. (This requires knowing the version, so it is

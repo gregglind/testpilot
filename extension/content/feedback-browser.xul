@@ -16,13 +16,14 @@
   <menu id="pilot-menu" insertafter="menu_openAddons" />
 </menupopup>
 
-<toolbar id="nav-bar">
-  <!-- Insertbefore?  Insertafter?  toolbarbutton? type="menu"? container="true"?-->
+<toolbarpalette id="BrowserToolbarPalette">
   <toolbarbutton type="menu" id="feedback-menu-button"
     label="&testpilot.feedbackbutton.label;"
     onmousedown="event.preventDefault();
         TestPilotMenuUtils.onMenuButtonMouseDown('feedback-menu-button');"/>
+</toolbarpalette>
 
+<toolbar id="nav-bar">
   <panel id="pilot-notification-popup" hidden="true" noautofocus="true"
     level="parent" position="after_start">
     <vbox class="pilot-notification-popup-container">

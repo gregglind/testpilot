@@ -18,7 +18,7 @@
 
 <toolbar id="nav-bar">
   <!-- Insertbefore?  Insertafter?  toolbarbutton? type="menu"? container="true"?-->
-  <button id="feedback-menu-button"
+  <toolbarbutton type="menu" id="feedback-menu-button"
     label="&testpilot.feedbackbutton.label;"
     onmousedown="event.preventDefault();
         TestPilotMenuUtils.onMenuButtonMouseDown('feedback-menu-button');"/>

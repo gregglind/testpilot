@@ -80,45 +80,23 @@ function Weave_sha1(string) {
 
 let MetadataCollector = {
   // Collects metadata such as what country you're in, what extensions you have installed, etc.
-  getExtensions: function MetadataCollector_getExtensions() {
+  getExtensions: function MetadataCollector_getExtensions(callback) {
     //http://lxr.mozilla.org/aviarybranch/source/toolkit/mozapps/extensions/public/nsIExtensionManager.idl
     //http://lxr.mozilla.org/aviarybranch/source/toolkit/mozapps/update/public/nsIUpdateService.idl#45
-
-    if (!Cc["@mozilla.org/extensions/manager;1"]) {
-      // TODO the above is undefined if we're operating in Firefox 4 land;
-      // need to use the async API of Application.getExtensions.
-      return [];
-    }
-
-    let extManager = Cc["@mozilla.org/extensions/manager;1"].getService(Ci.nsIExtensionManager);
-    let rdf = Cc["@mozilla.org/rdf/rdf-service;1"].getService(Ci.nsIRDFService);
-    let datasource = extManager.datasource;
-    let nsIUpdateItem = Ci.nsIUpdateItem;
-    let items = [];
-    let extensions = [];
-    let itemResource;
-    let itemProperty;
-    let itemValue;
-    let isEnabled;
-
-    items = extManager.getItemList(nsIUpdateItem.TYPE_EXTENSION,{});
-    for (let i = 0; i < items.length; ++i) {
-      let id = items[i].id;
-
-      itemResource = rdf.GetResource(PREFIX_ITEM_URI + id);
-      itemProperty = rdf.GetResource(PREFIX_NS_EM + "isDisabled");
-      let itemTarget = datasource.GetTarget(itemResource, itemProperty, true);
-
-      if (itemTarget) {
-	itemValue = itemTarget.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
-	isEnabled = (itemValue != "true");
-      } else {
-	isEnabled = true;
+    let myExtensions = [];
+    if (Application.extensions) {
+      for each (let ex in Application.extensions.all) {
+        myExtensions.push({ id: Weave_sha1(ex.id), isEnabled: ex.enabled });
       }
-
-      extensions.push({ id: Weave_sha1(id), isEnabled: isEnabled  });
+      callback(myExtensions);
+    } else {
+      Application.getExtensions(function(extensions) {
+        for each (let ex in extensions.all) {
+          myExtensions.push({ id: Weave_sha1(ex.id), isEnabled: ex.enabled });
+        }
+        callback(myExtensions);
+      });
     }
-    return extensions;
   },
 
   getAccessibilities : function MetadataCollector_getAccessibilities() {
@@ -167,20 +145,31 @@ let MetadataCollector = {
     }
   },
 
-  getTestPilotVersion: function MetadataCollector_getTestPilotVersion() {
-    // TODO Application.extensions is undefined if we're in Firefox 4 land.
-    // See setup.js.
-    return Application.extensions.get(EXTENSION_ID).version;
+  getTestPilotVersion: function MetadataCollector_getTPVersion(callback) {
+    // Application.extensions is undefined if we're in Firefox 4.
+    if (Application.extensions) {
+      callback(Application.extensions.get(EXTENSION_ID).version);
+    } else {
+      Application.getExtensions(function(extensions) {
+        callback(extensions.get(EXTENSION_ID).version);
+      });
+    }
   },
 
-  getMetadata: function MetadataCollector_getMetadata() {
-    return { extensions: MetadataCollector.getExtensions(),
-             accessibilities: MetadataCollector.getAccessibilities(),
-	     location: MetadataCollector.getLocation(),
-	     fxVersion: MetadataCollector.getVersion(),
-             operatingSystem: MetadataCollector.getOperatingSystem(),
-             tpVersion: MetadataCollector.getTestPilotVersion(),
-             surveyAnswers: MetadataCollector.getSurveyAnswers()};
+  getMetadata: function MetadataCollector_getMetadata(callback) {
+    let self = this;
+    self.getTestPilotVersion(function(tpVersion) {
+      self.getExtensions(function(extensions) {
+        callback({ extensions: extensions,
+                   accessibilities: self.getAccessibilities(),
+	           location: self.getLocation(),
+	           fxVersion: self.getVersion(),
+                   operatingSystem: self.getOperatingSystem(),
+                   tpVersion: tpVersion,
+                   surveyAnswers: self.getSurveyAnswers()}
+                 );
+      });
+    });
   }
   // TODO if we make a GUID for the user, we keep it here.
 };

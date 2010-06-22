@@ -692,14 +692,17 @@ TestPilotExperiment.prototype = {
 
   _prependMetadataToJSON: function TestPilotExperiment__prependToJson(callback) {
     let json = {};
-    json.metadata = MetadataCollector.getMetadata();
-    let guid = Application.prefs.getValue(GUID_PREF_PREFIX + this._id, "");
-    json.metadata.task_guid = guid;
-    json.metadata.event_headers = this._dataStore.getPropertyNames();
-    this._dataStore.getJSONRows(function(rows) {
-                                  json.events = rows;
-                                  callback( JSON.stringify(json) );
-                                });
+    let self = this;
+    MetadataCollector.getMetadata(function(md) {
+      json.metadata = md;
+      let guid = Application.prefs.getValue(GUID_PREF_PREFIX + self._id, "");
+      json.metadata.task_guid = guid;
+      json.metadata.event_headers = self._dataStore.getPropertyNames();
+      self._dataStore.getJSONRows(function(rows) {
+                                    json.events = rows;
+                                    callback( JSON.stringify(json) );
+                                  });
+    });
   },
 
   // Note: When we have multiple experiments running, the uploads
@@ -909,64 +912,68 @@ TestPilotBuiltinSurvey.prototype = {
     }
   },
 
-  _prependMetadataToJSON: function TestPilotSurvey__prependToJson() {
+  _prependMetadataToJSON: function TestPilotSurvey__prependToJson(callback) {
     let json = {};
-    json.metadata = MetadataCollector.getMetadata();
-    // Include guid of the study that this survey is related to, so we
-    // can match them up server-side.
-    let guid = Application.prefs.getValue(GUID_PREF_PREFIX + this._studyId, "");
-    json.metadata.task_guid = guid;
-    let pref = SURVEY_ANSWER_PREFIX + this._id;
-    let surveyAnswers = JSON.parse(Application.prefs.getValue(pref, ""));
-    json.survey_data = sanitizeJSONStrings(surveyAnswers);
-    return JSON.stringify(json);
+    let self = this;
+    MetadataCollector.getMetadata(function(md) {
+      json.metadata = md;
+      // Include guid of the study that this survey is related to, so we
+      // can match them up server-side.
+      let guid = Application.prefs.getValue(GUID_PREF_PREFIX + self._studyId, "");
+      json.metadata.task_guid = guid;
+      let pref = SURVEY_ANSWER_PREFIX + self._id;
+      let surveyAnswers = JSON.parse(Application.prefs.getValue(pref, ""));
+      json.survey_data = sanitizeJSONStrings(surveyAnswers);
+      callback(JSON.stringify(json));
+    });
   },
 
   // Upload function for survey -- TODO this duplicates a lot of code
   // from study._upload().
   _upload: function TestPilotSurveyt_upload(callback, retryCount) {
     let self = this;
-    let params = this._prependMetadataToJSON();
-    let req =
-      Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-        createInstance(Ci.nsIXMLHttpRequest);
-    let url = self.uploadUrl;
+    this._prependMetadataToJSON(function(params) {
+      let req =
+        Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+          createInstance(Ci.nsIXMLHttpRequest);
+      let url = self.uploadUrl;
 
-    req.open("POST", url, true);
-    req.setRequestHeader("Content-type", "application/json");
-    req.setRequestHeader("Content-length", params.length);
-    req.setRequestHeader("Connection", "close");
-    req.onreadystatechange = function(aEvt) {
-      if (req.readyState == 4) {
-	if (req.status == 200) {
-	  self._logger.info(
+      req.open("POST", url, true);
+      req.setRequestHeader("Content-type", "application/json");
+      req.setRequestHeader("Content-length", params.length);
+      req.setRequestHeader("Connection", "close");
+      req.onreadystatechange = function(aEvt) {
+        if (req.readyState == 4) {
+          if (req.status == 200) {
+            self._logger.info(
 	    "DATA WAS POSTED SUCCESSFULLY " + req.responseText);
-	  if (self._uploadRetryTimer) {
-	    self._uploadRetryTimer.cancel(); // Stop retrying - it worked!
-	  }
-          self.changeStatus(TaskConstants.STATUS_SUBMITTED);
-	  callback(true);
-	} else {
-	  self._logger.warn("ERROR POSTING DATA: " + req.responseText);
-	  self._uploadRetryTimer =
-	    Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+            if (self._uploadRetryTimer) {
+              self._uploadRetryTimer.cancel(); // Stop retrying - it worked!
+	    }
+            self.changeStatus(TaskConstants.STATUS_SUBMITTED);
+	    callback(true);
+	  } else {
+	    self._logger.warn("ERROR POSTING DATA: " + req.responseText);
+	    self._uploadRetryTimer =
+	      Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
-	  if (!retryCount) {
-	    retryCount = 0;
+	    if (!retryCount) {
+              retryCount = 0;
+	    }
+	    let interval =
+              Application.prefs.getValue(RETRY_INTERVAL_PREF, 3600000); // 1 hour
+	    let delay =
+	      parseInt(Math.random() * Math.pow(2, retryCount) * interval);
+	    self._uploadRetryTimer.initWithCallback(
+              { notify: function(timer) {
+	          self._upload(callback, retryCount++);
+	        } }, (interval + delay), Ci.nsITimer.TYPE_ONE_SHOT);
+	    callback(false);
 	  }
-	  let interval =
-	    Application.prefs.getValue(RETRY_INTERVAL_PREF, 3600000); // 1 hour
-	  let delay =
-	    parseInt(Math.random() * Math.pow(2, retryCount) * interval);
-	  self._uploadRetryTimer.initWithCallback(
-	    { notify: function(timer) {
-		self._upload(callback, retryCount++);
-	      } }, (interval + delay), Ci.nsITimer.TYPE_ONE_SHOT);
-	  callback(false);
-	}
-      }
-    };
-    req.send(params);
+        }
+      };
+      req.send(params);
+    });
   }
 };
 TestPilotBuiltinSurvey.prototype.__proto__ = TestPilotTask;

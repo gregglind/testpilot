@@ -236,28 +236,29 @@ var stringBundle;
 
   function showMetaData() {
     Components.utils.import("resource://testpilot/modules/metadata.js");
-    var md = MetadataCollector.getMetadata();
-    var mdLocale = document.getElementById("md-locale");
-    if (mdLocale)
-      mdLocale.innerHTML = md.location;
-    var mdVersion = document.getElementById("md-version");
-    if (mdVersion)
-      mdVersion.innerHTML = md.version;
-    var mdOs = document.getElementById("md-os");
-    if (mdOs)
-      mdOs.innerHTML = md.operatingSystem;
-    var mdNumExt = document.getElementById("md-num-ext");
-    if (mdNumExt) {
-      var numExt = md.extensions.length;
-      if (numExt == 1) {
-	mdNumExt.innerHTML =
-	  stringBundle.GetStringFromName("testpilot.statusPage.extension");
-      } else {
-	mdNumExt.innerHTML =
-	  stringBundle.formatStringFromName(
-	    "testpilot.statusPage.extensions", [numExt], 1);
+    MetadataCollector.getMetadata(function(md) {
+      var mdLocale = document.getElementById("md-locale");
+      if (mdLocale)
+        mdLocale.innerHTML = md.location;
+      var mdVersion = document.getElementById("md-version");
+      if (mdVersion)
+        mdVersion.innerHTML = md.version;
+      var mdOs = document.getElementById("md-os");
+      if (mdOs)
+        mdOs.innerHTML = md.operatingSystem;
+      var mdNumExt = document.getElementById("md-num-ext");
+      if (mdNumExt) {
+        var numExt = md.extensions.length;
+        if (numExt == 1) {
+          mdNumExt.innerHTML =
+            stringBundle.GetStringFromName("testpilot.statusPage.extension");
+        } else {
+          mdNumExt.innerHTML =
+            stringBundle.formatStringFromName(
+            "testpilot.statusPage.extensions", [numExt], 1);
+        }
       }
-    }
+    });
   }
 
   function onQuitPageLoad() {

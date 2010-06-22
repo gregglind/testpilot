@@ -186,8 +186,6 @@ exports.RemoteExperimentLoader.prototype = {
       this._fileGetter = downloadFile;
     }
     this._logger.trace("About to instantiate preferences store.");
-    // Make both a pref store (for backwards compatibility with the old code
-    // storage method) and a jar store (for the new and better one)
     this._jarStore = new JarStore();
     this._experimentFileNames = [];
     let self = this;

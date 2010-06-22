@@ -6,7 +6,7 @@
 <!ENTITY testpilot.settings.newStudy.label          "There's a new study">
 <!ENTITY testpilot.settings.hasNewResults.label     "A study has new results">
 <!ENTITY testpilot.settings.alwaysSubmitData.label  "Automatically submit my data (don't ask me)">
-<!ENTITY testpilot.allStudies.label                 "All Your Studies">
+<!ENTITY testpilot.allStudies.label                 "All Your User Studies">
 <!ENTITY testpilot.about.label                      "About Test Pilot">
 
 <!-- all studies window -->

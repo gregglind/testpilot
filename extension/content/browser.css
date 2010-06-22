@@ -20,6 +20,22 @@
  -moz-border-image: url(chrome://testpilot/skin/notification-tail-down.png) 26 50 22 18 / 26px 50px 22px 18px repeat;
 }
 
+#feedback-menu-button {
+  -moz-box-orient: horizontal;
+}
+
+ #feedback-menu-button .toolbarbutton-text {
+   display: -moz-box;
+ }
+ 
+#feedback-menu-button .toolbarbutton-icon {
+  display: none;
+}
+
+#feedback-menu-button .toolbarbutton-menu-dropmarker {
+  -moz-padding-start: 5px;
+}
+
 .pilot-notification-popup-container {
   -moz-appearance: none;
   margin-right: -24px;

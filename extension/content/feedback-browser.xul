@@ -18,7 +18,7 @@
 
 <toolbarpalette id="BrowserToolbarPalette">
   <toolbarbutton type="menu-button" id="feedback-menu-button"
-    label="&testpilot.feedbackbutton.label;"
+    class="toolbarbutton-1" label="&testpilot.feedbackbutton.label;"
     onmousedown="event.preventDefault();
         TestPilotMenuUtils.onMenuButtonMouseDown('feedback-menu-button');"/>
 </toolbarpalette>

@@ -35,101 +35,105 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const ALL_STUDIES_WINDOW_NAME = "TestPilotAllStudiesWindow";
-const ALL_STUDIES_WINDOW_TYPE = "extensions:testpilot:all_studies_window";
+var TestPilotWindowUtils;
 
-let TestPilotWindowUtils = {
-  openAllStudiesWindow: function() {
-    // If the window is not already open, open it; but if it is open,
-    // focus it instead.
-    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
-               getService(Components.interfaces.nsIWindowMediator);
-    let allStudiesWindow = wm.getMostRecentWindow(ALL_STUDIES_WINDOW_TYPE);
+(function() {
+  const ALL_STUDIES_WINDOW_NAME = "TestPilotAllStudiesWindow";
+  const ALL_STUDIES_WINDOW_TYPE = "extensions:testpilot:all_studies_window";
 
-    if (allStudiesWindow) {
-      allStudiesWindow.focus();
-    } else {
-      allStudiesWindow = window.openDialog(
-        "chrome://testpilot/content/all-studies-window.xul",
-        ALL_STUDIES_WINDOW_NAME, "chrome,titlebar,centerscreen,dialog=no");
-    }
-  },
+  TestPilotWindowUtils = {
+    openAllStudiesWindow: function() {
+      // If the window is not already open, open it; but if it is open,
+      // focus it instead.
+      let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
+                 getService(Components.interfaces.nsIWindowMediator);
+      let allStudiesWindow = wm.getMostRecentWindow(ALL_STUDIES_WINDOW_TYPE);
 
-  openInTab: function(url) {
-    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                   .getService(Components.interfaces.nsIWindowMediator);
-    let enumerator = wm.getEnumerator("navigator:browser");
-    let found = false;
+      if (allStudiesWindow) {
+        allStudiesWindow.focus();
+      } else {
+        allStudiesWindow = window.openDialog(
+          "chrome://testpilot/content/all-studies-window.xul",
+          ALL_STUDIES_WINDOW_NAME, "chrome,titlebar,centerscreen,dialog=no");
+      }
+    },
 
-    while(enumerator.hasMoreElements()) {
-      let win = enumerator.getNext();
-      let tabbrowser = win.getBrowser();
+    openInTab: function(url) {
+      let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                 .getService(Components.interfaces.nsIWindowMediator);
+      let enumerator = wm.getEnumerator("navigator:browser");
+      let found = false;
 
-      // Check each tab of this browser instance
-      let numTabs = tabbrowser.browsers.length;
-      for (let i = 0; i < numTabs; i++) {
-        let currentBrowser = tabbrowser.getBrowserAtIndex(i);
-        if (url == currentBrowser.currentURI.spec) {
-          tabbrowser.selectedTab = tabbrowser.tabContainer.childNodes[i];
-          found = true;
-          win.focus();
-          break;
+      while(enumerator.hasMoreElements()) {
+        let win = enumerator.getNext();
+        let tabbrowser = win.getBrowser();
+
+        // Check each tab of this browser instance
+        let numTabs = tabbrowser.browsers.length;
+        for (let i = 0; i < numTabs; i++) {
+          let currentBrowser = tabbrowser.getBrowserAtIndex(i);
+          if (url == currentBrowser.currentURI.spec) {
+            tabbrowser.selectedTab = tabbrowser.tabContainer.childNodes[i];
+            found = true;
+            win.focus();
+            break;
+          }
         }
       }
-    }
 
-    if (!found) {
-      let win = wm.getMostRecentWindow("navigator:browser");
-      if (win) {
-        let browser = win.getBrowser();
-        let tab = browser.addTab(url);
-        browser.selectedTab = tab;
-        win.focus();
-      } else {
-        window.open(url);
+      if (!found) {
+        let win = wm.getMostRecentWindow("navigator:browser");
+        if (win) {
+          let browser = win.getBrowser();
+          let tab = browser.addTab(url);
+          browser.selectedTab = tab;
+          win.focus();
+        } else {
+          window.open(url);
+        }
       }
+    },
+
+    getCurrentTabUrl: function() {
+      let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                 .getService(Components.interfaces.nsIWindowMediator);
+      let win = wm.getMostRecentWindow("navigator:browser");
+      let tabbrowser = win.getBrowser();
+      let currentBrowser = tabbrowser.selectedBrowser;
+      return currentBrowser.currentURI.spec;
+    },
+
+    openHomepage: function() {
+      let Application = Cc["@mozilla.org/fuel/application;1"]
+                          .getService(Ci.fuelIApplication);
+      let url = Application.prefs.getValue("extensions.testpilot.homepageURL",
+                                           "");
+      this.openInTab(url);
+    },
+
+    openFeedbackPage: function(aIsHappy) {
+      Components.utils.import("resource://testpilot/modules/feedback.js");
+      FeedbackManager.setCurrUrl(this.getCurrentTabUrl());
+      if (aIsHappy) {
+        this.openInTab(FeedbackManager.happyUrl);
+      } else {
+        this.openInTab(FeedbackManager.sadUrl);
+      }
+    },
+
+    openChromeless: function(url) {
+      /* Make the window smaller and dialog-boxier
+       * Links to discussion group, twitter, etc should open in new
+       * tab in main browser window, if we have these links here at all!!
+       * Maybe just one link to the main Test Pilot website. */
+
+      // TODO this window opening triggers studies' window-open code.
+      // Is that what we want or not?
+
+      let win = window.open(url, "TestPilotStudyDetailWindow",
+                           "chrome,centerscreen,resizable=yes,scrollbars=yes," +
+                           "status=no,width=1000,height=800");
+      win.focus();
     }
-  },
-
-  getCurrentTabUrl: function() {
-    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                   .getService(Components.interfaces.nsIWindowMediator);
-    let win = wm.getMostRecentWindow("navigator:browser");
-    let tabbrowser = win.getBrowser();
-    let currentBrowser = tabbrowser.selectedBrowser;
-    return currentBrowser.currentURI.spec;
-  },
-
-  openHomepage: function() {
-    let Application = Cc["@mozilla.org/fuel/application;1"]
-                  .getService(Ci.fuelIApplication);
-    let url = Application.prefs.getValue("extensions.testpilot.homepageURL",
-                                         "");
-    this.openInTab(url);
-  },
-
-  openFeedbackPage: function(aIsHappy) {
-    Components.utils.import("resource://testpilot/modules/feedback.js");
-    FeedbackManager.setCurrUrl(this.getCurrentTabUrl());
-    if (aIsHappy) {
-      this.openInTab(FeedbackManager.happyUrl);
-    } else {
-      this.openInTab(FeedbackManager.sadUrl);
-    }
-  },
-
-  openChromeless: function(url) {
-    // Make the window smaller and dialog-boxier
-    // Links to discussion group, twitter, etc should open in new
-    // tab in main browser window, if we have these links here at all!!
-    // Maybe just one link to the main Test Pilot website.
-
-    // TODO this window opening triggers studies' window-open code.
-    // Is that what we want or not?
-
-    let win = window.open(url, "TestPilotStudyDetailWindow",
-                         "chrome,centerscreen,resizable=yes,scrollbars=yes," +
-                         "status=no,width=1000,height=800");
-    win.focus();
-  }
-};
+  };
+}());

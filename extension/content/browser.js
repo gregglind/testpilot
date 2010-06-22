@@ -35,93 +35,96 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var Cc = Components.classes;
-var Cu = Components.utils;
-var Ci = Components.interfaces;
+var TestPilotMenuUtils;
 
-Cu.import("resource://testpilot/modules/setup.js");
+// this gets me a syntax error....?
+(function() {
+  var Cc = Components.classes;
+  var Cu = Components.utils;
+  var Ci = Components.interfaces;
 
-// Namespace object
-var TestPilotMenuUtils = {
-  updateSubmenu: function() {
-    let ntfyMenuFinished =
-      document.getElementById("pilot-menu-notify-finished");
-    let ntfyMenuNew = document.getElementById("pilot-menu-notify-new");
-    let ntfyMenuResults = document.getElementById("pilot-menu-notify-results");
-    let alwaysSubmitData =
-      document.getElementById("pilot-menu-always-submit-data");
-    let Application = Cc["@mozilla.org/fuel/application;1"]
-                    .getService(Ci.fuelIApplication);
-    ntfyMenuFinished.setAttribute("checked", Application.prefs.getValue(
-                                  POPUP_SHOW_ON_FINISH, false));
-    ntfyMenuNew.setAttribute("checked", Application.prefs.getValue(
-                              POPUP_SHOW_ON_NEW, false));
-    ntfyMenuResults.setAttribute("checked", Application.prefs.getValue(
-                                  POPUP_SHOW_ON_RESULTS, false));
-    alwaysSubmitData.setAttribute("checked", Application.prefs.getValue(
-                                   ALWAYS_SUBMIT_DATA, false));
-  },
+  Cu.import("resource://testpilot/modules/setup.js");
 
-  togglePref: function(id) {
-    let prefName = "extensions.testpilot." + id;
-    let oldVal = Application.prefs.getValue(prefName, false);
-    Application.prefs.setValue( prefName, !oldVal);
+  TestPilotMenuUtils = {
+    updateSubmenu: function() {
+      let ntfyMenuFinished =
+        document.getElementById("pilot-menu-notify-finished");
+      let ntfyMenuNew = document.getElementById("pilot-menu-notify-new");
+      let ntfyMenuResults = document.getElementById("pilot-menu-notify-results");
+      let alwaysSubmitData =
+        document.getElementById("pilot-menu-always-submit-data");
+      let Application = Cc["@mozilla.org/fuel/application;1"]
+                      .getService(Ci.fuelIApplication);
+      ntfyMenuFinished.setAttribute("checked", Application.prefs.getValue(
+                                    POPUP_SHOW_ON_FINISH, false));
+      ntfyMenuNew.setAttribute("checked", Application.prefs.getValue(
+                                POPUP_SHOW_ON_NEW, false));
+      ntfyMenuResults.setAttribute("checked", Application.prefs.getValue(
+                                    POPUP_SHOW_ON_RESULTS, false));
+      alwaysSubmitData.setAttribute("checked", Application.prefs.getValue(
+                                     ALWAYS_SUBMIT_DATA, false));
+    },
 
-    // If you turn on or off the global pref, startup or shutdown test pilot
-    // accordingly:
-    if (prefName == RUN_AT_ALL_PREF) {
-      if (oldVal == true) {
-        TestPilotSetup.globalShutdown();
+    togglePref: function(id) {
+      let prefName = "extensions.testpilot." + id;
+      let oldVal = Application.prefs.getValue(prefName, false);
+      Application.prefs.setValue( prefName, !oldVal);
+
+      // If you turn on or off the global pref, startup or shutdown test pilot
+      // accordingly:
+      if (prefName == RUN_AT_ALL_PREF) {
+        if (oldVal == true) {
+          TestPilotSetup.globalShutdown();
+        }
+        if (oldVal == false) {
+          TestPilotSetup.globalStartup();
+        }
       }
-      if (oldVal == false) {
-        TestPilotSetup.globalStartup();
+    },
+
+    onPopupShowing: function(event) {
+      this._setMenuLabels();
+    },
+
+    onPopupHiding: function(event) {
+      let target = event.target;
+      if (target.id == "pilot-menu-popup") {
+        let menu = document.getElementById("pilot-menu");
+        if (target.parentNode != menu) {
+          menu.appendChild(target);
+        }
       }
-    }
-  },
+    },
 
-  onPopupShowing: function(event) {
-    this._setMenuLabels();
-  },
-
-  onPopupHiding: function(event) {
-    let target = event.target;
-    if (target.id == "pilot-menu-popup") {
-      let menu = document.getElementById("pilot-menu");
-      if (target.parentNode != menu) {
-        menu.appendChild(target);
+    _setMenuLabels: function() {
+      // Make the enable/disable User Studies menu item show the right label
+      // for the current status...
+      let runStudiesToggle = document.getElementById("feedback-menu-enable-studies");
+      if (runStudiesToggle) {
+        let currSetting = Application.prefs.getValue("extensions.testpilot.runStudies",
+                                                     true);
+        // TODO those two labels should be pulled from properties
+        if (currSetting) {
+          runStudiesToggle.setAttribute("label", "Turn Off User Studies");
+        } else {
+          runStudiesToggle.setAttribute("label", "Turn On User Studies");
+        }
       }
-    }
-  },
 
-  _setMenuLabels: function() {
-    // Make the enable/disable User Studies menu item show the right label
-    // for the current status...
-    let runStudiesToggle = document.getElementById("feedback-menu-enable-studies");
-    if (runStudiesToggle) {
-      let currSetting = Application.prefs.getValue("extensions.testpilot.runStudies",
-                                                   true);
-      // TODO those two labels should be pulled from properties
-      if (currSetting) {
-        runStudiesToggle.setAttribute("label", "Turn Off User Studies");
-      } else {
-        runStudiesToggle.setAttribute("label", "Turn On User Studies");
+      let studiesMenuItem = document.getElementById("feedback-menu-show-studies");
+      studiesMenuItem.setAttribute("disabled",
+                                   !Application.prefs.getValue(RUN_AT_ALL_PREF, true));
+    },
+
+    onMenuButtonMouseDown: function(attachPointId) {
+      if (!attachPointId) {
+        attachPointId = "pilot-notifications-button";
       }
-    }
+      let menuPopup = document.getElementById("pilot-menu-popup");
+      let menuButton = document.getElementById(attachPointId);
 
-    let studiesMenuItem = document.getElementById("feedback-menu-show-studies");
-    studiesMenuItem.setAttribute("disabled",
-                                 !Application.prefs.getValue(RUN_AT_ALL_PREF, true));
-  },
-
-  onMenuButtonMouseDown: function(attachPointId) {
-    if (!attachPointId) {
-      attachPointId = "pilot-notifications-button";
-    }
-    let menuPopup = document.getElementById("pilot-menu-popup");
-    let menuButton = document.getElementById(attachPointId);
-
-    if (menuPopup.parentNode != menuButton)
-      menuButton.appendChild(menuPopup);
+      if (menuPopup.parentNode != menuButton)
+        menuButton.appendChild(menuPopup);
 
       let alignment;
       // Menu should appear above status bar icon, but below Feedback button
@@ -131,36 +134,38 @@ var TestPilotMenuUtils = {
         alignment = "after_end";
       }
 
-    menuPopup.openPopup(menuButton, alignment, 0, 0, true);
-  }
-};
-
-
-var TestPilotWindowHandlers = {
-  onWindowLoad: function() {
-    /* "Hold" window load events for TestPilotSetup, passing them along only
-     * after startup is complete.  It's hacky, but the benefit is that
-     * TestPilotSetup.onWindowLoad can treat all windows the same no matter
-     * whether they opened with Firefox on startup or were opened later. */
-    if (TestPilotSetup.startupComplete) {
-      TestPilotSetup.onWindowLoad(window);
-    } else {
-      let observerSvc = Cc["@mozilla.org/observer-service;1"]
-                           .getService(Ci.nsIObserverService);
-      let observer = {
-        observe: function(subject, topic, data) {
-          observerSvc.removeObserver(this, "testpilot:startup:complete");
-          TestPilotSetup.onWindowLoad(window);
-        }
-      };
-      observerSvc.addObserver(observer, "testpilot:startup:complete", false);
+      menuPopup.openPopup(menuButton, alignment, 0, 0, true);
     }
-  },
+  };
 
-  onWindowUnload: function() {
-    TestPilotSetup.onWindowUnload(window);
-  }
-};
 
-window.addEventListener("load", TestPilotWindowHandlers.onWindowLoad, false);
-window.addEventListener("unload", TestPilotWindowHandlers.onWindowUnload, false);
+  var TestPilotWindowHandlers = {
+    onWindowLoad: function() {
+      /* "Hold" window load events for TestPilotSetup, passing them along only
+       * after startup is complete.  It's hacky, but the benefit is that
+       * TestPilotSetup.onWindowLoad can treat all windows the same no matter
+       * whether they opened with Firefox on startup or were opened later. */
+      if (TestPilotSetup.startupComplete) {
+        TestPilotSetup.onWindowLoad(window);
+      } else {
+        let observerSvc = Cc["@mozilla.org/observer-service;1"]
+                             .getService(Ci.nsIObserverService);
+        let observer = {
+          observe: function(subject, topic, data) {
+            observerSvc.removeObserver(this, "testpilot:startup:complete");
+            TestPilotSetup.onWindowLoad(window);
+          }
+        };
+        observerSvc.addObserver(observer, "testpilot:startup:complete", false);
+      }
+    },
+
+    onWindowUnload: function() {
+      TestPilotSetup.onWindowUnload(window);
+    }
+  };
+
+  window.addEventListener("load", TestPilotWindowHandlers.onWindowLoad, false);
+  window.addEventListener("unload", TestPilotWindowHandlers.onWindowUnload, false);
+}());
+

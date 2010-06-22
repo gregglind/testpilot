@@ -5,6 +5,7 @@
   type="text/css"?>
 <?xml-stylesheet href="chrome://testpilot/content/browser.css" type="text/css"?>
 
+
 <!DOCTYPE prefwindow [
   <!ENTITY % testpilotDTD SYSTEM "chrome://testpilot/locale/main.dtd">
     %testpilotDTD;
@@ -87,21 +88,28 @@
           <preference id="always-submit-data" type="bool"
                       name="extensions.testpilot.alwaysSubmitData"/>
         </preferences>
-        <hbox pack="center">
-            <vbox pack="center">
-        <checkbox label="&testpilot.settings.alwaysSubmitData.label;"
-                  preference="always-submit-data"/>
-        <groupbox>
-        <label value="&testpilot.settings.notifyMeWhen.label;"/>
-        <checkbox label="&testpilot.settings.readyToSubmit.label;"
-                  preference="notify-finished"/>
-        <checkbox label="&testpilot.settings.newStudy.label;"
-                  preference="notify-new"/>
-        <checkbox label="&testpilot.settings.hasNewResults.label;"
-                  preference="notify-results"/>
-        </groupbox>
-            </vbox>
-        </hbox>
+        <vbox style="padding: 12px;">
+          <groupbox>
+            <caption label="Data Submission" />
+            <checkbox label="&testpilot.settings.alwaysSubmitData.label;"
+                      preference="always-submit-data"/>
+          </groupbox>
+          <groupbox>
+            <caption label="Notifications" />
+            <label value="&testpilot.settings.notifyMeWhen.label;"/>
+            <hbox>
+              <separator orient="vertical" />
+              <vbox>
+                <checkbox label="&testpilot.settings.readyToSubmit.label;"
+                          preference="notify-finished"/>
+                <checkbox label="&testpilot.settings.newStudy.label;"
+                          preference="notify-new"/>
+                <checkbox label="&testpilot.settings.hasNewResults.label;"
+                          preference="notify-results"/>
+              </vbox>
+            </hbox>
+          </groupbox>
+        </vbox>
       </prefpane>
     </deck>
   </vbox>

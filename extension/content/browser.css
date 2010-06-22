@@ -213,3 +213,13 @@ image.results-thumbnail {
     text-decoration: underline;
     cursor: pointer;
 }
+
+prefpane .groupbox-body {
+  -moz-appearance: none;
+  padding: 8px 4px 4px 4px;
+}
+
+prefpane .groupbox-title {
+  background: url("chrome://global/skin/50pct_transparent_grey.png") repeat-x bottom left;
+  margin-bottom: 4px;
+}

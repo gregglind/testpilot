@@ -90,12 +90,31 @@ let TestPilotWindowUtils = {
     }
   },
 
+  getCurrentTabUrl: function() {
+    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                   .getService(Components.interfaces.nsIWindowMediator);
+    let win = wm.getMostRecentWindow("navigator:browser");
+    let tabbrowser = win.getBrowser();
+    let currentBrowser = tabbrowser.selectedBrowser;
+    return currentBrowser.currentURI.spec;
+  },
+
   openHomepage: function() {
     let Application = Cc["@mozilla.org/fuel/application;1"]
                   .getService(Ci.fuelIApplication);
     let url = Application.prefs.getValue("extensions.testpilot.homepageURL",
                                          "");
     this.openInTab(url);
+  },
+
+  openFeedbackPage: function(aIsHappy) {
+    Components.utils.import("resource://testpilot/modules/feedback.js");
+    FeedbackManager.setCurrUrl(this.getCurrentTabUrl());
+    if (aIsHappy) {
+      this.openInTab(FeedbackManager.happyUrl);
+    } else {
+      this.openInTab(FeedbackManager.sadUrl);
+    }
   },
 
   openChromeless: function(url) {

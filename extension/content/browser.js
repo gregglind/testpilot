@@ -133,19 +133,6 @@ var TestPilotMenuUtils = {
       }
 
     menuPopup.openPopup(menuButton, alignment, 0, 0, true);
-  },
-
-  openFeedbackPage: function(aIsHappy) {
-    /* Copied from the MozReporterButtons extension */
-    let url =
-      Application.prefs.get(
-        "extensions.testpilot." + (aIsHappy ? "happyURL" : "sadURL")).value;
-    url =
-      url.replace(
-        "${USER_AGENT}", encodeURIComponent(window.navigator.userAgent));
-    url = url.replace("${URL}", encodeURIComponent(gBrowser.contentDocument.location.href));
-
-    window.openUILinkIn(url, "tab");
   }
 };
 

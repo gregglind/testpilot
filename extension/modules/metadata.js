@@ -168,6 +168,8 @@ let MetadataCollector = {
   },
 
   getTestPilotVersion: function MetadataCollector_getTestPilotVersion() {
+    // TODO Application.extensions is undefined if we're in Firefox 4 land.
+    // See setup.js.
     return Application.extensions.get(EXTENSION_ID).version;
   },
 

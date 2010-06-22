@@ -50,6 +50,7 @@ Components.utils.import("resource://testpilot/modules/experiment_data_store.js")
 Components.utils.import("resource://testpilot/modules/tasks.js");
 Components.utils.import("resource://testpilot/modules/extension-update.js");
 Components.utils.import("resource://testpilot/modules/log4moz.js");
+Components.utils.import("resource://testpilot/modules/feedback.js");
 
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
 const VERSION_PREF ="extensions.testpilot.lastversion";
@@ -265,6 +266,7 @@ let TestPilotSetup = {
     if (appcontent) {
       appcontent.addEventListener("DOMContentLoaded", function(event) {
         let newUrl =  event.originalTarget.URL;
+        FeedbackManager.fillInFeedbackPage(newUrl, window);
         for (i = 0; i < self.taskList.length; i++) {
           self.taskList[i].onUrlLoad(newUrl, event);
         }
@@ -278,6 +280,8 @@ let TestPilotSetup = {
   },
 
   addTask: function TPS_addTask(testPilotTask) {
+    // TODO raise some kind of exception if a task with the same ID already
+    // exists.  No excuse to ever be running two copies of the same task.
     this.taskList.push(testPilotTask);
   },
 

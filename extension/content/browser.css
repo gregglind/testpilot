@@ -24,9 +24,10 @@
   -moz-box-orient: horizontal;
 }
 
- #feedback-menu-button .toolbarbutton-text {
-   display: -moz-box;
- }
+#feedback-menu-button .toolbarbutton-text {
+  display: -moz-box;
+  margin: 0;
+}
  
 #feedback-menu-button .toolbarbutton-icon {
   display: none;

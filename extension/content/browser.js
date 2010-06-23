@@ -37,7 +37,6 @@
 
 var TestPilotMenuUtils;
 
-// this gets me a syntax error....?
 (function() {
   var Cc = Components.classes;
   var Cu = Components.utils;

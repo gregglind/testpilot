@@ -12,7 +12,7 @@ pref("extensions.testpilot.runStudies", true);
 
 pref("extensions.testpilot.indexBaseURL", "https://testpilot.mozillalabs.com/testcases/");
 pref("extensions.testpilot.firstRunUrl", "chrome://testpilot/content/welcome.html");
-pref("extensions.testpilot.happyURL", "http://input.stage.mozilla.com/happy");
-pref("extensions.testpilot.sadURL", "http://input.stage.mozilla.com/sad");
+pref("extensions.testpilot.happyURL", "http://input.mozilla.com/happy");
+pref("extensions.testpilot.sadURL", "http://input.mozilla.com/sad");
 pref("extensions.testpilot.dataUploadURL", "https://testpilot.mozillalabs.com/submit/");
 pref("extensions.testpilot.homepageURL", "https://testpilot.mozillalabs.com/");

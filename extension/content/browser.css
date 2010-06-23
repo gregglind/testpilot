@@ -1,24 +1,4 @@
-#pilot-notifications-button {
-  margin-right: 10px;
-}
-
-/* Popup Bounding Box */
-#pilot-notification-popup {
-  -moz-appearance: none;
-  -moz-window-shadow: none;
-  background-color: transparent;
-  margin-top: -4px;
-  margin-right: -24px;
-  width: 480px;
-}
-
-.tail-up {
- -moz-border-image: url(chrome://testpilot/skin/notification-tail-up.png) 26 50 22 18 / 26px 50px 22px 18px repeat;
-}
-
-.tail-down {
- -moz-border-image: url(chrome://testpilot/skin/notification-tail-down.png) 26 50 22 18 / 26px 50px 22px 18px repeat;
-}
+/* Toolbar Button */
 
 #feedback-menu-button {
   -moz-box-orient: horizontal;
@@ -37,11 +17,34 @@
   -moz-padding-start: 5px;
 }
 
+
+#pilot-notifications-button {
+  margin-right: 10px;
+}
+
+/* Popup Bounding Box */
+#pilot-notification-popup {
+  -moz-appearance: none;
+  -moz-window-shadow: none;
+  background-color: transparent;
+  margin-top: -6px;
+  margin-right: -3px;
+  width: 480px;
+}
+
+.tail-up {
+ -moz-border-image: url(chrome://testpilot-os/skin/notification-tail-up.png) 26 56 22 18 / 26px 56px 22px 18px round stretch;
+}
+
+.tail-down {
+ -moz-border-image: url(chrome://testpilot-os/skin/notification-tail-down.png) 26 56 22 18 / 26px 56px 22px 18px round stretch;
+}
+
+
 .pilot-notification-popup-container {
   -moz-appearance: none;
-  margin-right: -24px;
+  margin-right: -42px;
   padding: 0px 5px 5px 5px;
-  color:  white;
   font-size: 14px;
 }
 
@@ -55,7 +58,7 @@
 }
 
 #pilot-notification-close {
-  list-style-image: url("chrome://testpilot/skin/close_button.png");
+  list-style-image: url("chrome://testpilot-os/skin/close_button.png");
   -moz-image-region: rect(0px, 14px, 14px, 0px);
   width: 14px;
   height: 14px;
@@ -222,7 +225,6 @@ image.results-thumbnail {
 }
 
 .notification-link {
-    color: white;
     text-decoration: underline;
     cursor: pointer;
 }

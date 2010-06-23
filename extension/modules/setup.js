@@ -65,9 +65,6 @@ const POPUP_REMINDER_INTERVAL = "extensions.testpilot.popup.timeBetweenChecks";
 const ALWAYS_SUBMIT_DATA = "extensions.testpilot.alwaysSubmitData";
 const LOG_FILE_NAME = "TestPilotErrorLog.log";
 
-let Application = Cc["@mozilla.org/fuel/application;1"]
-                  .getService(Ci.fuelIApplication);
-
 let TestPilotSetup = {
   didReminderAfterStartup: false,
   startupComplete: false,
@@ -79,6 +76,20 @@ let TestPilotSetup = {
   _stringBundle: null,
   taskList: [],
   version: "",
+
+  // Lazy initializers:
+  __application: null,
+  get _application() {
+    if (this.__application == null) {
+      this.__application = Cc["@mozilla.org/fuel/application;1"]
+                             .getService(Ci.fuelIApplication);
+    }
+    return this.__application;
+  },
+
+  get _prefs() {
+    return this._application.prefs;
+  },
 
   _initLogging: function TPS__initLogging() {
     let props = Cc["@mozilla.org/file/directory_service;1"].
@@ -95,7 +106,7 @@ let TestPilotSetup = {
   _isFfx4BetaVersion: function TPS__isFfx4BetaVersion() {
     let result = Cc["@mozilla.org/xpcom/version-comparator;1"]
                    .getService(Ci.nsIVersionComparator)
-                   .compare("3.7a1pre", Application.version);
+                   .compare("3.7a1pre", this._application.version);
     if (result < 0) {
       return true;
     } else {
@@ -158,7 +169,7 @@ let TestPilotSetup = {
     logger.trace("TestPilotSetup.globalStartup was called.");
 
     this._setPrefDefaultsForVersion();
-    if (!Application.prefs.getValue(RUN_AT_ALL_PREF, true)) {
+    if (!this._prefs.getValue(RUN_AT_ALL_PREF, true)) {
       logger.trace("Test Pilot globally disabled: Not starting up.");
       return;
     }
@@ -195,7 +206,7 @@ let TestPilotSetup = {
     this._shortTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
     this._shortTimer.initWithCallback(
       { notify: function(timer) { self._doHousekeeping();} },
-      Application.prefs.getValue(POPUP_CHECK_INTERVAL, 180000),
+      this._prefs.getValue(POPUP_CHECK_INTERVAL, 180000),
       Ci.nsITimer.TYPE_REPEATING_SLACK
     );
     this._longTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -204,18 +215,18 @@ let TestPilotSetup = {
           self.reloadRemoteExperiments(function() {
             self._notifyUserOfTasks();
 	  });
-      }}, Application.prefs.getValue(POPUP_REMINDER_INTERVAL, 86400000),
+      }}, this._prefs.getValue(POPUP_REMINDER_INTERVAL, 86400000),
       Ci.nsITimer.TYPE_REPEATING_SLACK);
 
       this.getVersion(function() {
       // Show first run page (in front window) if newly installed or upgraded.
-        let currVersion = Application.prefs.getValue(VERSION_PREF, "firstrun");
+        let currVersion = self._prefs.getValue(VERSION_PREF, "firstrun");
 
         if (currVersion != self.version) {
           if(!self._isFfx4BetaVersion()) {
-            Application.prefs.setValue(VERSION_PREF, self.version);
+            self._prefs.setValue(VERSION_PREF, self.version);
             let browser = self._getFrontBrowserWindow().getBrowser();
-            let url = Application.prefs.getValue(FIRST_RUN_PREF, "");
+            let url = self._prefs.getValue(FIRST_RUN_PREF, "");
             let tab = browser.addTab(url);
             browser.selectedTab = tab;
           } else {
@@ -385,7 +396,7 @@ let TestPilotSetup = {
         submitBtn.onclick = function() {
           self._hideNotification();
           if (showAlwaysSubmitCheckbox && alwaysSubmitCheckbox.checked) {
-            Application.prefs.setValue(ALWAYS_SUBMIT_DATA, true);
+            self._prefs.setValue(ALWAYS_SUBMIT_DATA, true);
           }
           task.upload( function(success) {
             if (success) {
@@ -468,11 +479,11 @@ let TestPilotSetup = {
     }
 
     // Highest priority is if there is a finished test (needs a decision)
-    if (Application.prefs.getValue(POPUP_SHOW_ON_FINISH, false)) {
+    if (this._prefs.getValue(POPUP_SHOW_ON_FINISH, false)) {
       for (i = 0; i < this.taskList.length; i++) {
         task = this.taskList[i];
         if (task.status == TaskConstants.STATUS_FINISHED) {
-          if (!Application.prefs.getValue(ALWAYS_SUBMIT_DATA, false)) {
+          if (!this._prefs.getValue(ALWAYS_SUBMIT_DATA, false)) {
             this._showNotification(
 	      task, false,
 	      this._stringBundle.formatStringFromName(
@@ -493,7 +504,7 @@ let TestPilotSetup = {
 
     // If there's no finished test, next highest priority is new tests that
     // are starting...
-    if (Application.prefs.getValue(POPUP_SHOW_ON_NEW, false)) {
+    if (this._prefs.getValue(POPUP_SHOW_ON_NEW, false)) {
       for (i = 0; i < this.taskList.length; i++) {
         task = this.taskList[i];
         if (task.status == TaskConstants.STATUS_STARTING ||
@@ -528,7 +539,7 @@ let TestPilotSetup = {
     }
 
     // And finally, new experiment results:
-    if (Application.prefs.getValue(POPUP_SHOW_ON_RESULTS, false)) {
+    if (this._prefs.getValue(POPUP_SHOW_ON_RESULTS, false)) {
       for (i = 0; i < this.taskList.length; i++) {
         task = this.taskList[i];
         if (task.taskType == TaskConstants.TYPE_RESULTS &&
@@ -588,12 +599,12 @@ let TestPilotSetup = {
     // Application.extensions undefined in Firefox 4; will use the new
     // asynchrounous API, store string in this.version, and call the
     // callback when done.
-    if (Application.extensions) {
-      this.version = Application.extensions.get(EXTENSION_ID).version;
+    if (this._application.extensions) {
+      this.version = this._application.extensions.get(EXTENSION_ID).version;
       callback();
     } else {
       let self = this;
-      Application.getExtensions(function(extensions) {
+      self._application.getExtensions(function(extensions) {
         self.version = extensions.get(EXTENSION_ID).version;
         callback();
       });
@@ -614,7 +625,7 @@ let TestPilotSetup = {
   _isNewerThanFirefox: function TPS__isNewerThanFirefox(versionString) {
     let result = Cc["@mozilla.org/xpcom/version-comparator;1"]
                    .getService(Ci.nsIVersionComparator)
-                   .compare(Application.version, versionString);
+                   .compare(self._application.version, versionString);
     if (result < 0) {
       return true; // versionString is newer than Firefox
     } else {

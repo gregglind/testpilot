@@ -59,11 +59,19 @@ TestPilotComponent.prototype = {
       os.addObserver(this, "sessionstore-windows-restored", true);
       break;
     case "sessionstore-windows-restored":
-      Cu.import("resource://testpilot/modules/setup.js");
       /* Stop oberver, to ensure that globalStartup doesn't get
        * called more than once. */
       os.removeObserver(this, "sessionstore-windows-restored", false);
-      TestPilotSetup.globalStartup();
+      /* Call global startup on a timer so that it's off of the main
+       * thread... delay a few seconds to give firefox time to finish
+       * starting up.
+       */
+      let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      timer.initWithCallback(
+        {notify: function(timer) {
+           Cu.import("resource://testpilot/modules/setup.js");
+          TestPilotSetup.globalStartup();
+         }}, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
       break;
     }
   }

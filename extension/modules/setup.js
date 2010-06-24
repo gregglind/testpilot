@@ -63,8 +63,6 @@ let TestPilotSetup = {
   _shortTimer: null,
   _longTimer: null,
   _remoteExperimentLoader: null,
-  _obs: null,
-  _stringBundle: null,
   taskList: [],
   version: "",
 
@@ -167,6 +165,25 @@ let TestPilotSetup = {
     return this.__taskModule;
   },
 
+  __stringBundle: null,
+  get _stringBundle() {
+    if (this.__stringBundle == null) {
+      this.__stringBundle =
+      Cc["@mozilla.org/intl/stringbundle;1"].
+        getService(Ci.nsIStringBundleService).
+          createBundle("chrome://testpilot/locale/main.properties");
+    }
+    return this.__stringBundle;
+  },
+
+  __obs: null,
+  get _obs() {
+    if (this.__obs == null) {
+      this.__obs = this._loader.require("observer-service");
+    }
+    return this.__obs;
+  },
+
   _isFfx4BetaVersion: function TPS__isFfx4BetaVersion() {
     let result = Cc["@mozilla.org/xpcom/version-comparator;1"]
                    .getService(Ci.nsIVersionComparator)
@@ -231,19 +248,13 @@ let TestPilotSetup = {
     let logger = this._logger;
     logger.trace("TestPilotSetup.globalStartup was called.");
 
+    try {
     this._setPrefDefaultsForVersion();
     if (!this._prefs.getValue(RUN_AT_ALL_PREF, true)) {
       logger.trace("Test Pilot globally disabled: Not starting up.");
       return;
     }
 
-    this._stringBundle =
-      Cc["@mozilla.org/intl/stringbundle;1"].
-        getService(Ci.nsIStringBundleService).
-          createBundle("chrome://testpilot/locale/main.properties");
-
-    try {
-    this._obs = this._loader.require("observer-service");
     // Set up observation for task state changes
     var self = this;
     this._obs.add("testpilot:task:changed", this.onTaskStatusChanged, self);
@@ -322,7 +333,7 @@ let TestPilotSetup = {
       self.taskList[i].onAppShutdown();
       self.taskList[i].onExperimentShutdown();
     }
-    // TODO this._obs = null?  bug 574388 
+    // TODO this._obs = null?  bug 574388
     this._obs.remove("testpilot:task:changed", this.onTaskStatusChanged, self);
     this._obs.remove(
       "testpilot:task:dataAutoSubmitted", this._onTaskDataAutoSubmitted, self);

@@ -48,7 +48,7 @@ var FeedbackManager = {
   _happyUrl: null,
   get happyUrl() {
     if (!this._happyUrl) {
-      this._happyUrl = Application.prefs.getValue("extensions.testpilot.happyURL", "");
+      this._happyUrl = Application.prefs.getValue("extensions.input.happyURL", "");
     }
     return this._happyUrl;
   },
@@ -56,7 +56,7 @@ var FeedbackManager = {
   _sadUrl: null,
   get sadUrl() {
     if (!this._sadUrl) {
-      this._sadUrl = Application.prefs.getValue("extensions.testpilot.sadURL", "");
+      this._sadUrl = Application.prefs.getValue("extensions.input.sadURL", "");
     }
     return this._sadUrl;
   },

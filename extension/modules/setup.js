@@ -322,6 +322,7 @@ let TestPilotSetup = {
       self.taskList[i].onAppShutdown();
       self.taskList[i].onExperimentShutdown();
     }
+    // TODO this._obs = null?  bug 574388 
     this._obs.remove("testpilot:task:changed", this.onTaskStatusChanged, self);
     this._obs.remove(
       "testpilot:task:dataAutoSubmitted", this._onTaskDataAutoSubmitted, self);

@@ -102,11 +102,17 @@ var TestPilotMenuUtils;
       if (runStudiesToggle) {
         let currSetting = Application.prefs.getValue("extensions.testpilot.runStudies",
                                                      true);
-        // TODO those two labels should be pulled from properties
+
+        let stringBundle = Cc["@mozilla.org/intl/stringbundle;1"].
+          getService(Ci.nsIStringBundleService).
+          createBundle("chrome://testpilot/locale/main.properties");
+
         if (currSetting) {
-          runStudiesToggle.setAttribute("label", "Turn Off User Studies");
+          runStudiesToggle.setAttribute("label",
+            stringBundle.GetStringFromName("testpilot.turnOff"));
         } else {
-          runStudiesToggle.setAttribute("label", "Turn On User Studies");
+          runStudiesToggle.setAttribute("label",
+            stringBundle.GetStringFromName("testpilot.turnOn"));
         }
       }
 

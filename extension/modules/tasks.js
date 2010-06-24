@@ -879,7 +879,7 @@ TestPilotBuiltinSurvey.prototype = {
 
   onDetailPageOpened: function TPS_onDetailPageOpened() {
     if (this._status < TaskConstants.STATUS_IN_PROGRESS) {
-      this._status = TaskConstants.STATUS_IN_PROGRESS;
+      this.changeStatus( TaskConstants.STATUS_IN_PROGRESS, true );
     }
   },
 
@@ -1014,7 +1014,7 @@ TestPilotWebSurvey.prototype = {
      * default to not bugging the user about it again.
      */
     if (this._status < TaskConstants.STATUS_SUBMITTED) {
-      this._status = TaskConstants.STATUS_SUBMITTED;
+      this.changeStatus( TaskConstants.STATUS_SUBMITTED, true );
     }
   }
 };

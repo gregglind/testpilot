@@ -922,7 +922,7 @@ TestPilotBuiltinSurvey.prototype = {
       let guid = Application.prefs.getValue(GUID_PREF_PREFIX + self._studyId, "");
       json.metadata.task_guid = guid;
       let pref = SURVEY_ANSWER_PREFIX + self._id;
-      let surveyAnswers = JSON.parse(Application.prefs.getValue(pref, ""));
+      let surveyAnswers = JSON.parse(Application.prefs.getValue(pref, "{}"));
       json.survey_data = sanitizeJSONStrings(surveyAnswers);
       callback(JSON.stringify(json));
     });

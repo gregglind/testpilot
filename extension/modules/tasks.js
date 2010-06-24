@@ -74,8 +74,8 @@ const TaskConstants = {
  STATUS_FINISHED : 4, // Finished and awaiting your choice.
  STATUS_CANCELLED : 5, // You've opted out and not submitted anything.
  STATUS_SUBMITTED : 6, // You've submitted your data.
- STATUS_RESULTS : 7, // Test finished AND final results visible somewhere
- STATUS_ARCHIVED: 8, // You've seen the results; there's nothing more to do.
+ STATUS_RESULTS : 7, // Test finished AND final results visible somewhere, deprecated
+ STATUS_ARCHIVED: 8, // Results seen.  Deprecated. TODO: or use for expired?
  STATUS_MISSED: 9, // You never ran this study.
 
  TYPE_EXPERIMENT : 1,
@@ -1044,10 +1044,6 @@ function TestPilotLegacyStudy(studyInfo) {
 };
 TestPilotLegacyStudy.prototype = {
   _init: function TestPilotLegacyStudy__init(studyInfo) {
-    /* If user doesn't already have status for this, it means they didn't
-     * run it when it was a live study, so set status to MISSED so that
-     * it won't get mistaken for a new study (and so we won't try to run it)*/
-
     let stat = Application.prefs.getValue(STATUS_PREF_PREFIX + studyInfo.id,
                                           null);
     this._taskInit( studyInfo.id,
@@ -1055,8 +1051,24 @@ TestPilotLegacyStudy.prototype = {
                     studyInfo.url,
                     studyInfo.summary,
                     studyInfo.thumbnail );
-    if (stat == null) {
-      this._status = TaskConstants.STATUS_MISSED;
+
+    /* Only three statuses are valid for legacy studies: It must be either
+     * canceled, archived (meaning you submitted it), or missed (you never ran it).
+     * Set status to one of these.
+     */
+    switch (stat) {
+    case TaskConstants.STATUS_CANCELLED:
+    case TaskConstants.STATUS_ARCHIVED:
+    case TaskConstants.STATUS_MISSED:
+      // Keep that status, so do nothing
+      break;
+    case TaskConstants.STATUS_SUBMITTED:
+      // Change submitted to archived
+      this.changeStatus(TaskConstants.STATUS_ARCHIVED, true);
+      break;
+    default:
+      // Anything else means you missed it
+      this.changeStatus(TaskConstants.STATUS_MISSED, true);
     }
 
     if (studyInfo.duration) {

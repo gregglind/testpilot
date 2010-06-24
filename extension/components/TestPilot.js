@@ -70,7 +70,7 @@ TestPilotComponent.prototype = {
       timer.initWithCallback(
         {notify: function(timer) {
            Cu.import("resource://testpilot/modules/setup.js");
-          TestPilotSetup.globalStartup();
+           TestPilotSetup.globalStartup();
          }}, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
       break;
     }

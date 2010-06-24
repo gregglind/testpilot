@@ -226,9 +226,10 @@ var TestPilotXulWindow = {
     let numFinishedStudies = 0;
     let numCurrentStudies = 0;
     let experiments = TestPilotSetup.getAllTasks();
-
     if (experiments.length == 0) {
       // Can happen if this window opens before all tasks are done loading
+      // See bug 574203 for what happens if you open this window before
+      // the component has loaded setup.js.
       window.setTimeout(
         function() { TestPilotXulWindow._init(aReload); }, 2000);
       return;

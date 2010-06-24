@@ -166,6 +166,10 @@ var TestPilotTask = {
     return url + this._id;
   },
 
+  get showMoreInfoLink() {
+    return true;
+  },
+
   // event handlers:
 
   onExperimentStartup: function TestPilotTask_onExperimentStartup() {
@@ -198,6 +202,9 @@ var TestPilotTask = {
   onUrlLoad: function TestPilotTask_onUrlLoad(url) {
   },
 
+  onDetailPageOpened: function TestPilotTask_onDetailPageOpened(){
+  },
+
   checkDate: function TestPilotTask_checkDate() {
   },
 
@@ -228,6 +235,8 @@ var TestPilotTask = {
     } else if (this._status == TaskConstants.STATUS_RESULTS) {
       this.changeStatus(TaskConstants.STATUS_ARCHIVED);
     }
+
+    this.onDetailPageOpened();
   }
 };
 
@@ -868,12 +877,9 @@ TestPilotBuiltinSurvey.prototype = {
     return this._studyId;
   },
 
-  onUrlLoad: function TPS_onUrlLoad(url) {
-    /* Viewing the appropriate URL makes survey status progress from
-     * NEW (havent' seen survey) to PENDING (seen it but not done it).
-     * So we can stop notifying people about the survey once they've seen it.*/
-    if (url == this._url && this._status == TaskConstants.STATUS_NEW) {
-      this.changeStatus(TaskConstants.STATUS_PENDING);
+  onDetailPageOpened: function TPS_onDetailPageOpened() {
+    if (this._status < TaskConstants.STATUS_IN_PROGRESS) {
+      this._status = TaskConstants.STATUS_IN_PROGRESS;
     }
   },
 
@@ -903,7 +909,6 @@ TestPilotBuiltinSurvey.prototype = {
       surveyResults["version_number"] = this._versionNumber;
     }
     Application.prefs.setValue(prefName, JSON.stringify(surveyResults));
-
     if (this._studyId) {
       this._upload(callback, 0);
     } else {
@@ -930,7 +935,7 @@ TestPilotBuiltinSurvey.prototype = {
 
   // Upload function for survey -- TODO this duplicates a lot of code
   // from study._upload().
-  _upload: function TestPilotSurveyt_upload(callback, retryCount) {
+  _upload: function TestPilotSurvey__upload(callback, retryCount) {
     let self = this;
     this._prependMetadataToJSON(function(params) {
       let req =
@@ -999,16 +1004,19 @@ TestPilotWebSurvey.prototype = {
     return this.infoPageUrl;
   },
 
-  onUrlLoad: function TPS_onUrlLoad(url) {
+  get showMoreInfoLink() {
+    return false;
+  },
+
+  onDetailPageOpened: function TPWS_onDetailPageOpened() {
     /* Once you view the URL of the survey, we'll assume you've taken it.
      * There's no reliable way to tell whether you have or not, so let's
      * default to not bugging the user about it again.
      */
-    if (url == this._url && this._status < TaskConstants.STATUS_SUBMITTED) {
-      this.changeStatus( TaskConstants.STATUS_SUBMITTED );
+    if (this._status < TaskConstants.STATUS_SUBMITTED) {
+      this._status = TaskConstants.STATUS_SUBMITTED;
     }
   }
-
 };
 TestPilotWebSurvey.prototype.__proto__ = TestPilotTask;
 

@@ -222,6 +222,12 @@ var TestPilotXulWindow = {
     this._init(true);
   },
 
+  onTakeSurveyButton: function(taskId) {
+    let task = TestPilotSetup.getTaskById(taskId);
+    TestPilotWindowUtils.openChromeless(task.defaultUrl);
+    task.onDetailPageOpened();
+  },
+
   _init: function(aReload) {
     let experiments;
     let ready = false;
@@ -279,9 +285,11 @@ var TestPilotXulWindow = {
       let openInTab = (task.taskType == TaskConstants.TYPE_LEGACY);
 
       this.addDescription(textVbox, task.title, task.summary);
-      this.addXulLink(
-        textVbox, this._stringBundle.getString("testpilot.moreInfo"),
-        task.defaultUrl, openInTab);
+      if (task.showMoreInfoLink) {
+        this.addXulLink(
+          textVbox, this._stringBundle.getString("testpilot.moreInfo"),
+          task.defaultUrl, openInTab);
+      }
 
       // Create the rightmost status area, depending on status:
       let statusVbox = document.createElement("vbox");
@@ -318,7 +326,7 @@ var TestPilotXulWindow = {
             statusVbox,
             this._stringBundle.getString("testpilot.takeSurvey"),
             "survey-button",
-            "TestPilotWindowUtils.openChromeless('" + task.defaultUrl + "');");
+            "TestPilotXulWindow.onTakeSurveyButton('" + task.id + "');");
         } else if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
           if (task.startDate) {
             this.addLabel(
@@ -337,7 +345,7 @@ var TestPilotXulWindow = {
             statusVbox,
             this._stringBundle.getString("testpilot.takeSurvey"),
             "survey-button",
-            "TestPilotWindowUtils.openChromeless('" + task.defaultUrl + "');");
+            "TestPilotXulWindow.onTakeSurveyButton('" + task.id + "');");
         } else if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
           this.addLabel(
             statusVbox,

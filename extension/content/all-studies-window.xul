@@ -64,7 +64,13 @@
     <deck id="tp-xulwindow-deck" flex="1">
       <prefpane id="current-studies-pane" class="tp-tab-panel">
         <richlistbox id="current-studies-listbox" class="tp-study-list"
-          disabled="true" />
+          disabled="true">
+          <richlistitem id="still-loading-msg" class="tp-study-list">
+            <description class="pilot-largetext">
+              &testpilot.studiesWindow.stillLoadingMessage;
+            </description>
+          </richlistitem>
+        </richlistbox>
       </prefpane>
 
       <prefpane id="finished-studies-pane" class="tp-tab-panel">

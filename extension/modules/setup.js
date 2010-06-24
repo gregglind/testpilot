@@ -43,15 +43,7 @@ EXPORTED_SYMBOLS = ["TestPilotSetup", "POPUP_SHOW_ON_NEW",
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
-
-var Cuddlefish = {};
-Components.utils.import("resource://testpilot/modules/lib/cuddlefish.js",
-                        Cuddlefish);
-Components.utils.import("resource://testpilot/modules/experiment_data_store.js");
-Components.utils.import("resource://testpilot/modules/tasks.js");
-Components.utils.import("resource://testpilot/modules/extension-update.js");
-Components.utils.import("resource://testpilot/modules/log4moz.js");
-Components.utils.import("resource://testpilot/modules/feedback.js");
+const Cu = Components.utils;
 
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
 const VERSION_PREF ="extensions.testpilot.lastversion";
@@ -70,7 +62,6 @@ let TestPilotSetup = {
   startupComplete: false,
   _shortTimer: null,
   _longTimer: null,
-  _loader: null,
   _remoteExperimentLoader: null,
   _obs: null,
   _stringBundle: null,
@@ -91,16 +82,89 @@ let TestPilotSetup = {
     return this._application.prefs;
   },
 
-  _initLogging: function TPS__initLogging() {
-    let props = Cc["@mozilla.org/file/directory_service;1"].
-                  getService(Ci.nsIProperties);
-    let logFile = props.get("ProfD", Components.interfaces.nsIFile);
-    logFile.append(LOG_FILE_NAME);
-    let formatter = new Log4Moz.BasicFormatter;
-    let root = Log4Moz.repository.rootLogger;
-    root.level = Log4Moz.Level["All"];
-    let appender = new Log4Moz.RotatingFileAppender(logFile, formatter);
-    root.addAppender(appender);
+  __loader: null,
+  get _loader() {
+    if (this.__loader == null) {
+      let Cuddlefish = {};
+      Components.utils.import("resource://testpilot/modules/lib/cuddlefish.js",
+                        Cuddlefish);
+      let repo = this._logRepo;
+      this.__loader = new Cuddlefish.Loader(
+          {rootPaths: ["resource://testpilot/modules/",
+                     "resource://testpilot/modules/lib/"],
+           console: repo.getLogger("TestPilot.Loader")
+      });
+    }
+    return this.__loader;
+  },
+
+  __feedbackManager: null,
+  get _feedbackManager() {
+    if (this.__feedbackManager == null) {
+      let FeedbackModule = {};
+      Cu.import("resource://testpilot/modules/feedback.js", FeedbackModule);
+      this.__feedbackManager = FeedbackModule.FeedbackManager;
+    }
+    return this.__feedbackManager;
+  },
+
+  __dataStoreModule: null,
+  get _dataStoreModule() {
+    if (this.__dataStoreModule == null) {
+      this.__dataStoreModule = {};
+      Cu.import("resource://testpilot/modules/experiment_data_store.js",
+                  this._dataStoreModule);
+    }
+    return this.__dataStoreModule;
+  },
+
+  __extensionUpdater: null,
+  get _extensionUpdater() {
+    if (this.__extensionUpdater == null) {
+      let ExUpdate = {};
+      Cu.import("resource://testpilot/modules/extension-update.js",
+                   ExUpdate);
+      this.__extensionUpdater = ExUpdate.TestPilotExtensionUpdate;
+    }
+    return this.__extensionUpdater;
+  },
+
+  __logRepo: null,
+  get _logRepo() {
+    // Note: This hits the disk so it's an expensive operation; don't call it
+    // on startup.
+    if (this.__logRepo == null) {
+      let Log4MozModule = {};
+      Cu.import("resource://testpilot/modules/log4moz.js", Log4MozModule);
+      let props = Cc["@mozilla.org/file/directory_service;1"].
+                    getService(Ci.nsIProperties);
+      let logFile = props.get("ProfD", Components.interfaces.nsIFile);
+      logFile.append(LOG_FILE_NAME);
+      let formatter = new Log4MozModule.Log4Moz.BasicFormatter;
+      let root = Log4MozModule.Log4Moz.repository.rootLogger;
+      root.level = Log4MozModule.Log4Moz.Level["All"];
+      let appender = new Log4MozModule.Log4Moz.RotatingFileAppender(logFile, formatter);
+      root.addAppender(appender);
+      this.__logRepo = Log4MozModule.Log4Moz.repository;
+    }
+    return this.__logRepo;
+  },
+
+  __logger: null,
+  get _logger() {
+    if (this.__logger == null) {
+      this.__logger = this._logRepo.getLogger("TestPilot.Setup");
+    }
+    return this.__logger;
+  },
+
+  __taskModule: null,
+  get _taskModule() {
+    if (this.__taskModule == null) {
+      this.__taskModule = {};
+      Cu.import("resource://testpilot/modules/tasks.js", this.__taskModule);
+    }
+    return this.__taskModule;
   },
 
   _isFfx4BetaVersion: function TPS__isFfx4BetaVersion() {
@@ -136,7 +200,7 @@ let TestPilotSetup = {
     /* If this is first run, and it's ffx4 beta version, and the feedback
      * button is not in the expected place, put it there!
      * (copied from MozReporterButtons extension) */
-    let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
+    let logger = this._logger;
     try {
       let win = this._getFrontBrowserWindow();
       let firefoxnav = win.document.getElementById("nav-bar");
@@ -164,8 +228,7 @@ let TestPilotSetup = {
   globalStartup: function TPS__doGlobalSetup() {
     // Only ever run this stuff ONCE, on the first window restore.
     // Should get called by the Test Pilot component.
-    this._initLogging();
-    let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
+    let logger = this._logger;
     logger.trace("TestPilotSetup.globalStartup was called.");
 
     this._setPrefDefaultsForVersion();
@@ -180,13 +243,6 @@ let TestPilotSetup = {
           createBundle("chrome://testpilot/locale/main.properties");
 
     try {
-    logger.trace("Making new cuddlefish loader:");
-    this._loader = new Cuddlefish.Loader(
-      {rootPaths: ["resource://testpilot/modules/",
-                   "resource://testpilot/modules/lib/"],
-       console: Log4Moz.repository.getLogger("TestPilot.Loader")
-      });
-    logger.trace("Made new cuddlefish loader.");
     this._obs = this._loader.require("observer-service");
     // Set up observation for task state changes
     var self = this;
@@ -259,7 +315,7 @@ let TestPilotSetup = {
   },
 
   globalShutdown: function TPS_globalShutdown() {
-    let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
+    let logger = this._logger;
     logger.trace("Global shutdown.  Unregistering everything.");
     let self = this;
     for (let i = 0; i < self.taskList.length; i++) {
@@ -295,16 +351,14 @@ let TestPilotSetup = {
   },
 
   onWindowUnload: function TPS__onWindowRegistered(window) {
-    let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
-    logger.trace("Called TestPilotSetup.onWindow unload!");
+    this._logger.trace("Called TestPilotSetup.onWindow unload!");
     for (let i = 0; i < this.taskList.length; i++) {
       this.taskList[i].onWindowClosed(window);
     }
   },
 
   onWindowLoad: function TPS_onWindowLoad(window) {
-    let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
-    logger.trace("Called TestPilotSetup.onWindowLoad!");
+    this._logger.trace("Called TestPilotSetup.onWindowLoad!");
     // Run this stuff once per window...
     let self = this;
 
@@ -314,7 +368,7 @@ let TestPilotSetup = {
     if (appcontent) {
       appcontent.addEventListener("DOMContentLoaded", function(event) {
         let newUrl =  event.originalTarget.URL;
-        FeedbackManager.fillInFeedbackPage(newUrl, window);
+        self._feedbackManager.fillInFeedbackPage(newUrl, window);
         for (i = 0; i < self.taskList.length; i++) {
           self.taskList[i].onUrlLoad(newUrl, event);
         }
@@ -386,7 +440,7 @@ let TestPilotSetup = {
 	  this._stringBundle.GetStringFromName(
 	    "testpilot.notification.update"));
 	submitBtn.onclick = function() {
-	  TestPilotExtensionUpdate.check(EXTENSION_ID);
+          this._extensionUpdater.check(EXTENSION_ID);
           self._hideNotification();
 	};
       } else {
@@ -472,6 +526,7 @@ let TestPilotSetup = {
     // Check whether there are tasks needing attention, and if any are
     // found, show the popup door-hanger thingy.
     let i, task;
+    let TaskConstants = this._taskModule.TaskConstants;
 
     // if showing extension update notification, don't do anything.
     if (this._isShowingUpdateNotification()) {
@@ -568,7 +623,6 @@ let TestPilotSetup = {
   },
 
   _doHousekeeping: function TPS__doHousekeeping() {
-    let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
     // check date on all tasks:
     for (let i = 0; i < this.taskList.length; i++) {
       let task = this.taskList[i];
@@ -576,7 +630,7 @@ let TestPilotSetup = {
     }
     // Do a full reminder -- but at most once per browser session
     if (!this.didReminderAfterStartup) {
-      logger.trace("Doing reminder after startup...");
+      this._logger.trace("Doing reminder after startup...");
       this.didReminderAfterStartup = true;
       this._notifyUserOfTasks();
     }
@@ -642,7 +696,7 @@ let TestPilotSetup = {
     // (e.g. meet the minimum Test Pilot version and Firefox version)
     // false if not.
     // If the experiment doesn't specify minimum versions, attempt to run it.
-    let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
+    let logger = this._logger;
     try {
       let minTpVer, minFxVer, expName;
       if (experiment.experimentInfo) {
@@ -686,12 +740,12 @@ let TestPilotSetup = {
   },
 
   checkForTasks: function TPS_checkForTasks(callback) {
-    let logger = Log4Moz.repository.getLogger("TestPilot.Setup");
+    let logger = this._logger;
     if (! this._remoteExperimentLoader ) {
       logger.trace("Now requiring remote experiment loader:");
       let remoteLoaderModule = this._loader.require("remote-experiment-loader");
       logger.trace("Now instantiating remoteExperimentLoader:");
-      let rel = new remoteLoaderModule.RemoteExperimentLoader(Log4Moz);
+      let rel = new remoteLoaderModule.RemoteExperimentLoader(this._logRepo);
       this._remoteExperimentLoader = rel;
     }
 
@@ -719,22 +773,21 @@ let TestPilotSetup = {
               // If it supplies questions, it's a built-in survey.
               // If not, it's a web-based survey.
               if (!sInfo.surveyQuestions) {
-                task = new TestPilotWebSurvey(sInfo);
+                task = new self._taskModule.TestPilotWebSurvey(sInfo);
               } else {
-                task = new TestPilotBuiltinSurvey(sInfo);
+                task = new self._taskModule.TestPilotBuiltinSurvey(sInfo);
               }
             } else {
               // This one must be an experiment.
               let expInfo = experiments[filename].experimentInfo;
               let dsInfo = experiments[filename].dataStoreInfo;
-              let dataStore = new ExperimentDataStore( dsInfo.fileName,
-                                                       dsInfo.tableName,
-                                                       dsInfo.columns );
+              let dataStore = new self._dataStoreModule.ExperimentDataStore(
+                dsInfo.fileName, dsInfo.tableName, dsInfo.columns );
               let webContent = experiments[filename].webContent;
-              task = new TestPilotExperiment(expInfo,
-                                             dataStore,
-                                             experiments[filename].handlers,
-                                             webContent);
+              task = new self._taskModule.TestPilotExperiment(expInfo,
+                                                              dataStore,
+                                                              experiments[filename].handlers,
+                                                              webContent);
             }
             self.addTask(task);
             logger.info("Loaded task " + filename);
@@ -746,7 +799,7 @@ let TestPilotSetup = {
         // Handling new results is much simpler:
         let results = self._remoteExperimentLoader.getStudyResults();
         for (let r in results) {
-          let studyResult = new TestPilotStudyResults(results[r]);
+          let studyResult = new self._taskModule.TestPilotStudyResults(results[r]);
           self.addTask(studyResult);
         }
 
@@ -754,7 +807,7 @@ let TestPilotSetup = {
          * if the user participated in it we want to keep that metadata. */
         let legacyStudies = self._remoteExperimentLoader.getLegacyStudies();
         for (let l in legacyStudies) {
-          let legacyStudy = new TestPilotLegacyStudy(legacyStudies[l]);
+          let legacyStudy = new self._taskModule.TestPilotLegacyStudy(legacyStudies[l]);
           self.addTask(legacyStudy);
         }
 

@@ -165,17 +165,17 @@ function downloadFile(url, cb, lastModified) {
     // {'experiments': [{'name': 'Bookmark Experiment',
     //                           'filename': 'bookmarks.js'}]}
 
-exports.RemoteExperimentLoader = function(log4moz, fileGetterFunction ) {
+exports.RemoteExperimentLoader = function(logRepo, fileGetterFunction ) {
   /* fileGetterFunction is an optional stub function for unit testing.  Pass in
    * nothing to have it use the default behavior of downloading the files from the
    * Test Pilot server.  FileGetterFunction must take (url, callback).*/
-  this._init(log4moz, fileGetterFunction);
+  this._init(logRepo, fileGetterFunction);
 };
 
 exports.RemoteExperimentLoader.prototype = {
-  _init: function(log4moz, fileGetterFunction) {
-    this._logger = log4moz.repository.getLogger("TestPilot.Loader");
-    this._expLogger = log4moz.repository.getLogger("TestPilot.RemoteCode");
+  _init: function(logRepo, fileGetterFunction) {
+    this._logger = logRepo.getLogger("TestPilot.Loader");
+    this._expLogger = logRepo.getLogger("TestPilot.RemoteCode");
     this._studyResults = [];
     this._legacyStudies = [];
     let prefs = require("preferences-service");

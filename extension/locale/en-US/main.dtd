@@ -14,7 +14,8 @@
 <!ENTITY testpilot.studiesWindow.currentStudies.label   "Current Studies">
 <!ENTITY testpilot.studiesWindow.finishedStudies.label  "Finished Studies">
 <!ENTITY testpilot.studiesWindow.studyFindings.label    "Study Findings">
-<!ENTITY testpilot.studiesWindow.settings.label    "Settings">
+<!ENTITY testpilot.studiesWindow.settings.label         "Settings">
+<!ENTITY testpilot.studiesWindow.stillLoadingMessage    "Loading, please wait...">
 
 <!-- raw data dialog -->
 <!ENTITY testpilot.rawDataWindow.title                  "Test Pilot: Raw Data">

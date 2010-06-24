@@ -47,6 +47,7 @@ TestPilotComponent.prototype = {
   contractID: "@mozilla.org/testpilot/service;1",
   classID: Components.ID("{e6e5e58f-7977-485a-b076-2f74bee2677b}"),
   _xpcom_categories: [{ category: "app-startup", service: true }],
+  _startupTimer: null,
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
@@ -66,8 +67,8 @@ TestPilotComponent.prototype = {
        * thread... delay a few seconds to give firefox time to finish
        * starting up.
        */
-      let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      timer.initWithCallback(
+      this._startupTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      this._startupTimer.initWithCallback(
         {notify: function(timer) {
            Cu.import("resource://testpilot/modules/setup.js");
            TestPilotSetup.globalStartup();

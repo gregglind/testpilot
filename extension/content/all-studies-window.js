@@ -223,17 +223,31 @@ var TestPilotXulWindow = {
   },
 
   _init: function(aReload) {
-    let numFinishedStudies = 0;
-    let numCurrentStudies = 0;
-    let experiments = TestPilotSetup.getAllTasks();
-    if (experiments.length == 0) {
-      // Can happen if this window opens before all tasks are done loading
-      // See bug 574203 for what happens if you open this window before
-      // the component has loaded setup.js.
+    let experiments;
+    let ready = false;
+
+    // Are we done loading tasks?
+    if (TestPilotSetup.startupComplete) {
+      experiments = TestPilotSetup.getAllTasks();
+      if (experiments.length > 0 ) {
+        ready = true;
+      }
+    }
+
+    if (!ready) {
+      // If you opened the window before tasks are done loading, exit now but try
+      // again in a few seconds.
       window.setTimeout(
         function() { TestPilotXulWindow._init(aReload); }, 2000);
       return;
     }
+
+    let numFinishedStudies = 0;
+    let numCurrentStudies = 0;
+
+    /* Remove 'loading' message */
+    let msg = window.document.getElementById("still-loading-msg");
+    msg.setAttribute("hidden", "true");
 
     if (aReload) {
       /* If we're reloading, start by clearing out any old stuff already

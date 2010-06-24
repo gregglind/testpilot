@@ -520,6 +520,9 @@ let TestPilotSetup = {
 	      "new-study", false, false,
 	      this._stringBundle.GetStringFromName("testpilot.moreInfo"),
 	      task.defaultUrl);
+            // Having shown the notification, update task status so that this
+            // notification won't be shown again.
+            task.changeStatus(TaskConstants.STATUS_IN_PROGRESS, true);
             return;
           } else if (task.taskType == TaskConstants.TYPE_SURVEY) {
 	    this._showNotification(
@@ -532,6 +535,7 @@ let TestPilotSetup = {
 	      "new-study", false, false,
 	      this._stringBundle.GetStringFromName("testpilot.moreInfo"),
 	      task.defaultUrl);
+            task.changeStatus(TaskConstants.STATUS_IN_PROGRESS, true);
             return;
           }
         }
@@ -544,9 +548,6 @@ let TestPilotSetup = {
         task = this.taskList[i];
         if (task.taskType == TaskConstants.TYPE_RESULTS &&
             task.status == TaskConstants.STATUS_NEW) {
-          title = "New Test Pilot Results";
-          text = "New results are now available for the Test Pilot \"" +
-            task.title + "\" study.";
 	  this._showNotification(
 	    task, true,
 	    this._stringBundle.formatStringFromName(
@@ -557,6 +558,9 @@ let TestPilotSetup = {
 	    "new-results", false, false,
 	    this._stringBundle.GetStringFromName("testpilot.moreInfo"),
 	    task.defaultUrl);
+          // Having shown the notification, advance the status of the
+          // results, so that this notification won't be shown again
+          task.changeStatus(TaskConstants.STATUS_ARCHIVED, true);
           return;
         }
       }

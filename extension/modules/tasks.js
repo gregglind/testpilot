@@ -985,7 +985,9 @@ TestPilotWebSurvey.prototype = {
   _init: function TestPilotWebSurvey__init(surveyInfo) {
     this._taskInit(surveyInfo.surveyId,
                    surveyInfo.surveyName,
-                   surveyInfo.surveyUrl);
+                   surveyInfo.surveyUrl,
+                   surveyInfo.summary,
+                   surveyInfo.thumbnail);
     this._logger.info("Initing survey.  This._status is " + this._status);
   },
 
@@ -1002,7 +1004,7 @@ TestPilotWebSurvey.prototype = {
      * There's no reliable way to tell whether you have or not, so let's
      * default to not bugging the user about it again.
      */
-    if (url == this._url && this._status == TaskConstants.STATUS_NEW) {
+    if (url == this._url && this._status < TaskConstants.STATUS_SUBMITTED) {
       this.changeStatus( TaskConstants.STATUS_SUBMITTED );
     }
   }

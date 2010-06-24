@@ -337,8 +337,3 @@ exports.RemoteExperimentLoader.prototype = {
 // TODO but once the study is expired, should delete the jar for it and
 // just load the LegacyStudy version.
 
-// TODO we just saw a legacy study get itself loaded and show up as "finished"
-// (status 4)... the legacy study will set itself to "MISSED" if it didn't
-// have a status, but what if it did have a status left over from when it was
-// running, and that status wasn't SUBMITTED or CANCELED?  Should figure out
-// what to do if it's status 1-4.

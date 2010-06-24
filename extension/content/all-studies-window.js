@@ -331,19 +331,28 @@ var TestPilotXulWindow = {
       }
       if (task.status == TaskConstants.STATUS_IN_PROGRESS ||
           task.status == TaskConstants.STATUS_STARTING) {
-        this.addLabel(
-          statusVbox,
-          this._stringBundle.getString(
-            "testpilot.studiesWindow.gatheringData"));
-        let now = (new Date()).getTime();
-        let progress =
-          100 * (now - task.startDate) / (task.endDate - task.startDate);
-        this.addProgressBar(statusVbox, progress);
-        this.addLabel(
-          statusVbox,
-          this._stringBundle.getFormattedString(
-            "testpilot.studiesWindow.willFinish",
-            [(new Date(task.endDate)).toLocaleDateString()]));
+
+        if (task.taskType == TaskConstants.TYPE_SURVEY) {
+          this.addButton(
+            statusVbox,
+            this._stringBundle.getString("testpilot.takeSurvey"),
+            "survey-button",
+            "TestPilotWindowUtils.openChromeless('" + task.defaultUrl + "');");
+        } else if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
+          this.addLabel(
+            statusVbox,
+            this._stringBundle.getString(
+             "testpilot.studiesWindow.gatheringData"));
+             let now = (new Date()).getTime();
+          let progress =
+            100 * (now - task.startDate) / (task.endDate - task.startDate);
+          this.addProgressBar(statusVbox, progress);
+          this.addLabel(
+            statusVbox,
+            this._stringBundle.getFormattedString(
+              "testpilot.studiesWindow.willFinish",
+              [(new Date(task.endDate)).toLocaleDateString()]));
+        }
       }
       if (task.status >= TaskConstants.STATUS_SUBMITTED) {
         if (task.taskType == TaskConstants.TYPE_RESULTS) {

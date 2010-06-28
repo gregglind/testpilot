@@ -84,7 +84,7 @@ var stringBundle;
       } else {
         // Replace 'now uploading' message
         let errorParagraph = document.createElement("p");
-        errorParagraph.innerHTML = stringBundle.GetStringFromName("testpilot.statusPage.uploadError");
+        errorParagraph.innerHTML = stringBundle.GetStringFromName("testpilot.statusPage.uploadErrorMsg");
         let willRetryParagraph = document.createElement("p");
         willRetryParagraph.innerHTML = stringBundle.GetStringFromName("testpilot.statusPage.willRetry");
         uploadStatus.innerHTML = "";
@@ -258,11 +258,9 @@ var stringBundle;
       if (mdNumExt) {
         // This computes the correctly localized singular or plural string
         // of the number of extensions, e.g. "1 extension", "2 extensions", etc.
-        let [get, numForms] = PluralForm.makeGetter(parseInt(
-                                stringBundle.GetStringFromName("testpilot.pluralRule")));
-        let str = stringBundle.GetStringFromName("testpilot.statusPage.extensions");
+        let str = stringBundle.GetStringFromName("testpilot.statusPage.numExtensions");
         var numExt = md.extensions.length;
-        mdNumExt.innerHTML = get(numExt, str).replace("#1", numExt);
+        mdNumExt.innerHTML = PluralForm.get(numExt, str).replace("#1", numExt);
       }
     });
   }

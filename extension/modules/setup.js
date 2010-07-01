@@ -186,9 +186,9 @@ let TestPilotSetup = {
 
   _isFfx4BetaVersion: function TPS__isFfx4BetaVersion() {
     let result = Cc["@mozilla.org/xpcom/version-comparator;1"]
-                   .getService(Ci.nsIVersionComparator)
-                   .compare("3.7a1pre", this._application.version);
-    if (result < 0) {
+                       .getService(Ci.nsIVersionComparator)
+                       .compare("4.0b1pre", this._application.version);
+    if (result <= 0) {
       return true;
     } else {
       return false;

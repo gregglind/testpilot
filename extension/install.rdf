@@ -13,15 +13,15 @@
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
         <em:minVersion>3.5</em:minVersion>
-        <em:maxVersion>4.0b2</em:maxVersion>
+        <em:maxVersion>4.0b2pre</em:maxVersion>
       </Description>
     </em:targetApplication>
    
     <!-- Front End MetaData -->
-    <em:name>Feedback</em:name>
-    <em:description>Help make Firefox better by giving feedback.</em:description>
+    <em:name>Test Pilot</em:name>
+    <em:description>Help make Firefox better by running user studies.</em:description>
     <em:creator>Mozilla Corporation</em:creator>
     <em:homepageURL>http://testpilot.mozillalabs.com/</em:homepageURL>
-    <em:iconURL>chrome://testpilot/skin/dino_32x32.png</em:iconURL>
+    <em:iconURL>chrome://testpilot/skin/testpilot_32x32.png</em:iconURL>
   </Description>
 </RDF>

@@ -224,11 +224,20 @@ exports.RemoteExperimentLoader.prototype = {
     let myLocale = prefs.get("general.useragent.locale", "");
     let studiesToLoad = [];
     for each (let set in studiesIndex) {
+      // First try for specific locale, e.g. pt-BR for brazillian portugese
       if (set[myLocale]) {
         studiesToLoad.push(set[myLocale]);
-      } else if (set["default"]) {
-        studiesToLoad.push(set["default"]);
+        // If that's not there, look for the language, e.g. just "pt":
+      } else {
+        let lang = myLocale.slice(0, 2);
+        if (set[lang]) {
+          studiesToLoad.push(set[lang]);
+          // If that's not there either, look for one called "default":
+        } else if(set["default"]) {
+          studiesToLoad.push(set["default"]);
+        }
       }
+      // If none of those are there, load nothing.
     }
     return studiesToLoad();
   },

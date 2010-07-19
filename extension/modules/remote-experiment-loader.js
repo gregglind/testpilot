@@ -239,7 +239,7 @@ exports.RemoteExperimentLoader.prototype = {
       }
       // If none of those are there, load nothing.
     }
-    return studiesToLoad();
+    return studiesToLoad;
   },
 
   checkForUpdates: function(callback) {

@@ -227,15 +227,20 @@ exports.RemoteExperimentLoader.prototype = {
       // First try for specific locale, e.g. pt-BR for brazillian portugese
       if (set[myLocale]) {
         studiesToLoad.push(set[myLocale]);
-        // If that's not there, look for the language, e.g. just "pt":
-      } else {
-        let lang = myLocale.slice(0, 2);
+        continue;
+      }
+      // If that's not there, look for the language, e.g. just "pt":
+      let hyphen = myLocale.indexOf("-");
+      if (hyphen > -1) {
+        let lang = myLocale.slice(0, hyphen);
         if (set[lang]) {
           studiesToLoad.push(set[lang]);
-          // If that's not there either, look for one called "default":
-        } else if(set["default"]) {
-          studiesToLoad.push(set["default"]);
+          continue;
         }
+      }
+      // If that's not there either, look for one called "default":
+      if(set["default"]) {
+        studiesToLoad.push(set["default"]);
       }
       // If none of those are there, load nothing.
     }

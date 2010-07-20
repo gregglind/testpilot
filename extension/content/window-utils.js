@@ -49,18 +49,13 @@ var TestPilotWindowUtils;
                  getService(Components.interfaces.nsIWindowMediator);
       let allStudiesWindow = wm.getMostRecentWindow(ALL_STUDIES_WINDOW_TYPE);
 
-      let screenWidth = window.screen.availWidth;
-      let screenHeight = window.screen.availHeight;
-      let width = screenWidth >= 800 ? 700 : screenWidth - 100;
-      let height = screenHeight >= 800 ? 700 : screenHeight - 100;
-
       if (allStudiesWindow) {
         allStudiesWindow.focus();
       } else {
-        allStudiesWindow = window.open(
+        allStudiesWindow = window.openDialog(
           "chrome://testpilot/content/all-studies-window.xul",
           ALL_STUDIES_WINDOW_NAME,
-          "chrome,titlebar,centerscreen,dialog=no,resizable=yes,width=" + width +",height=" + height);
+          "chrome,titlebar,centerscreen,dialog=no");
       }
     },
 

@@ -435,16 +435,13 @@ var TestPilotXulWindow = {
     let height = screenHeight >= 800 ? 700 : screenHeight - 100;
 
     height -= 130; // Or whatever is height of title bar plus windowdragbox
-    currList.setAttribute("rows", 4);
-    finList.setAttribute("rows", 4);
-    resultsList.setAttribute("rows", 4);
 
-    /*currList.width = width;
+    currList.width = width;
     currList.height = height;
     finList.width = width;
     finList.height = height;
     resultsList.width = width;
-    resultsList.height = height;*/
+    resultsList.height = height;
     window.sizeToContent();
   },
 

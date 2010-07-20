@@ -62,9 +62,9 @@
     </windowdragbox>
 
     <deck id="tp-xulwindow-deck" flex="1">
-      <prefpane id="current-studies-pane" class="tp-tab-panel" flex="1">
+      <prefpane id="current-studies-pane" class="tp-tab-panel">
         <richlistbox id="current-studies-listbox" class="tp-study-list"
-          disabled="true" flex="1">
+          disabled="true">
           <richlistitem id="still-loading-msg" class="tp-study-list">
             <description class="pilot-largetext">
               &testpilot.studiesWindow.stillLoadingMessage;
@@ -73,17 +73,17 @@
         </richlistbox>
       </prefpane>
 
-      <prefpane id="finished-studies-pane" class="tp-tab-panel" flex="1">
+      <prefpane id="finished-studies-pane" class="tp-tab-panel">
         <richlistbox id="finished-studies-listbox" class="tp-study-list"
-          disabled="true" flex="1"/>
+          disabled="true"/>
       </prefpane>
 
-      <prefpane id="study-results-pane" class="tp-tab-panel" flex="1">
+      <prefpane id="study-results-pane" class="tp-tab-panel">
         <richlistbox id="study-results-listbox" class="tp-study-list"
-          disabled="true" flex="1"/>
+          disabled="true"/>
       </prefpane>
 
-      <prefpane id="settings-pane" class="tp-tab-panel" flex="1">
+      <prefpane id="settings-pane" class="tp-tab-panel">
         <preferences>
           <preference id="notify-finished" type="bool"
                       name="extensions.testpilot.popup.showOnStudyFinished"/>

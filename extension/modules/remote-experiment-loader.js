@@ -322,66 +322,97 @@ exports.RemoteExperimentLoader.prototype = {
     return true;
   },
 
+  // TODO a bad thing that can go wrong: If we have a net connection but the index file
+  // has not changed, we currently don't try to download anything...
+
+  // Another bad thing: If there's a jar download that's corrupt or unreadable or has
+    // the wrong permissions or something, we need to kill it and download a new one.
+
+  // WTF every jar file I'm downloading appears as 0 bytes with __x__x___ permissions!
+
+  _cachedIndexNsiFile: null,
   get cachedIndexNsiFile() {
-    let file = Cc["@mozilla.org/file/directory_service;1"].
-                     getService(Ci.nsIProperties).
-                     get("ProfD", Ci.nsIFile);
-    file.append("TestPilotExperimentFiles"); // TODO this name should go in pref?
-    if (!file.exists() || !file.isDirectory()) {
-      file.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
+    if (!this._cachedIndexNsiFile) {
+      try {
+        let file = Cc["@mozilla.org/file/directory_service;1"].
+                         getService(Ci.nsIProperties).
+                         get("ProfD", Ci.nsIFile);
+        file.append("TestPilotExperimentFiles"); // TODO this name should go in pref?
+        // Make sure there's a directory with this name; delete any non-directory
+        // file that's in the way.
+        if (file.exists() && !file.isDirectory()) {
+          file.remove(false);
+        }
+        if (!file.exists()) {
+          file.create(Ci.nsIFile.DIRECTORY_TYPE, 0777);
+        }
+        file.append("index.json");
+        this._cachedIndexNsiFile = file;
+      } catch(e) {
+        console.warn("Error creating directory for cached index file: " + e);
+      }
     }
-    file.append("index.json");
-    return file;
+    return this._cachedIndexNsiFile;
   },
 
   _cacheIndexFile: function(data) {
     // write data to disk as basedir/index.json
-    let file = this.cachedIndexNsiFile;
-    if (file.exists()) {
-      file.remove(false);
+    try {
+      let file = this.cachedIndexNsiFile;
+      if (file == null) {
+        console.warn("Can't cache index file because directory does not exist.");
+        return;
+      }
+      if (file.exists()) {
+        file.remove(false);
+      }
+      file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
+      // file is nsIFile, data is a string
+      let foStream = Cc["@mozilla.org/network/file-output-stream;1"].
+                               createInstance(Ci.nsIFileOutputStream);
+
+      foStream.init(file, 0x02 | 0x08 | 0x20, 0666, 0);
+      // write, create, truncate
+      let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
+                                createInstance(Ci.nsIConverterOutputStream);
+      converter.init(foStream, "UTF-8", 0, 0);
+      converter.writeString(data);
+      converter.close(); // this closes foStream too
+    } catch(e) {
+      console.warn("Error cacheing index file: " + e);
     }
-    file.create(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
-    // file is nsIFile, data is a string
-    let foStream = Cc["@mozilla.org/network/file-output-stream;1"].
-                             createInstance(Ci.nsIFileOutputStream);
-
-    // use 0x02 | 0x10 to open file for appending.
-    foStream.init(file, 0x02 | 0x08 | 0x20, 0666, 0);
-    // write, create, truncate
-    // In a c file operation, we have no need to set file mode with or operation,
-    // directly using "r" or "w" usually.
-
-    // if you are sure there will never ever be any non-ascii text in data you can
-    // also call foStream.writeData directly
-    let converter = Cc["@mozilla.org/intl/converter-output-stream;1"].
-                              createInstance(Ci.nsIConverterOutputStream);
-    converter.init(foStream, "UTF-8", 0, 0);
-    converter.writeString(data);
-    converter.close(); // this closes foStream
   },
 
+  // https://developer.mozilla.org/en/Table_Of_Errors
   _loadCachedIndexFile: function() {
     // If basedir/index.json exists, read it and return its data
     // Otherwise, return false
     let file = this.cachedIndexNsiFile;
+    if (file == null) {
+      console.warn("Can't load cached index file because directory does not exist.");
+      return false;
+    }
     if (file.exists()) {
-      let data = "";
-      let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
-                        createInstance(Ci.nsIFileInputStream);
-      let cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].
-                        createInstance(Ci.nsIConverterInputStream);
-      fstream.init(file, -1, 0, 0);
-      cstream.init(fstream, "UTF-8", 0, 0); // you can use another encoding here if you wish
-
-      let str = {};
-      while (cstream.readString(4096, str) != 0) {
-        data += str.value;
+      try {
+        let data = "";
+        let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
+                          createInstance(Ci.nsIFileInputStream);
+        let cstream = Cc["@mozilla.org/intl/converter-input-stream;1"].
+                          createInstance(Ci.nsIConverterInputStream);
+        fstream.init(file, -1, 0, 0);
+        cstream.init(fstream, "UTF-8", 0, 0);
+        let str = {};
+        while (cstream.readString(4096, str) != 0) {
+          data += str.value;
+        }
+        cstream.close(); // this closes fstream too
+        return data;
+      } catch(e) {
+        console.warn("Error occured in reading cached index file: " + e);
+        return false;
       }
-
-      cstream.close(); // this closes fstream
-
-      return data;
     } else {
+      console.warn("Trying to load cached index file but it does not exist.");
       return false;
     }
   },
@@ -401,7 +432,12 @@ exports.RemoteExperimentLoader.prototype = {
     this._logger.info("Unloading everything to prepare to check for updates.");
     this._refreshLoader();
 
-    let modDate = this.cachedIndexNsiFile.lastModifiedTime;
+    let modDate = 0;
+    if (this.cachedIndexNsiFile) {
+      if (this.cachedIndexNsiFile.exists()) {
+        modDate = this.cachedIndexNsiFile.lastModifiedTime;
+      }
+    }
     let url = resolveUrl(self._baseUrl, indexFileName);
     self._fileGetter(url, function onDone(data) {
       if (data) {

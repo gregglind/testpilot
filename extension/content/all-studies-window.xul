@@ -97,7 +97,8 @@
         <vbox style="padding: 12px;">
           <groupbox>
             <caption label="&testpilot.settings.dataSubmission.label;" />
-            <checkbox label="&testpilot.settings.alwaysSubmitData.label;"
+            <checkbox id="checkbox-always-submit-data"
+                      label="&testpilot.settings.alwaysSubmitData.label;"
                       preference="always-submit-data"/>
           </groupbox>
           <groupbox>
@@ -106,11 +107,14 @@
             <hbox>
               <separator orient="vertical" />
               <vbox>
-                <checkbox label="&testpilot.settings.readyToSubmit.label;"
+                <checkbox id="checkbox-notify-finished"
+                          label="&testpilot.settings.readyToSubmit.label;"
                           preference="notify-finished"/>
-                <checkbox label="&testpilot.settings.newStudy.label;"
+                <checkbox id="checkbox-notify-new"
+                          label="&testpilot.settings.newStudy.label;"
                           preference="notify-new"/>
-                <checkbox label="&testpilot.settings.hasNewResults.label;"
+                <checkbox id="checkbox-notify-results"
+                          label="&testpilot.settings.hasNewResults.label;"
                           preference="notify-results"/>
               </vbox>
             </hbox>

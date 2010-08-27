@@ -216,26 +216,7 @@ var TestPilotXulWindow = {
   },
 
   onUnload: function() {
-    this._savePreferences();
     Observers.remove("testpilot:task:changed", this._onTaskStatusChanged, this);
-  },
-
-  _savePreferences : function() {
-    let checkNotifyNew = document.getElementById("checkbox-notify-new");
-    let checkNotifyResults = document.getElementById("checkbox-notify-results");
-    let checkNotifyFinished =
-      document.getElementById("checkbox-notify-finished");
-    let checkAlwaysSubmitData =
-      document.getElementById("checkbox-always-submit-data");
-
-    Application.prefs.setValue(
-      POPUP_SHOW_ON_NEW, checkNotifyNew.checked);
-    Application.prefs.setValue(
-      POPUP_SHOW_ON_RESULTS, checkNotifyResults.checked);
-    Application.prefs.setValue(
-      POPUP_SHOW_ON_FINISH, checkNotifyFinished.checked);
-    Application.prefs.setValue(
-      ALWAYS_SUBMIT_DATA, checkAlwaysSubmitData.checked);
   },
 
   _onTaskStatusChanged : function() {

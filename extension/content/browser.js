@@ -175,12 +175,9 @@ var TestPilotMenuUtils;
         return;
       }
       let firefoxnav = window.document.getElementById("nav-bar");
-      // #nav-bar is sometimes missing at this point, possibly because we're
-      // being called to early in startup process.  Investigate further, but
-      // for now just avoid throwing an exception that would derail the rest
-      // of startup.
+      /* This is sometimes called for windows that don't have a navbar - in
+       * that case, do nothing. */
       if (!firefoxnav) {
-        console.warn("Elem #nav-bar does not exist on startup.\n");
         return;
       }
       // TODO if the user has removed the feedback button via customization

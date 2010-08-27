@@ -175,6 +175,18 @@ var TestPilotMenuUtils;
         return;
       }
       let firefoxnav = window.document.getElementById("nav-bar");
+      // #nav-bar is sometimes missing at this point, possibly because we're
+      // being called to early in startup process.  Investigate further, but
+      // for now just avoid throwing an exception that would derail the rest
+      // of startup.
+      if (!firefoxnav) {
+        console.warn("Elem #nav-bar does not exist on startup.\n");
+        return;
+      }
+      // TODO if the user has removed the feedback button via customization
+      // interface, we don't want to add it back in.  Use a pref to store whether
+      // this setup was done or not.
+
       let curSet = firefoxnav.currentSet;
 
       if (-1 == curSet.indexOf("feedback-menu-button")) {

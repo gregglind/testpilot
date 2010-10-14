@@ -55,6 +55,7 @@ const POPUP_SHOW_ON_RESULTS = "extensions.testpilot.popup.showOnNewResults";
 const POPUP_CHECK_INTERVAL = "extensions.testpilot.popup.delayAfterStartup";
 const POPUP_REMINDER_INTERVAL = "extensions.testpilot.popup.timeBetweenChecks";
 const ALWAYS_SUBMIT_DATA = "extensions.testpilot.alwaysSubmitData";
+const UPDATE_CHANNEL_PREF = "app.update.channel";
 const LOG_FILE_NAME = "TestPilotErrorLog.log";
 
 let TestPilotSetup = {
@@ -185,14 +186,13 @@ let TestPilotSetup = {
   },
 
   _isFfx4BetaVersion: function TPS__isFfx4BetaVersion() {
-    let result = Cc["@mozilla.org/xpcom/version-comparator;1"]
-                       .getService(Ci.nsIVersionComparator)
-                       .compare("4.0b1pre", this._application.version);
-    if (result <= 0) {
-      return true;
-    } else {
-      return false;
-    }
+    /* Return true if we're in the beta channel -- this will determine whether we show the
+     * Feedback interface or the Test Pilot interface.
+     * TODO should the Nightly channel act like the beta channel? 
+     * TODO can we programmatically choose which overlay to use in chrome.manifest
+     * based on the channel?  Do we need to?*/
+    let channel = this._prefs.getValue(UPDATE_CHANNEL_PREF, "default");
+    return (channel == "beta") || (channel == "nightly");
   },
 
   _setPrefDefaultsForVersion: function TPS__setPrefDefaultsForVersion() {

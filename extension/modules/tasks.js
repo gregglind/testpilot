@@ -478,7 +478,6 @@ TestPilotExperiment.prototype = {
 
   onAppShutdown: function TestPilotExperiment_onAppShutdown() {
     this._logger.trace("Experiment.onAppShutdown called.");
-    // TODO the caller for this is not yet implemented
     if (this.experimentIsRunning()) {
       this._handlers.onAppShutdown();
     }

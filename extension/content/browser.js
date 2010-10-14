@@ -180,19 +180,25 @@ var TestPilotMenuUtils;
       if (!firefoxnav) {
         return;
       }
-      // TODO if the user has removed the feedback button via customization
-      // interface, we don't want to add it back in.  Use a pref to store whether
-      // this setup was done or not.
 
+      /* Check if we've already done this customization -- if not, don't do it
+       * again  (don't want to put it back in after user explicitly takes it out-
+       * bug 577243 )
+       * TODO will this pref-checking slow down startup process too much? */
+      let pref = "extensions.testpilot.alreadyCustomizedToolbar";
+      let ps = Cc["@mozilla.org/preferences-service;1"]
+                    .getService(Ci.nsIPrefBranch);
+      let alreadyCustomized = ps.getBoolPref(pref);
       let curSet = firefoxnav.currentSet;
 
-      if (-1 == curSet.indexOf("feedback-menu-button")) {
+      if (!alreadyCustomized && (-1 == curSet.indexOf("feedback-menu-button"))) {
         // place the buttons after the search box.
         let newSet = curSet + ",feedback-menu-button";
 
         firefoxnav.setAttribute("currentset", newSet);
         firefoxnav.currentSet = newSet;
         window.document.persist("nav-bar", "currentset");
+        ps.setBoolPref(pref, true);
         // if you don't do the following call, funny things happen.
         try {
           BrowserToolboxCustomizeDone(true);

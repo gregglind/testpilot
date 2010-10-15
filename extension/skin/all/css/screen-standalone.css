@@ -169,7 +169,7 @@ body {
 .home_callout {
 	font-size: 16px;
 	vertical-align: middle;
-	width: 280px;
+	/* width: 280px;*/
 	padding: 8px 24px;
 	margin: 8px auto;
 	color: rgba(0, 0, 0, 0.8);

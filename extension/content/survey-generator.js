@@ -95,8 +95,15 @@ function onBuiltinSurveyLoad() {
 }
 
 function drawSurveyForm(task, contentDiv) {
-  let oldAnswers = task.oldAnswers;
   let surveyQuestions = task.surveyQuestions;
+
+  /* Fill form fields with old survey answers if available --
+   * but not if the survey version has changed since you stored them!!
+   * (bug 576482) */
+  let oldAnswers = null;
+  if (task.oldAnswers && (task.version == task.oldAnswers["version_number"])) {
+    oldAnswers = task.oldAnswers["answers"];
+  }
 
   let submitButton = document.getElementById("survey-submit");
   submitButton.setAttribute("style", "");

@@ -49,6 +49,17 @@ function startup(data, reason) {
    // data tells us extension id, version, and installPath.
    // reason is one of APP_STARTUP, ADDON_ENABLE, ADDON_INSTALL,
    // ADDON_UPGRADE, or ADDON_DOWNGRADE.
+
+  /* TODO this will need to register a listener for new window opens,
+   * so tht it can apply the TestPilotWindowHandlers.onWindowLoad()
+   * currently defined in browser.js.  (Without an overlay, we have no
+   * other way of ensuring that the window load handler gets called for
+   * each window.)
+   *
+   * This will also need to manually insert CSS styles (which are otherwise
+   * included by the overlay.)   Look at the document.loadOverlay function.
+   * https://developer.mozilla.org/En/DOM/Document.loadOverlay
+   */
 }
 
 function shutdown(data, reason) {

@@ -47,15 +47,34 @@ EXPORTED_SYMBOLS = ["TestPilotUIBuilder"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const UPDATE_CHANNEL_PREF = "app.update.channel";
 
 var TestPilotUIBuilder = {
+  __prefs: null,
+  get _prefs() {
+    this.__prefs = Cc["@mozilla.org/preferences-service;1"]
+      .getService(Ci.nsIPrefBranch);
+    return this.__prefs;
+  },
+
+  __stringBundle: null,
+  get _stringBundle() {
+    this.__stringBundle =
+      Cc["@mozilla.org/intl/stringbundle;1"].
+        getService(Ci.nsIStringBundleService).
+	  createBundle("chrome://testpilot/locale/main.properties");
+    return this.__stringBundle;
+  },
+
   _makeElement: function(window, tagName, attributes) {
-    let elem =  window.document.createElement(tagName);
+    let doc = window.document;
+    let elem =  doc.createElement(tagName);
     for (let x in attributes) {
       let value = attributes[x];
       if (value.indexOf("&") == 0 &&
           value.indexOf(";") == value.length -1) {
-        value = this._getTextFromDtd(value);
+        let key = value.slice(1, -1);
+        value = this._stringBundle.GetStringFromName(key);
       }
       let attrName = x;
       if (attrName == "className") {
@@ -64,10 +83,6 @@ var TestPilotUIBuilder = {
       elem.setAttribute(attrName, value);
     }
     return elem;
-  },
-
-  _getTextFromDtd: function() {
-    // TODO how do I do this?
   },
 
   buildNotificationPopup: function(window) {
@@ -236,7 +251,18 @@ var TestPilotUIBuilder = {
                            onmousedown: "event.preventDefault();\
                            TestPilotMenuUtils.onMenuButtonMouseDown('feedback-menu-button');"
                          });
-    let palette = window.document.getElementById("BrowserToolbarPalette");
+
+    /* We want to add this feedback button to the customization palette.
+     * Problem:
+     * <toolbarpalette id="BrowserToolbarPalette"> can't be obtained via
+     * getElementById() because it is surgically removed from the XUL DOM by
+     * some magic XBL that runs at startup. However, a reference to it is
+     * saved as toolbox.palette.
+     */
+    let toolbox = window.document.getElementById("navigator-toolbox");
+    let palette = toolbox.palette;
+    dump("Palette is " + palette + "\n");
+
     palette.appendChild(button);
   },
 
@@ -286,15 +312,76 @@ var TestPilotUIBuilder = {
     // TODO get chrome://testpilot/content/browser.js and window-utils.js
   },
 
+  // Might need to call
+
   buildFeedbackInterface: function(window) {
+    let firefoxnav = window.document.getElementById("nav-bar");
+    /* This is sometimes called for windows that don't have a navbar - in
+     * that case, do nothing. TODO maybe this should be in onWindowLoad?*/
+    if (!firefoxnav) {
+      dump("Window with no nav-bar; ignoring.\n");
+      return;
+    }
+
     this.addFeedbackButton(window);
+    let menu = this.buildFeedbackMenu(window);
+    // Insert this menu into
+    // id="menu_ToolsPopup" right after "menu_openAddons":
+    let toolsMenu = window.document.getElementById("menu_ToolsPopup");
+    if (toolsMenu) {
+      let prevChild = window.document.getElementById("menu_openAddons");
+      toolsMenu.insertBefore(menu, prevChild.nextSibling);
+    }
+
+    /* If this is first run, and it's ffx4 beta version, and the feedback
+     * button is not in the expected place, put it there!
+     * (copied from MozReporterButtons extension) */
+
+    /* Check if we've already done this customization -- if not, don't do it
+     * again  (don't want to put it back in after user explicitly takes it out-
+     * bug 577243 )
+     * TODO will this pref-checking slow down startup process too much? */
+    let pref = "extensions.testpilot.alreadyCustomizedToolbar";
+    let alreadyCustomized = this._prefs.getBoolPref(pref);
+    let curSet = firefoxnav.currentSet;
+
+    if (!alreadyCustomized && (-1 == curSet.indexOf("feedback-menu-button"))) {
+      // place the buttons after the search box.
+      let newSet = curSet + ",feedback-menu-button";
+
+      firefoxnav.setAttribute("currentset", newSet);
+      firefoxnav.currentSet = newSet;
+      window.document.persist("nav-bar", "currentset");
+      ps.setBoolPref(pref, true);
+      // if you don't do the following call, funny things happen.
+      try {
+        BrowserToolboxCustomizeDone(true);
+      } catch (e) {
+      }
+    }
 
     // TODO apply chrome://testpilot/content/browser.css
     // TODO apply chrome://testpilot-os/skin/feedback.css
     // TODO get chrome://testpilot/content/browser.js and window-utils.js
-
   },
 
   buildCorrectInterface: function(window) {
+    let channel = this._prefs.getCharPref(UPDATE_CHANNEL_PREF);
+    // TODO what if we're on the Beta channel on 3.5 or 3.6 (somehow)?
+    if (channel == "beta" || channel == "nightly") {
+      dump("Building feedback interface.\n");
+      try {
+        this.buildFeedbackInterface(window);
+      } catch(e) {
+        dump("Error: " + e + "\n");
+      }
+    } else {
+      dump("Building TP interface.\n");
+      try {
+        this.buildTestPilotInterface(window);
+      } catch(e) {
+        dump("Error: " + e + "\n");
+      }
+    }
   }
 };

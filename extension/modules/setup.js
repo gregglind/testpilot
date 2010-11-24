@@ -188,9 +188,9 @@ let TestPilotSetup = {
   _isFfx4BetaVersion: function TPS__isFfx4BetaVersion() {
     /* Return true if we're in the beta channel -- this will determine whether we show the
      * Feedback interface or the Test Pilot interface.
-     * TODO should the Nightly channel act like the beta channel? 
-     * TODO can we programmatically choose which overlay to use in chrome.manifest
-     * based on the channel?  Do we need to?*/
+     * TODO should the Nightly channel act like the beta channel?
+     * TODO this is duplicated in interface.js, maybe call that instead.
+     */
     let channel = this._prefs.getValue(UPDATE_CHANNEL_PREF, "default");
     return (channel == "beta") || (channel == "nightly");
   },

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://testpilot/content/browser.css" type="text/css"?>
+<?xml-stylesheet href="chrome://testpilot-os/skin/feedback.css" type="text/css"?>
+
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<script src="chrome://testpilot/content/browser.js"
+  type="application/x-javascript" />
+<script src="chrome://testpilot/content/window-utils.js"
+  type="application/x-javascript" />
+</overlay>

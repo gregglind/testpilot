@@ -352,7 +352,7 @@ var TestPilotUIBuilder = {
       firefoxnav.setAttribute("currentset", newSet);
       firefoxnav.currentSet = newSet;
       window.document.persist("nav-bar", "currentset");
-      ps.setBoolPref(pref, true);
+      this._prefs.setBoolPref(pref, true);
       // if you don't do the following call, funny things happen.
       try {
         BrowserToolboxCustomizeDone(true);

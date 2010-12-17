@@ -1,5 +1,7 @@
 EXPORTED_SYMBOLS = ["runAllTests"];
 var Cu = Components.utils;
+var Cc = Components.classes;
+var Ci = Components.interfaces;
 var testsRun = 0;
 var testsPassed = 0;
 
@@ -314,6 +316,129 @@ function testRemoteLoaderIndexCache() {
   cheapAssertEqual(remoteLoader._loadCachedIndexFile(), data);
 }
 
+
+function StubDataStore(fileName, tableName, columns) {
+}
+StubDataStore.prototype = {
+  storeEvent: function(uiEvent, callback) {
+  },
+  getJSONRows: function(callback) {
+  },
+  getAllDataAsJSON: function(useDisplayValues, callback) {
+  },
+  wipeAllData: function(callback) {
+  },
+  nukeTable: function() {
+  },
+  haveData: function(callback) {
+  },
+  getHumanReadableColumnNames: function() {
+  },
+  getPropertyNames: function() {
+  }
+};
+
+function StubWebContent() {
+}
+StubWebContent.prototype = {
+  inProgressHtml: "",
+  completedHtml: "",
+  upcomingHtml: "",
+  canceledHtml: "",
+  remainDataHtml: "",
+  dataExpiredHtml: "",
+  deletedRemainDataHtml: "",
+  inProgressDataPrivacyHtml: "",
+  completedDataPrivacyHtml: "",
+  canceledDataPrivacyHtml: "",
+  dataExpiredDataPrivacyHtml: "",
+  remainDataPrivacyHtml: "",
+  deletedRemainDataPrivacyHtml: "",
+  onPageLoad: function(experiment, document, graphUtils) {
+  }
+};
+
+function StubHandlers() {
+}
+StubHandlers.prototype = {
+  onNewWindow: function(window) {
+  },
+  onWindowClosed: function(window) {
+  },
+  onAppStartup: function() {
+  },
+  onAppShutdown: function() {
+  },
+  onExperimentStartup: function(store) {
+  },
+  onExperimentShutdown: function() {
+  },
+  onEnterPrivateBrowsing: function() {
+  },
+  onExitPrivateBrowsing: function() {
+  },
+  uninstallAll: function() {
+  }
+};
+
+function StubDateProvider() {
+}
+StubDateProvider.prototype = {
+};
+
+function testRecurringStudyStateChange() {
+
+  Cu.import("resource://testpilot/modules/tasks.js");
+
+  let expInfo = {
+    startDate: null,
+    duration: 7,
+    testName: "Unit Test Recurring Study",
+    testId: "unit_test_recur_study",
+    testInfoUrl: "https://testpilot.mozillalabs.com/",
+    summary: "Be sure to wipe all prefs and the store in the setup/teardown",
+    thumbnail: "",
+    optInRequired: false,
+    recursAutomatically: true,
+    recurrenceInterval: 30,
+    versionNumber: 1
+  };
+
+  dump("Looking for prefs to delete...\n");
+  let prefService = Cc["@mozilla.org/preferences-service;1"]
+                     .getService(Ci.nsIPrefService)
+                     .QueryInterface(Ci.nsIPrefBranch2);
+  let prefStem = "extensions.testpilot";
+  let prefNames = prefService.getChildList(prefStem);
+  for each (let prefName in prefNames) {
+    if (prefName.indexOf("unit_test_recur_study") != -1) {
+      dump("Clearing pref " + prefName + "\n");
+      prefService.clearUserPref(prefName);
+    }
+  }
+
+  // TODO stub out date provider function so we can manipulate date to watch state
+  // changes!
+  let dataStore = new StubDataStore();
+  let handlers = new StubHandlers();
+  let webContent = new StubWebContent();
+  let task = new TestPilotExperiment(expInfo, dataStore, handlers, webContent);
+
+  cheapAssertEqual(task.id, "unit_test_recur_study", "id should be id");
+  cheapAssertEqual(task.version, 1, "version should be version");
+  cheapAssertEqual(task.title, "Unit Test Recurring Study", "title should be title");
+  cheapAssertEqual(task.taskType, TaskConstants.TYPE_EXPERIMENT, "Should be experiment");
+  cheapAssertEqual(task.status, TaskConstants.STATUS_STARTING, "Status should be starting");
+
+  // TODO delete and recreate task, make sure it recovers its status and start/end
+  // dates correctly
+
+  // TODO get end date, ensure that it's 7 days past the start date
+  /*cheapAssertEqual(task.startDate, today);
+  cheapAssertEqual(task.endDate, today + 7);*/
+}
+
+
 function runAllTests() {
   testTheDataStore();
   testFirefoxVersionCheck();
@@ -321,9 +446,11 @@ function runAllTests() {
   //testTheCuddlefishPreferencesFilesystem();
   //testRemoteLoader();
   testRemoteLoaderIndexCache();
+  testRecurringStudyStateChange();
   dump("TESTING COMPLETE.  " + testsPassed + " out of " + testsRun +
        " tests passed.");
 }
+
 
 //exports.runAllTests = runAllTests;
 

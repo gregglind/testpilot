@@ -381,10 +381,6 @@ StubHandlers.prototype = {
   }
 };
 
-function StubDateProvider() {
-}
-StubDateProvider.prototype = {
-};
 
 function testRecurringStudyStateChange() {
 
@@ -417,12 +413,18 @@ function testRecurringStudyStateChange() {
     }
   }
 
-  // TODO stub out date provider function so we can manipulate date to watch state
-  // changes!
+  const START_DATE = 1292629441125;
+  let stubDate = START_DATE;
+
+  let stubDateFunction = function() {
+    return stubDate;
+  };
+
   let dataStore = new StubDataStore();
   let handlers = new StubHandlers();
   let webContent = new StubWebContent();
-  let task = new TestPilotExperiment(expInfo, dataStore, handlers, webContent);
+  let task = new TestPilotExperiment(expInfo, dataStore, handlers, webContent,
+                                    stubDateFunction);
 
   cheapAssertEqual(task.id, "unit_test_recur_study", "id should be id");
   cheapAssertEqual(task.version, 1, "version should be version");
@@ -433,9 +435,9 @@ function testRecurringStudyStateChange() {
   // TODO delete and recreate task, make sure it recovers its status and start/end
   // dates correctly
 
-  // TODO get end date, ensure that it's 7 days past the start date
-  /*cheapAssertEqual(task.startDate, today);
-  cheapAssertEqual(task.endDate, today + 7);*/
+  // Ensure that end date is 7 days past the start date
+  cheapAssertEqual(task.startDate, START_DATE, "Start date is wrong");
+  cheapAssertEqual(task.endDate, START_DATE + 7 * 24 * 60 * 60 * 1000, "End date is wrong");
 }
 
 

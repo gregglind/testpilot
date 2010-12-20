@@ -261,8 +261,6 @@ var TestPilotUIBuilder = {
      */
     let toolbox = window.document.getElementById("navigator-toolbox");
     let palette = toolbox.palette;
-    dump("Palette is " + palette + "\n");
-
     palette.appendChild(button);
   },
 
@@ -271,7 +269,7 @@ var TestPilotUIBuilder = {
     let newElem = function( tagName, attrs) {
       return self._makeElement(window, tagName, attrs);
     };
-    let notificationPopup = this.buildNotificationPopup();
+    let notificationPopup = this.buildNotificationPopup(window);
 
     let properties = {id: "pilot-notifications-button",
                       className: "statusbarpanel-iconic",

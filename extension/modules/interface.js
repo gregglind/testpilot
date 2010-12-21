@@ -110,6 +110,7 @@ var TestPilotUIBuilder = {
                               {id: "pilot-notification-close",
                               tooltiptext: "&testpilot.notification.close.tooltip;"
                               }));
+    hbox.appendChild(vbox3);
     vbox.appendChild(newElem("description", {id: "pilot-notification-text"}));
     let hbox2 = newElem("hbox", {align: "right"});
     hbox2.appendChild(newElem("label", {id: "pilot-notification-link"}));
@@ -123,6 +124,7 @@ var TestPilotUIBuilder = {
     vbox.appendChild(hbox3);
     let hbox4 = newElem("hbox", {align: "right"});
     hbox4.appendChild(newElem("button", {id: "pilot-notification-submit"}));
+    vbox.appendChild(hbox4);
 
     return panel;
   },
@@ -320,6 +322,8 @@ var TestPilotUIBuilder = {
       dump("Window with no nav-bar; ignoring.\n");
       return;
     }
+    let notificationPopup = this.buildNotificationPopup(window);
+    firefoxnav.appendChild(notificationPopup);
 
     this.addFeedbackButton(window);
     let menu = this.buildFeedbackMenu(window);

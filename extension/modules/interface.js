@@ -239,31 +239,25 @@ var TestPilotUIBuilder = {
     return menu;
   },
 
-  addFeedbackButton: function(window) {
-    let self = this;
-    let newElem = function( tagName, attrs) {
-      return self._makeElement(window, tagName, attrs);
-    };
-
-    let button = newElem("toolbarbutton",
-                         { type: "menu",
-                           id: "feedback-menu-button",
-                           className: "toolbarbutton-1",
-                           label: "&testpilot.feedbackbutton.label;",
-                           onmousedown: "event.preventDefault();\
-                           TestPilotMenuUtils.onMenuButtonMouseDown('feedback-menu-button');"
-                         });
-
-    /* We want to add this feedback button to the customization palette.
-     * Problem:
-     * <toolbarpalette id="BrowserToolbarPalette"> can't be obtained via
-     * getElementById() because it is surgically removed from the XUL DOM by
-     * some magic XBL that runs at startup. However, a reference to it is
-     * saved as toolbox.palette.
+  getFeedbackButton: function(window) {
+    /* Feedback button exists in the browser.xul overlay, which puts it into the
+     * customization panel.  If it's already been added to the interface, however,
+     * it will not be there but rather will be in the toolbar.
+     * Either way, this function returns a reference to it so we can modify its
+     * attributes.
      */
-    let toolbox = window.document.getElementById("navigator-toolbox");
-    let palette = toolbox.palette;
-    palette.appendChild(button);
+    let feedbackButton = window.document.getElementById("feedback-menu-button");
+    if (!feedbackButton) {
+      let toolbox = window.document.getElementById("navigator-toolbox");
+      /* <toolbarpalette id="BrowserToolbarPalette"> can't be obtained via
+       * getElementById() because it is surgically removed from the XUL DOM by
+       * some magic XBL that runs at startup. However, a reference to it is
+       * saved as toolbox.palette.*/
+      let palette = toolbox.palette;
+      // palette doesn't have getElementById but it does have getElementsByAttribute().
+      feedbackButton = palette.getElementsByAttribute("id", "feedback-menu-button").item(0);
+    }
+    return feedbackButton;
   },
 
   addTestPilotButton: function(window) {
@@ -305,6 +299,10 @@ var TestPilotUIBuilder = {
       toolsMenu.insertBefore(menu, prevChild.nextSibling);
     }
 
+    // Get rid of feedback button:
+    let feedbackButton = this.getFeedbackButton(window);
+    feedbackButton.parentNode.removeChild(feedbackButton);
+
     // In firefox 4 on Windows, there may not be any menu tools popup!!
     // Where do we put it then?
 
@@ -325,7 +323,11 @@ var TestPilotUIBuilder = {
     let notificationPopup = this.buildNotificationPopup(window);
     firefoxnav.appendChild(notificationPopup);
 
-    this.addFeedbackButton(window);
+    let feedbackButton = this.getFeedbackButton(window);
+    feedbackButton.setAttribute("hidden", "false");
+    feedbackButton.setAttribute("label", this._stringBundle.GetStringFromName(
+                                  "testpilot.feedbackbutton.label"));
+
     let menu = this.buildFeedbackMenu(window);
     // Insert this menu into
     // id="menu_ToolsPopup" right after "menu_openAddons":
@@ -334,7 +336,6 @@ var TestPilotUIBuilder = {
       let prevChild = window.document.getElementById("menu_openAddons");
       toolsMenu.insertBefore(menu, prevChild.nextSibling);
     }
-
     /* If this is first run, and it's ffx4 beta version, and the feedback
      * button is not in the expected place, put it there!
      * (copied from MozReporterButtons extension) */
@@ -357,7 +358,7 @@ var TestPilotUIBuilder = {
       this._prefs.setBoolPref(pref, true);
       // if you don't do the following call, funny things happen.
       try {
-        BrowserToolboxCustomizeDone(true);
+        window.BrowserToolboxCustomizeDone(true);
       } catch (e) {
       }
     }

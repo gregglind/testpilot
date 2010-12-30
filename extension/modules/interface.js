@@ -248,6 +248,7 @@ var TestPilotUIBuilder = {
      */
     let feedbackButton = window.document.getElementById("feedback-menu-button");
     if (!feedbackButton) {
+      // TODO this can raise a 'toolbox is null' error?
       let toolbox = window.document.getElementById("navigator-toolbox");
       /* <toolbarpalette id="BrowserToolbarPalette"> can't be obtained via
        * getElementById() because it is surgically removed from the XUL DOM by

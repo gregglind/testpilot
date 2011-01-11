@@ -2,6 +2,11 @@
 <?xml-stylesheet href="chrome://testpilot/content/browser.css" type="text/css"?>
 <?xml-stylesheet href="chrome://testpilot-os/skin/feedback.css" type="text/css"?>
 
+<!DOCTYPE overlay [
+  <!ENTITY % testpilotDTD SYSTEM "chrome://testpilot/locale/main.dtd">
+    %testpilotDTD;
+]>
+
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <script src="chrome://testpilot/content/browser.js"
   type="application/x-javascript" />
@@ -9,9 +14,11 @@
   type="application/x-javascript" />
 
 <toolbarpalette id="BrowserToolbarPalette">
-  <toolbarbutton type="menu" id="feedback-menu-button" hidden="true"
-    class="toolbarbutton-1" onmousedown="event.preventDefault();
-        TestPilotMenuUtils.onMenuButtonMouseDown('feedback-menu-button');"/>
+  <toolbarbutton id="feedback-menu-button"
+    type="menu" class="toolbarbutton-1" label="&testpilot.feedbackbutton.label;"
+    onmousedown="event.preventDefault();
+    TestPilotMenuUtils.onMenuButtonMouseDown('feedback-menu-button');"/>
+
 </toolbarpalette>
 
 </overlay>

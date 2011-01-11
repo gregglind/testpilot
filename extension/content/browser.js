@@ -146,7 +146,6 @@ var TestPilotMenuUtils;
 
   var TestPilotWindowHandlers = {
     onWindowLoad: function() {
-      dump("onWindowLoad called.\n");
       // Customize the interface of the newly opened window.
       Cu.import("resource://testpilot/modules/interface.js");
       TestPilotUIBuilder.buildCorrectInterface(window);

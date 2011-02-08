@@ -61,14 +61,6 @@ var FeedbackManager = {
     return this._sadUrl;
   },
 
-  _rateUrl: null,
-  get rateUrl() {
-    if (!this._rateUrl) {
-      this._rateUrl = Application.prefs.getValue("extensions.input.rateURL", "");
-    }
-    return this._rateUrl;
-  },
-
   _brokenUrl: null,
   get brokenUrl() {
     if (!this._brokenUrl) {
@@ -93,14 +85,11 @@ var FeedbackManager = {
     case "sad":
       return this.sadUrl;
       break;
-    case "rate":
-      return this.rateUrl;
-      break;
     case "broken":
       return this.brokenUrl;
       break;
     case "idea":
-      return this.rateUrl;
+      return this.ideaUrl;
       break;
     default:
       return null;
@@ -109,9 +98,9 @@ var FeedbackManager = {
   },
 
   isInputUrl: function FeedbackManager_isInputUrl(url) {
-    /* Return true if the URL belongs to one of the pages of the Input website.  We can identify
-     * these by looking for a domain of input.mozilla.com and a page name ending in 'feedback',
-     * 'happy', or 'sad'.
+    /* Return true if the URL belongs to one of the pages of the Input website.  We can
+     * identify these by looking for a domain of input.mozilla.com and a page name ending
+     * in 'feedback', 'happy', or 'sad'.
      */
     let ioService = Cc["@mozilla.org/network/io-service;1"]
       .getService(Ci.nsIIOService);

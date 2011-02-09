@@ -478,7 +478,7 @@ exports.RemoteExperimentLoader.prototype = {
     let url = resolveUrl(self._baseUrl, indexFileName);
     self._fileGetter(url, function onDone(data) {
       if (data) {
-        this._logger.trace("Index file updated on server.\n");
+        self._logger.trace("Index file updated on server.\n");
         self._executeFreshIndexFile(data, callback);
         // cache index file contents so we can read them later if we can't get online.
         self._cacheIndexFile(data);

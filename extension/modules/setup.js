@@ -185,14 +185,13 @@ let TestPilotSetup = {
     return this.__obs;
   },
 
-  _isFfx4BetaVersion: function TPS__isFfx4BetaVersion() {
-    /* Return true if we're in the beta channel -- this will determine whether we show the
-     * Feedback interface or the Test Pilot interface.
-     * TODO should the Nightly channel act like the beta channel?
-     * TODO this is duplicated in interface.js, maybe call that instead.
-     */
-    let channel = this._prefs.getValue(UPDATE_CHANNEL_PREF, "default");
-    return (channel == "beta") || (channel == "nightly");
+  __uiBuilder: null,
+  get _uiBuilder() {
+    if (this.__uiBuilder == null) {
+      this.__uiBuilder = {};
+      Cu.import("resource://testpilot/modules/interface.js", this.__uiBuilder);
+    }
+    return this.__uiBuilder.TestPilotUIBuilder;
   },
 
   _setPrefDefaultsForVersion: function TPS__setPrefDefaultsForVersion() {
@@ -204,7 +203,7 @@ let TestPilotSetup = {
     let prefBranch = ps.getDefaultBranch("");
     /* note we're setting default values, not current values -- these
      * get overridden by any user set values. */
-    if (this._isFfx4BetaVersion()) {
+    if (this._uiBuilder.isBetaChannel()) {
       prefBranch.setBoolPref(POPUP_SHOW_ON_NEW, true);
       prefBranch.setIntPref(POPUP_CHECK_INTERVAL, 600000);
     } else {
@@ -261,7 +260,7 @@ let TestPilotSetup = {
         let currVersion = self._prefs.getValue(VERSION_PREF, "firstrun");
 
         if (currVersion != self.version) {
-          if(!self._isFfx4BetaVersion()) {
+          if(!self._uiBuilder.isBetaChannel()) {
             // Don't show first run page in ffx4 beta version.
             self._prefs.setValue(VERSION_PREF, self.version);
             let browser = self._getFrontBrowserWindow().getBrowser();
@@ -385,15 +384,13 @@ let TestPilotSetup = {
     let popup = doc.getElementById("pilot-notification-popup");
 
     let anchor;
-    if (this._isFfx4BetaVersion()) {
+    if (this._uiBuilder.isBetaChannel()) {
       /* If we're in the Ffx4Beta version, popups come down from feedback
        * button, but if we're in the standalone extension version, they
        * come up from status bar icon. */
       anchor = doc.getElementById("feedback-menu-button");
-      popup.setAttribute("class", "tail-up");
     } else {
       anchor = doc.getElementById("pilot-notifications-button");
-      popup.setAttribute("class", "tail-down");
     }
     let textLabel = doc.getElementById("pilot-notification-text");
     let titleLabel = doc.getElementById("pilot-notification-title");

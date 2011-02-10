@@ -1,4 +1,9 @@
 #pilot-notification-popup {
+  width: 480px;
+}
+
+.legacy-tail-up,
+.legacy-tail-down {
   -moz-appearance: none;
   background-color: Menu;
   background-image: -moz-linear-gradient(hsla(0,0%,100%,.2), transparent);
@@ -7,11 +12,6 @@
   -moz-border-radius: 4px;
   border: 1px solid Menu;
   margin: -6px 0 0 0;
-  width: 480px;
-}
-
-.tail-up,
-.tail-down {
  -moz-border-image: none;
 }
 

@@ -52,9 +52,30 @@ const UPDATE_CHANNEL_PREF = "app.update.channel";
 var TestPilotUIBuilder = {
   __prefs: null,
   get _prefs() {
-    this.__prefs = Cc["@mozilla.org/preferences-service;1"]
-      .getService(Ci.nsIPrefBranch);
+    if (this.__prefs == null) {
+      this.__prefs = Cc["@mozilla.org/preferences-service;1"]
+        .getService(Ci.nsIPrefBranch);
+    }
     return this.__prefs;
+  },
+
+  __versionChecker: null,
+  get _versionChecker() {
+    if (this.__versionChecker == null) {
+      this.__versionChecker = Cc["@mozilla.org/xpcom/version-comparator;1"]
+        .getService(Ci.nsIVersionComparator);
+    }
+    return this.__versionChecker;
+  },
+
+  __version: null,
+  get _version() {
+    if (this.__version == null) {
+      let appInfo = Cc["@mozilla.org/xre/app-info;1"]
+        .getService(Ci.nsIXULAppInfo);
+      this.__version = appInfo.version;
+    }
+    return this.__version;
   },
 
   buildTestPilotInterface: function(window) {
@@ -66,6 +87,15 @@ var TestPilotUIBuilder = {
       feedbackButton = palette.getElementsByAttribute("id", "feedback-menu-button").item(0);
     }
     feedbackButton.parentNode.removeChild(feedbackButton);
+
+    let panel = window.document.getElementById("pilot-notification-popup");
+    if (this.arrowPanelAvailable()) {
+      dump("TP interface. Using built-in arrow panel.\n");
+      panel.setAttribute("type", "arrow");
+    } else {
+      dump("TP interface. Using legacy tail-down panel.\n");
+      panel.setAttribute("class", "legacy-tail-down");
+    }
   },
 
   buildFeedbackInterface: function(window) {
@@ -105,6 +135,15 @@ var TestPilotUIBuilder = {
       window.document.getElementById("feedback-menu-broken-button").setAttribute("hidden", "true");
       window.document.getElementById("feedback-menu-idea-button").setAttribute("hidden", "true");
     }
+
+    let panel = window.document.getElementById("pilot-notification-popup");
+    if (this.arrowPanelAvailable()) {
+      dump("Feedback interface. Using built-in arrow panel.\n");
+      panel.setAttribute("type", "arrow");
+    } else {
+      dump("Feedback interface. Using legacy tail-up panel.\n");
+      panel.setAttribute("class", "legacy-tail-down");
+    }
   },
 
   isBetaChannel: function() {
@@ -112,15 +151,16 @@ var TestPilotUIBuilder = {
     return (this._prefs.getCharPref(UPDATE_CHANNEL_PREF) == "beta");
   },
 
+  arrowPanelAvailable: function() {
+    // Returns true iff app version is one that implements panel type="arrow"
+    // (4.0b7 or higher TODO verify this is the correct cutoff)
+    return (this._versionChecker.compare(this._version, "4.0b7") >= 0);
+  },
+
   appVersionIsFinal: function() {
     // Return true iff app version >= 4.0 AND there is no "beta" or "rc" in version string.
-    let appInfo = Cc["@mozilla.org/xre/app-info;1"]
-      .getService(Ci.nsIXULAppInfo);
-    let version = appInfo.version;
-    let versionChecker = Components.classes["@mozilla.org/xpcom/version-comparator;1"]
-      .getService(Components.interfaces.nsIVersionComparator);
-    if (versionChecker.compare(version, "4.0") >= 0) {
-      if (version.indexOf("b") == -1 && version.indexOf("rc") == -1) {
+    if (this._versionChecker.compare(this._version, "4.0") >= 0) {
+      if (this._version.indexOf("b") == -1 && this._version.indexOf("rc") == -1) {
         return true;
       }
     }

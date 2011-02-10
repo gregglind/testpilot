@@ -12,9 +12,23 @@
   <menu id="pilot-menu" insertafter="menu_openAddons" />
 </menupopup>
 
+<!-- somethin like <panel id="thepanel" type="arrow">
+  <hbox align="start">
+    <image src="warning.png"/>
+    <vbox>
+      <description value="You have 6 new messages."/>
+      <hbox>
+        <button label="Read Mail"/>
+        <button label="New Message"/>
+      </hbox>
+    </vbox>
+  </hbox>
+</panel>
+<description value="6 New Messages" popup="thepanel"/> -->
+
 <toolbar id="nav-bar">
   <panel id="pilot-notification-popup" hidden="true" noautofocus="true"
-    level="parent" position="after_start">
+    level="parent" position="after_start" type="arrow">
     <vbox class="pilot-notification-popup-container">
       <hbox class="pilot-notification-toprow">
         <image id="pilot-notification-icon" />

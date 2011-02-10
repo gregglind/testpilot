@@ -60,7 +60,7 @@
                   image="chrome://testpilot/skin/testpilot_16x16.png"/>
 
   <panel id="pilot-notification-popup" hidden="true" noautofocus="true"
-    level="parent" position="after_start">
+    level="parent" position="after_start" type="arrow">
     <vbox class="pilot-notification-popup-container">
       <hbox class="pilot-notification-toprow">
         <image id="pilot-notification-icon" />

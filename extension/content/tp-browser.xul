@@ -50,6 +50,10 @@
   </menupopup>
 </menu>
 
+<box id="notification-popup-box">
+  <image id="pilot-notification-box-icon" class="notification-anchor-icon" role="button"/>
+</box>
+
 <statusbar id="status-bar">
   <statusbarpanel id="pilot-notifications-button"
                   class="statusbarpanel-iconic"

@@ -200,6 +200,78 @@
     }
   }
 
+  function tryOutBuiltInNotification() {
+    Components.utils.import("resource://gre/modules/PopupNotifications.jsm");
+    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
+               getService(Components.interfaces.nsIWindowMediator);
+    let win = wm.getMostRecentWindow("navigator:browser");
+    // tabbrowser, panel, iconBox, huh?
+// used in browser.js like this:
+//      return new tmp.PopupNotifications(gBrowser,
+//                                   document.getElementById("notification-popup"),
+//                                   document.getElementById("notification-popup-box"));
+    let tabbrowser = win.getBrowser();
+    /*let panel = win.document.getElementById("pilot-notification-popup");
+    let iconBox = win.document.getElementById("pilot-popup-box");
+    let pn = new PopupNotifications(tabbrowser, panel, iconBox);*/
+    win.PopupNotifications.show(win.getBrowser().selectedBrowser, "tp-complete-popup",
+	        'The Foo study has finished collecting data.',
+	        "pilot-notification-box-icon",
+	        { label: "Submit data",
+	          accessKey: "S",
+	          callback: function() {
+	            alert("Doing something awesome!");
+	          }
+	        },
+	        [
+                 { label: "See Details...",
+	          accessKey: "D",
+	          callback: function() {
+	            alert("Doing something awesome!");
+	          }
+	        },
+                 { label: "Cancel this study...",
+	          accessKey: "C",
+	          callback: function() {
+	            alert("Doing something awesome!");
+	          }
+	        },
+                 { label: "Always submit (don't ask)",
+	          accessKey: "A",
+	          callback: function() {
+	            alert("Doing something awesome!");
+	          }
+	        },
+                ],
+                {persistWhileVisible: true}
+	        );
+  }
+
+  function dummyNotificationFromFeedbackButton() {
+    Components.utils.import("resource://gre/modules/PopupNotifications.jsm");
+    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
+               getService(Components.interfaces.nsIWindowMediator);
+    let win = wm.getMostRecentWindow("navigator:browser");
+    // tabbrowser, panel, iconBox, huh?
+// used in browser.js like this:
+//      return new tmp.PopupNotifications(gBrowser,
+//                                   document.getElementById("notification-popup"),
+//                                   document.getElementById("notification-popup-box"));
+    let tabbrowser = win.getBrowser();
+    let panel = win.document.getElementById("pilot-notification-popup");
+    let iconBox = win.document.getElementById("feedback-menu-button");
+    let pn = new PopupNotifications(tabbrowser, panel, iconBox);
+    pn.show(win.getBrowser().selectedBrowser, "tp-complete-popup",
+	        'The Foo study hasfinished collecting data.',
+	        null,
+	        { label: "Submit data",
+	          accessKey: "S",
+	          callback: function() {
+	            alert("Doing something awesome!");
+	          }
+	        });
+  }
+
 </script>
 
 <style type="text/css">
@@ -231,7 +303,7 @@ or set it to
 <button onclick="showMetaData();">Show Metadata</button>
 <button onclick="runUnitTests();">Run Tests</button>
 </fieldset>
-<fieldset>
+<fieldset> <!--  makeThereBeAPopup(); -->
 <p><button onclick="makeThereBeAPopup();">Show Dummy Popup</button>
 <button onclick="reloadAllExperiments();">Reload All Experiments</button>
 <button onclick="remindMe();">Notify Me</button>

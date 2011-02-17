@@ -24,12 +24,27 @@
   margin-right: 10px;
 }
 
-/* Popup Bounding Box */
+/* For Firefox 4 built-in popup notification system */
+
+#pilot-notification-box-icon {
+  list-style-image: url("chrome://testpilot/skin/testpilot_16x16.png");
+}
+.popup-notification-icon[popupid="tp-complete-popup"] {
+    height: 48px;
+    width: 48px;
+  list-style-image: url("chrome://testpilot/skin/tp-submit-48x48.png");
+}
+#notification-popup-box[anchorid="pilot-notification-box-icon"] > #pilot-notification-box-icon {
+  display: -moz-box;
+}
+
+/* Popup Bounding Box (for our hand-rolled popup notification system) */
+
 #pilot-notification-popup {
-  width: 480px;
 }
 
 .legacy-tail-up {
+  width: 480px;
   -moz-appearance: none;
   -moz-window-shadow: none;
   background-color: transparent;
@@ -41,6 +56,7 @@
 /* tail-down uses the old styling; it doesn't look as good as the new styling,
    but the new styling doesn't work on 3.6. */
 .legacy-tail-down {
+  width: 480px;
   -moz-appearance: none;
   -moz-window-shadow: none;
   background-color: transparent;

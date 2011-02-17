@@ -1,2 +1,8 @@
 syntax: glob
 *.pyc
+*~
+*.rej
+*.orig
+*.xpi
+patches
+*.DS_Store

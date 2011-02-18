@@ -14,7 +14,7 @@
 
 <toolbar id="nav-bar">
   <panel id="pilot-notification-popup" hidden="true" noautofocus="true"
-    level="parent" position="after_start" type="arrow">
+    level="parent" position="after_start">
     <vbox class="pilot-notification-popup-container">
       <hbox class="pilot-notification-toprow">
         <image id="pilot-notification-icon" />

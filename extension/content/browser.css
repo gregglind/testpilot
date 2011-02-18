@@ -24,46 +24,28 @@
   margin-right: 10px;
 }
 
-/* For Firefox 4 built-in popup notification system */
-
-#pilot-notification-box-icon {
-  list-style-image: url("chrome://testpilot/skin/testpilot_16x16.png");
-}
-.popup-notification-icon[popupid="tp-complete-popup"] {
-    height: 48px;
-    width: 48px;
-  list-style-image: url("chrome://testpilot/skin/tp-submit-48x48.png");
-}
-#notification-popup-box[anchorid="pilot-notification-box-icon"] > #pilot-notification-box-icon {
-  display: -moz-box;
-}
-
-/* Popup Bounding Box (for our hand-rolled popup notification system) */
-
+/* Popup Bounding Box */
 #pilot-notification-popup {
-}
-
-.legacy-tail-up {
-  width: 480px;
   -moz-appearance: none;
   -moz-window-shadow: none;
   background-color: transparent;
   margin-top: -6px;
   margin-right: -3px;
-  -moz-border-image: url(chrome://testpilot-os/skin/notification-tail-up.png) 26 56 22 18 / 26px 56px 22px 18px round stretch;
+  width: 480px;
+}
+
+.tail-up {
+ -moz-border-image: url(chrome://testpilot-os/skin/notification-tail-up.png) 26 56 22 18 / 26px 56px 22px 18px round stretch;
 }
 
 /* tail-down uses the old styling; it doesn't look as good as the new styling,
-   but the new styling doesn't work on 3.6. */
-.legacy-tail-down {
-  width: 480px;
-  -moz-appearance: none;
-  -moz-window-shadow: none;
-  background-color: transparent;
-  margin-top: -6px;
-  margin-right: -3px;
-  -moz-border-image: url(chrome://testpilot/skin/notification-tail-down.png) 26 50 22 18 / 26px 50px 22px 18px repeat;
-  color: white;
+   but the new styling doesn't work on 3.6.
+   TODO: If someone is using 3.7.* or 4.* but is NOT on the beta channel and
+   installed Test Pilot from AMO, they should get the new styling, similar
+   to .tail-up! */
+.tail-down {
+ -moz-border-image: url(chrome://testpilot/skin/notification-tail-down.png) 26 50 22 18 / 26px 50px 22px 18px repeat;
+ color: white;
 }
 
 .pilot-notification-popup-container {

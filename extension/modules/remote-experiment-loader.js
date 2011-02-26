@@ -512,6 +512,11 @@ exports.RemoteExperimentLoader.prototype = {
       } catch(e) {
         this._logger.warn("Error loading " + filename);
         this._logger.warn(e);
+        // TODO log this exception to database!  but, um... the relevant experimentDataStore
+        // instance hasn't been instantiated yet, and won't be, so where do we write it to and how
+        // will this study know to include this exception in the exception list it eventually
+        // uploads?
+        // tricksy, tricksy.  Need to have a Generic Exceptions table too.
       }
     }
     return remoteExperiments;

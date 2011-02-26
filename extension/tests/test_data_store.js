@@ -5,14 +5,7 @@ var Ci = Components.interfaces;
 var testsRun = 0;
 var testsPassed = 0;
 
-function base64decode(data) {
-  // base64 encode/decode is built into window object, but we're in a module so we
-  // need to fetch a window reference first:
-  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
-    getService(Ci.nsIWindowMediator);
-  let window = wm.getMostRecentWindow("navigator:browser");
-  return window.atob(data);
-}
+// Utility functions for testing:
 
 function cheapAssertEqual(a, b, errorMsg) {
   testsRun += 1;
@@ -23,6 +16,30 @@ function cheapAssertEqual(a, b, errorMsg) {
     dump("UNIT TEST FAILED: ");
     dump(errorMsg + "\n");
     dump(a + " does not equal " + b + "\n");
+  }
+}
+
+function cheapAssertNotEqual(a, b, errorMsg) {
+  testsRun += 1;
+  if (a != b) {
+    dump("UNIT TEST PASSED.\n");
+    testsPassed += 1;
+  } else {
+    dump("UNIT TEST FAILED: ");
+    dump(errorMsg + "\n");
+    dump(a + " equals " + b + " when it shouldn't.\n");
+  }
+}
+
+function cheapAssertStringContains(bigString, subString, errorMsg) {
+  testsRun += 1;
+  if (bigString.indexOf(subString) > -1) {
+    dump("UNIT TEST PASSED.\n");
+    testsPassed += 1;
+  } else {
+    dump("UNIT TEST FAILED: ");
+    dump(errorMsg + "\n");
+    dump(bigString + " does not contain " + subString + "\n");
   }
 }
 
@@ -67,6 +84,62 @@ function cheapAssertFail(errorMsg) {
   dump(errorMsg + "\n");
 }
 
+// Utility functions for cleanup:
+
+function clearAllPrefsForStudy(studyId) {
+  dump("Looking for prefs to delete...\n");
+  let prefService = Cc["@mozilla.org/preferences-service;1"]
+                     .getService(Ci.nsIPrefService)
+                     .QueryInterface(Ci.nsIPrefBranch2);
+  let prefStem = "extensions.testpilot";
+  let prefNames = prefService.getChildList(prefStem);
+  for each (let prefName in prefNames) {
+    if (prefName.indexOf(studyId) != -1) {
+      dump("Clearing pref " + prefName + "\n");
+      prefService.clearUserPref(prefName);
+    }
+  }
+}
+
+function clearDbFile(filename) {
+  let dirSvc = Cc["@mozilla.org/file/directory_service;1"]
+                .getService(Ci.nsIProperties);
+  let file = dirSvc.get("ProfD", Ci.nsIFile);
+  file.append(filename);
+  if (file.exists()) {
+    file.remove(false);
+  }
+}
+
+// Other utility functions
+
+function waitABit(seconds, callback) {
+ let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+ timer.initWithCallback({ notify: function(timer) {
+                            callback();
+                          }}, seconds * 1000, Ci.nsITimer.TYPE_ONE_SHOT);
+}
+
+
+function base64decode(data) {
+  // base64 encode/decode is built into window object, but we're in a module so we
+  // need to fetch a window reference first:
+  let wm = Cc["@mozilla.org/appshell/window-mediator;1"].
+    getService(Ci.nsIWindowMediator);
+  let window = wm.getMostRecentWindow("navigator:browser");
+  return window.atob(data);
+}
+
+function ensureExperimentIsRunning(experiment) {
+  if (!experiment.experimentIsRunning) {
+    experiment.changeStatus(TaskConstants.STATUS_STARTING, true);
+    experiment.checkDate(); // will call onExperimentStartup()
+  }
+}
+
+// Beginning of tests
+
+
 function testFirefoxVersionCheck() {
   Cu.import("resource://testpilot/modules/setup.js");
   cheapAssertEqual(true, TestPilotSetup._isNewerThanFirefox("4.0"));
@@ -96,6 +169,7 @@ function testTheDataStore() {
   var fileName = "testpilot_storage_unit_test.sqlite";
   var tableName = "testpilot_storage_unit_test";
   var storedCount = 0;
+  clearDbFile(fileName);
   var store = new ExperimentDataStore(fileName, tableName, columns);
 
 
@@ -169,6 +243,8 @@ function testTheDataStore() {
         cheapAssertEqual(JSON.stringify(json),
                          JSON.stringify(expectedJson),
                         "JSON after wipe fails to be empty.");
+        // end test by clearing file - TODO this should be in teardown
+        clearDbFile(fileName);
       });
     });
   }
@@ -403,22 +479,6 @@ StubHandlers.prototype = {
   }
 };
 
-function clearAllPrefsForStudy(studyId) {
-  dump("Looking for prefs to delete...\n");
-  let prefService = Cc["@mozilla.org/preferences-service;1"]
-                     .getService(Ci.nsIPrefService)
-                     .QueryInterface(Ci.nsIPrefBranch2);
-  let prefStem = "extensions.testpilot";
-  let prefNames = prefService.getChildList(prefStem);
-  for each (let prefName in prefNames) {
-    if (prefName.indexOf(studyId) != -1) {
-      dump("Clearing pref " + prefName + "\n");
-      prefService.clearUserPref(prefName);
-    }
-  }
-
-}
-
 function testRecurringStudyStateChange() {
 
   Cu.import("resource://testpilot/modules/tasks.js");
@@ -549,24 +609,6 @@ function testRecurringStudyStateChange() {
   /* getWebContent and getDataPrivacyContent should give us back the right strings
    * based on all the state. */
 
-}
-
-
-function runAllTests() {
-  testsRun = 0;
-  testsPassed = 0;
-
-  //testTheDataStore();
-  //testFirefoxVersionCheck();
-  //testStringSanitizer();
-  //testTheCuddlefishPreferencesFilesystem();
-  //testRemoteLoader();
-  //testRemoteLoaderIndexCache();
-  //testRecurringStudyStateChange();
-  //testKillSwitch();
-  testSameGUIDs();
-  dump("TESTING COMPLETE.  " + testsPassed + " out of " + testsRun +
-       " tests passed.");
 }
 
 
@@ -745,8 +787,7 @@ function testSameGUIDs() {
   let survey = new TestPilotBuiltinSurvey(surveyInfo);
 
   // Start the study so it will generate a GUID
-  experiment.changeStatus(TaskConstants.STATUS_STARTING, true);
-  experiment.checkDate();
+  ensureExperimentIsRunning(experiment);
 
   // Get GUIDs from study and from survey, compare:
   experiment._prependMetadataToJSON(function(jsonString) {
@@ -775,7 +816,7 @@ function testSameGUIDs() {
           let exp2Guid = JSON.parse(jsonString).metadata.task_guid;
           dump("exp2Guid is " + exp2Guid + ", survey2Guid is " + survey2Guid + "\n");
           cheapAssertEqual(exp2Guid, survey2Guid, "guids should match");
-          cheapAssertEqual((exp2Guid != ""), true, "guid should be non-empty");
+          cheapAssertNotEqual(exp2Guid, "", "guid should be non-empty");
         });
       });
     });
@@ -784,3 +825,126 @@ function testSameGUIDs() {
 
 // TODO test for continuity of GUID with recurring study (longitudinal) - i don't think this
 // has actually been working so far because a new GUID is generted every time the study starts up...
+
+function testExceptionLogging() {
+
+  Cu.import("resource://testpilot/modules/experiment_data_store.js");
+  Cu.import("resource://testpilot/modules/tasks.js");
+
+  var columns =  [{property: "prop_a", type: TYPE_INT_32, displayName: "Length"} ];
+
+  var fileName = "testpilot_exception_unit_test.sqlite";
+  var tableName = "testpilot_exception_unit_test";
+  clearDbFile(fileName);
+  clearAllPrefsForStudy("unit_test_exception_study");
+  var store = new ExperimentDataStore(fileName, tableName, columns);
+
+  let buggyHandlers = {
+    onNewWindow: function(window) {
+      throw (new Error("new window FAIL"));
+    },
+    onWindowClosed: function(window) {
+      throw (new Error("close window FAIL"));
+    },
+    onAppStartup: function() {
+      throw (new Error("app startup FAIL"));
+    },
+    onAppShutdown: function() {
+      throw (new Error("app shutdown FAIL"));
+    },
+    onExperimentStartup: function() {
+      throw (new Error("experiment startup FAIL"));
+    },
+    onExperimentShutdown: function() {
+      throw (new Error("experiment shutdown FAIL"));
+    },
+    doExperimentCleanup: function() {
+      throw (new Error("experiment cleanup FAIL"));
+    },
+    onEnterPrivateBrowsing: function() {
+      throw (new Error("enter private browsing FAIL"));
+    },
+    onExitPrivateBrowsing: function() {
+      throw (new Error("exit private browsing FAIL"));
+    }
+  };
+
+  let expInfo = {
+    startDate: null,
+    duration: 7,
+    testName: "Unit Test Exception Reporting",
+    testId: "unit_test_exception_study",
+    testInfoUrl: "https://testpilot.mozillalabs.com/",
+    summary: "Be sure to wipe all prefs and the store in the setup/teardown",
+    thumbnail: "",
+    optInRequired: false,
+    recursAutomatically: false,
+    recurrenceInterval: 30,
+    versionNumber: 1
+  };
+
+  let webContent = new StubWebContent();
+  let experiment = new TestPilotExperiment(expInfo, store, buggyHandlers, webContent);
+  ensureExperimentIsRunning(experiment);
+
+  // Wait for the wipeAllData and the onExperimentStartup to finish
+  waitABit(4, function() {
+  experiment.onNewWindow();
+  experiment.onWindowClosed();
+  experiment.onAppStartup();
+  experiment.onAppShutdown();
+  experiment.onExperimentShutdown();
+  experiment.doExperimentCleanup();
+  experiment.onEnterPrivateBrowsing();
+  experiment.onExitPrivateBrowsing();
+
+  // TODO weird problem:
+  //  If you try to re-run tests, logException fails with a disk I/O error the 2nd time!!
+
+  // Pause here for 4 secs to give the database writes a chance to finish.
+  waitABit(4, function() {
+    experiment._prependMetadataToJSON(function(jsonString) {
+      let exceptions = JSON.parse(jsonString).exceptions;
+      cheapAssertEqual(exceptions.length, 9, "Should have 9 exceptions");
+      cheapAssertStringContains(exceptions[0].exception, "experiment startup FAIL", "should have failed");
+      cheapAssertStringContains(exceptions[1].exception, "new window FAIL", "should have failed");
+      cheapAssertStringContains(exceptions[2].exception, "close window FAIL", "should have failed");
+      cheapAssertStringContains(exceptions[3].exception, "app startup FAIL", "should have failed");
+      cheapAssertStringContains(exceptions[4].exception, "app shutdown FAIL", "should have failed");
+      cheapAssertStringContains(exceptions[5].exception, "experiment shutdown FAIL", "should have failed");
+      cheapAssertStringContains(exceptions[6].exception, "experiment cleanup FAIL", "should have failed");
+      cheapAssertStringContains(exceptions[7].exception, "enter private browsing FAIL", "should have failed");
+      cheapAssertStringContains(exceptions[8].exception, "exit private browsing FAIL", "should have failed");
+
+      // Now do a wipe and verify that it clears all exceptions.
+      store.wipeAllData(function() {
+        experiment._prependMetadataToJSON(function(jsonString) {
+          let exceptions = JSON.parse(jsonString).exceptions;
+          cheapAssertEqual(exceptions.length, 0, "Exceptions should be wiped!");
+          // TODO this should be a teardown:
+          clearDbFile(fileName);
+        });
+      });
+    });
+  });
+});
+}
+
+
+function runAllTests() {
+  testsRun = 0;
+  testsPassed = 0;
+
+  testTheDataStore();
+  //testFirefoxVersionCheck();
+  //testStringSanitizer();
+  //testTheCuddlefishPreferencesFilesystem();
+  //testRemoteLoader();
+  //testRemoteLoaderIndexCache();
+  //testRecurringStudyStateChange();
+  //testKillSwitch();
+  //testSameGUIDs();
+  testExceptionLogging();
+  dump("TESTING COMPLETE.  " + testsPassed + " out of " + testsRun +
+       " tests passed.");
+}

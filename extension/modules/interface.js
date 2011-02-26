@@ -109,7 +109,8 @@ var TestPilotUIBuilder = {
 
   isBetaChannel: function() {
     // Nightly channel is treated the same as default channel.
-    return (this._prefs.getCharPref(UPDATE_CHANNEL_PREF) == "beta");
+    let channel = this._prefs.getCharPref(UPDATE_CHANNEL_PREF);
+    return (channel == "beta") || (channel == "betatest");
   },
 
   appVersionIsFinal: function() {

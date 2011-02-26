@@ -189,11 +189,10 @@ let TestPilotSetup = {
   _isFfx4BetaVersion: function TPS__isFfx4BetaVersion() {
     /* Return true if we're in the beta channel -- this will determine whether we show the
      * Feedback interface or the Test Pilot interface.
-     * TODO should the Nightly channel act like the beta channel?
      * TODO this is duplicated in interface.js, maybe call that instead.
      */
     let channel = this._prefs.getValue(UPDATE_CHANNEL_PREF, "default");
-    return (channel == "beta") || (channel == "nightly");
+    return (channel == "beta") || (channel == "betatest");
   },
 
   _setPrefDefaultsForVersion: function TPS__setPrefDefaultsForVersion() {

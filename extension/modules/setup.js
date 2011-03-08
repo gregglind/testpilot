@@ -192,9 +192,7 @@ let TestPilotSetup = {
      * TODO this is duplicated in interface.js, maybe call that instead.
      */
     let channel = this._prefs.getValue(UPDATE_CHANNEL_PREF, "default");
-    let retval = (channel == "beta") || (channel == "betatest");
-    dump("Update channel is " + channel + " returning " + retval +"\n");
-    return retval;
+    return (channel == "beta") || (channel == "betatest");
   },
 
   _setPrefDefaultsForVersion: function TPS__setPrefDefaultsForVersion() {
@@ -391,11 +389,9 @@ let TestPilotSetup = {
       /* If we're in the Ffx4Beta version, popups come down from feedback
        * button, but if we're in the standalone extension version, they
        * come up from status bar icon. */
-      dump("Notifications will be tail-up\n");
       anchor = doc.getElementById("feedback-menu-button");
       popup.setAttribute("class", "tail-up");
     } else {
-      dump("Notifications will be tail-down\n");
       anchor = doc.getElementById("pilot-notifications-button");
       popup.setAttribute("class", "tail-down");
     }

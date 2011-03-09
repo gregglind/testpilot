@@ -219,6 +219,7 @@ exports.RemoteExperimentLoader.prototype = {
     this._studyResults = [];
     this._legacyStudies = [];
     this._experimentFileNames = [];
+    this._loadErrors = [];
   },
 
   getLocalizedStudyInfo: function(studiesIndex) {
@@ -504,19 +505,18 @@ exports.RemoteExperimentLoader.prototype = {
      * the module name and value = the module object. */
     this._logger.trace("GetExperiments called.");
     let remoteExperiments = {};
+    this._loadErrors = [];
     for each (filename in this._experimentFileNames) {
       this._logger.debug("GetExperiments is loading " + filename);
       try {
         remoteExperiments[filename] = this._loader.require(filename);
         this._logger.info("Loaded " + filename + " OK.");
       } catch(e) {
+        // Store the errors so we can display them to user or include them with
+        // the upload!
+        this._loadErrors.push(e);
         this._logger.warn("Error loading " + filename);
         this._logger.warn(e);
-        // TODO log this exception to database!  but, um... the relevant experimentDataStore
-        // instance hasn't been instantiated yet, and won't be, so where do we write it to and how
-        // will this study know to include this exception in the exception list it eventually
-        // uploads?
-        // tricksy, tricksy.  Need to have a Generic Exceptions table too.
       }
     }
     return remoteExperiments;
@@ -528,6 +528,10 @@ exports.RemoteExperimentLoader.prototype = {
 
   getLegacyStudies: function() {
     return this._legacyStudies;
+  },
+
+  getLoadErrors: function() {
+    return this._loadErrors;
   }
 };
 

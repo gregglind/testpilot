@@ -186,6 +186,19 @@ let TestPilotSetup = {
     return this.__obs;
   },
 
+  __notifier: null,
+  get _notifier() {
+    if (this.__notifier == null) {
+      let tmpModule = {};
+      Cu.import("resource://testpilot/modules/notifications.js", tmpModule);
+
+      // TODO decide right here which version to instantiate!
+      let anchorToFeedback = this._isFfx4BetaVersion();
+      this.__notifier = new tmpModule.OldNotificationManager(anchorToFeedback);
+    }
+    return this.__notifier;
+  },
+
   _isFfx4BetaVersion: function TPS__isFfx4BetaVersion() {
     /* Return true if we're in the beta channel -- this will determine whether we show the
      * Feedback interface or the Test Pilot interface.
@@ -368,144 +381,9 @@ let TestPilotSetup = {
     this.taskList.push(testPilotTask);
   },
 
-  _showNotification: function TPS__showNotification(task, fragile, text, title,
-                                                    iconClass, showSubmit,
-						    showAlwaysSubmitCheckbox,
-                                                    linkText, linkUrl,
-						    isExtensionUpdate,
-                                                    onCloseCallback) {
-    /* TODO: Refactor the arguments of this function, it's getting really
-     * unweildly.... maybe pass in an object, or even make a notification an
-     * object that you create and then call .show() on. */
-
-    // If there are multiple windows, show notifications in the frontmost
-    // window.
-    let window = this._getFrontBrowserWindow();
-    let doc = window.document;
-    let popup = doc.getElementById("pilot-notification-popup");
-
-    let anchor;
-    if (this._isFfx4BetaVersion()) {
-      /* If we're in the Ffx4Beta version, popups come down from feedback
-       * button, but if we're in the standalone extension version, they
-       * come up from status bar icon. */
-      anchor = doc.getElementById("feedback-menu-button");
-      popup.setAttribute("class", "tail-up");
-    } else {
-      anchor = doc.getElementById("pilot-notifications-button");
-      popup.setAttribute("class", "tail-down");
-    }
-    let textLabel = doc.getElementById("pilot-notification-text");
-    let titleLabel = doc.getElementById("pilot-notification-title");
-    let icon = doc.getElementById("pilot-notification-icon");
-    let submitBtn = doc.getElementById("pilot-notification-submit");
-    let closeBtn = doc.getElementById("pilot-notification-close");
-    let link = doc.getElementById("pilot-notification-link");
-    let alwaysSubmitCheckbox =
-      doc.getElementById("pilot-notification-always-submit-checkbox");
-    let self = this;
-
-    // Set all appropriate attributes on popup:
-    if (isExtensionUpdate) {
-      popup.setAttribute("tpisextensionupdate", "true");
-    }
-    popup.setAttribute("noautohide", !fragile);
-    titleLabel.setAttribute("value", title);
-    while (textLabel.lastChild) {
-      textLabel.removeChild(textLabel.lastChild);
-    }
-    textLabel.appendChild(doc.createTextNode(text));
-    if (iconClass) {
-      // css will set the image url based on the class.
-      icon.setAttribute("class", iconClass);
-    }
-
-    alwaysSubmitCheckbox.setAttribute("hidden", !showAlwaysSubmitCheckbox);
-    if (showSubmit) {
-      if (isExtensionUpdate) {
-        submitBtn.setAttribute("label",
-	  this._stringBundle.GetStringFromName(
-	    "testpilot.notification.update"));
-	submitBtn.onclick = function() {
-          this._extensionUpdater.check(EXTENSION_ID);
-          self._hideNotification(window, onCloseCallback);
-	};
-      } else {
-        submitBtn.setAttribute("label",
-	  this._stringBundle.GetStringFromName("testpilot.submit"));
-        // Functionality for submit button:
-        submitBtn.onclick = function() {
-          self._hideNotification(window, onCloseCallback);
-          if (showAlwaysSubmitCheckbox && alwaysSubmitCheckbox.checked) {
-            self._prefs.setValue(ALWAYS_SUBMIT_DATA, true);
-          }
-          task.upload( function(success) {
-            if (success) {
-              self._showNotification(
-		task, true,
-                self._stringBundle.GetStringFromName(
-		  "testpilot.notification.thankYouForUploadingData.message"),
-                self._stringBundle.GetStringFromName(
-		  "testpilot.notification.thankYouForUploadingData"),
-		"study-submitted", false, false,
-                self._stringBundle.GetStringFromName("testpilot.moreInfo"),
-		task.defaultUrl);
-            } else {
-              // TODO any point in showing an error message here?
-            }
-          });
-        };
-      }
-    }
-    submitBtn.setAttribute("hidden", !showSubmit);
-
-    // Create the link if specified:
-    if (linkText && (linkUrl || task)) {
-      link.setAttribute("value", linkText);
-      link.setAttribute("class", "notification-link");
-      link.onclick = function(event) {
-        if (event.button == 0) {
-	  if (task) {
-            task.loadPage();
-	  } else {
-            self._openChromeless(linkUrl);
-	  }
-          self._hideNotification(window, onCloseCallback);
-        }
-      };
-      link.setAttribute("hidden", false);
-    } else {
-      link.setAttribute("hidden", true);
-    }
-
-    closeBtn.onclick = function() {
-      self._hideNotification(window, onCloseCallback);
-    };
-
-    // Show the popup:
-    popup.hidden = false;
-    popup.setAttribute("open", "true");
-    popup.openPopup( anchor, "after_end");
-  },
-
   _openChromeless: function TPS__openChromeless(url) {
     let window = this._getFrontBrowserWindow();
     window.TestPilotWindowUtils.openChromeless(url);
-  },
-
-  _hideNotification: function TPS__hideNotification(window, onCloseCallback) {
-    /* Note - we take window as an argument instead of just using the frontmost
-     * window because the window order might have changed since the notification
-     * appeared and we want to be sure we close the notification in the same
-     * window as we opened it in! */
-    let popup = window.document.getElementById("pilot-notification-popup");
-    popup.hidden = true;
-    popup.setAttribute("open", "false");
-    popup.removeAttribute("tpisextensionupdate");
-    popup.hidePopup();
-    if (onCloseCallback) {
-      onCloseCallback();
-    }
   },
 
   _isShowingUpdateNotification : function() {
@@ -513,6 +391,43 @@ let TestPilotSetup = {
     let popup = window.document.getElementById("pilot-notification-popup");
 
     return popup.hasAttribute("tpisextensionupdate");
+  },
+
+  _showSubmitNotification: function(task) {
+    let win = this._getFrontBrowserWindow();
+    let self = this;
+    this._notifier.showNotification(win, {
+      title: self._stringBundle.formatStringFromName(
+        "testpilot.notification.readyToSubmit.message", [task.title], 1),
+      text: self._stringBundle.GetStringFromName("testpilot.notification.readyToSubmit"),
+      iconClass: "study-finished",
+      showSubmit: true,
+      showAlwaysSubmitCheckbox: true,
+      linkText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+      linkCallback: function() { task.loadPage(); },
+      submitButtonLabel: self._stringBundle.GetStringFromName("testpilot.submit"),
+      submitButtonCallback: function(checkBoxChecked) {
+        if (checkBoxChecked) {
+          self._prefs.setValue(ALWAYS_SUBMIT_DATA, true);
+        }
+        task.upload( function(success) {
+          if (success) {
+            self._notifier.showNotification(win, {
+              title: self._stringBundle.GetStringFromName(
+		"testpilot.notification.thankYouForUploadingData.message"),
+              text: self._stringBundle.GetStringFromName(
+		  "testpilot.notification.thankYouForUploadingData"),
+	      iconClass:"study-submitted",
+              linkText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+              linkCallback: function() {task.loadPage(); },
+              fragile: true
+            });
+          } else {
+              // TODO any point in showing an error message here?
+          } }
+        );
+      }
+    });
   },
 
   _notifyUserOfTasks: function TPS__notifyUser() {
@@ -532,18 +447,7 @@ let TestPilotSetup = {
         task = this.taskList[i];
         if (task.status == TaskConstants.STATUS_FINISHED) {
           if (!this._prefs.getValue(ALWAYS_SUBMIT_DATA, false)) {
-            this._showNotification(
-	      task, false,
-	      this._stringBundle.formatStringFromName(
-		"testpilot.notification.readyToSubmit.message", [task.title],
-		1),
-	      this._stringBundle.GetStringFromName(
-		"testpilot.notification.readyToSubmit"),
-	      "study-finished", true, true,
-	      this._stringBundle.GetStringFromName("testpilot.moreInfo"),
-	      task.defaultUrl);
-            // We return after showing something, because it only makes
-            // sense to show one notification at a time!
+            this._showSubmitNotification(task);
             return;
           }
         }
@@ -558,33 +462,33 @@ let TestPilotSetup = {
         if (task.status == TaskConstants.STATUS_PENDING ||
             task.status == TaskConstants.STATUS_NEW) {
           if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
-	    this._showNotification(
-	      task, false,
-	      this._stringBundle.formatStringFromName(
+            this._notifier.showNotification(win, {
+	      title: self._stringBundle.formatStringFromName(
 		"testpilot.notification.newTestPilotStudy.pre.message",
 		[task.title], 1),
-	      this._stringBundle.GetStringFromName(
+	      text: self._stringBundle.GetStringFromName(
 		"testpilot.notification.newTestPilotStudy"),
-	      "new-study", false, false,
-	      this._stringBundle.GetStringFromName("testpilot.moreInfo"),
-	      task.defaultUrl, false, function() {
+	      iconClass: "new-study",
+	      linkText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+              linkCallback: function() { task.loadPage(); },
+              closeCallback: function() {
                 /* on close callback (Bug 575767) -- when the "new study
                  * starting" popup is dismissed, then the study can start. */
                 task.changeStatus(TaskConstants.STATUS_STARTING, true);
                 TestPilotSetup.reloadRemoteExperiments();
-              });
+              }});
             return;
           } else if (task.taskType == TaskConstants.TYPE_SURVEY) {
-	    this._showNotification(
-	      task, false,
-	      this._stringBundle.formatStringFromName(
+            this._notifier.showNotification(win, {
+	      title: self._stringBundle.formatStringFromName(
 		"testpilot.notification.newTestPilotSurvey.message",
 		[task.title], 1),
-              this._stringBundle.GetStringFromName(
+              text: self._stringBundle.GetStringFromName(
 		"testpilot.notification.newTestPilotSurvey"),
-	      "new-study", false, false,
-	      this._stringBundle.GetStringFromName("testpilot.moreInfo"),
-	      task.defaultUrl);
+	      iconClass: "new-study",
+	      linkText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+	      linkCallback: function() { task.loadPage(); }
+            });
             task.changeStatus(TaskConstants.STATUS_IN_PROGRESS, true);
             return;
           }
@@ -598,20 +502,20 @@ let TestPilotSetup = {
         task = this.taskList[i];
         if (task.taskType == TaskConstants.TYPE_RESULTS &&
             task.status == TaskConstants.STATUS_NEW) {
-	  this._showNotification(
-	    task, true,
-	    this._stringBundle.formatStringFromName(
-	      "testpilot.notification.newTestPilotResults.message",
-	      [task.title], 1),
-            this._stringBundle.GetStringFromName(
-	      "testpilot.notification.newTestPilotResults"),
-	    "new-results", false, false,
-	    this._stringBundle.GetStringFromName("testpilot.moreInfo"),
-	    task.defaultUrl);
-          // Having shown the notification, advance the status of the
-          // results, so that this notification won't be shown again
-          task.changeStatus(TaskConstants.STATUS_ARCHIVED, true);
-          return;
+              this._notifier.showNotification( win, {
+	        title: this._stringBundle.formatStringFromName(
+	          "testpilot.notification.newTestPilotResults.message",
+	          [task.title], 1),
+                text: this._stringBundle.GetStringFromName(
+	          "testpilot.notification.newTestPilotResults"),
+	        iconClass: "new-results",
+	        linkText: this._stringBundle.GetStringFromName("testpilot.moreInfo"),
+                linkCallback: function() { task.loadPage(); }
+              });
+              /* Having shown the notification, advance the status of the
+               * results, so that this notification won't be shown again */
+              task.changeStatus(TaskConstants.STATUS_ARCHIVED, true);
+              return;
         }
       }
     }
@@ -636,16 +540,17 @@ let TestPilotSetup = {
   },
 
   _onTaskDataAutoSubmitted: function(subject, data) {
-    this._showNotification(
-      subject, true,
-      this._stringBundle.formatStringFromName(
+    let task = subject;
+    this._notifier.showNotification( win, {
+      title: self._stringBundle.formatStringFromName(
 	"testpilot.notification.autoUploadedData.message",
 	[subject.title], 1),
-      this._stringBundle.GetStringFromName(
+      text: self._stringBundle.GetStringFromName(
 	"testpilot.notification.autoUploadedData"),
-      "study-submitted", false, false,
-      this._stringBundle.GetStringFromName("testpilot.moreInfo"),
-      subject.defaultUrl);
+      iconClass: "study-submitted",
+      linkText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+      linkCallback: function() { task.loadPage(); }
+    });
   },
 
   getVersion: function TPS_getVersion(callback) {
@@ -718,13 +623,16 @@ let TestPilotSetup = {
 
         // Let user know there is a newer version of Test Pilot available:
         if (!this._isShowingUpdateNotification()) {
-          this._showNotification(
-	    null, false,
-	    this._stringBundle.GetStringFromName(
+          this._showNotification(win, {
+            title: self._stringBundle.GetStringFromName(
 	      "testpilot.notification.extensionUpdate.message"),
-	    this._stringBundle.GetStringFromName(
+	    text: self._stringBundle.GetStringFromName(
 	      "testpilot.notification.extensionUpdate"),
-	    "update-extension", true, false, "", "", true);
+	    iconClass: "update-extension",
+            showSubmit: true,
+            submitButtonLabel: self._stringBundle.GetStringFromName("testpilot.notification.update"),
+            submitButtonCallback: function() { self._extensionUpdater.check(EXTENSION_ID); }
+          });
 	}
         return false;
       }

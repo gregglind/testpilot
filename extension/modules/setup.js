@@ -392,10 +392,13 @@ let TestPilotSetup = {
   },
 
   _isShowingUpdateNotification : function() {
-    let window = this._getFrontBrowserWindow();
+    // TODO break entanglement with notification manager here
+    /*let window = this._getFrontBrowserWindow();
     let popup = window.document.getElementById("pilot-notification-popup");
 
     return popup.hasAttribute("tpisextensionupdate");
+    */
+    return false;
   },
 
   _showSubmitNotification: function(task) {
@@ -412,6 +415,8 @@ let TestPilotSetup = {
       linkCallback: function() { task.loadPage(); },
       submitButtonLabel: self._stringBundle.GetStringFromName("testpilot.submit"),
       submitButtonCallback: function(checkBoxChecked) {
+        // TODO break entanglement with notificaiton manager -- figure out what happens if
+        // user checks the box / picks the 'always submit' option from drop-down.
         if (checkBoxChecked) {
           self._prefs.setValue(ALWAYS_SUBMIT_DATA, true);
         }

@@ -47,6 +47,7 @@ EXPORTED_SYMBOLS = ["TestPilotUIBuilder"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
+const Cu = Components.utils;
 const UPDATE_CHANNEL_PREF = "app.update.channel";
 
 var TestPilotUIBuilder = {

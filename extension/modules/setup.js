@@ -186,15 +186,20 @@ let TestPilotSetup = {
     return this.__obs;
   },
 
+  __interfaceBuilder: null,
+  get _interfaceBuilder() {
+    if (this.__interfaceBuilder == null) {
+      let interfaceModule = {};
+      Cu.import("resource://testpilot/modules/tasks.js", interfaceModule);
+      this.__interfaceBuilder = interfaceModule.TestPilotUIBuilder;
+    }
+    return this.__interfaceBuilder;
+  },
+
   __notifier: null,
   get _notifier() {
     if (this.__notifier == null) {
-      let tmpModule = {};
-      Cu.import("resource://testpilot/modules/notifications.js", tmpModule);
-
-      // TODO decide right here which version to instantiate!
-      let anchorToFeedback = this._isFfx4BetaVersion();
-      this.__notifier = new tmpModule.OldNotificationManager(anchorToFeedback);
+      this.__notifier = this._interfaceBuilder.getNotificationManager();
     }
     return this.__notifier;
   },

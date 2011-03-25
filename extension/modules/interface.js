@@ -38,7 +38,7 @@
  * do any other tweaking to UI needed to work correctly with user's version.
  * 1. Fx 3.*, default update channel -> TP icon menu in status bar
  * 2. beta update channel -> Feedback button in toolbar, customizable
- * 3. Fx 4.*, default update channel -> TP icon menu in add-on bar
+ * 3. Fx 4.*, default update channel -> TP icon in toolbar, doorhanger notifications
  */
 
 // A lot of the stuff that's currently in browser.js can get moved here.
@@ -52,9 +52,30 @@ const UPDATE_CHANNEL_PREF = "app.update.channel";
 var TestPilotUIBuilder = {
   __prefs: null,
   get _prefs() {
-    this.__prefs = Cc["@mozilla.org/preferences-service;1"]
-      .getService(Ci.nsIPrefBranch);
+    if (!this.__prefs) {
+      this.__prefs = Cc["@mozilla.org/preferences-service;1"]
+        .getService(Ci.nsIPrefBranch);
+    }
     return this.__prefs;
+  },
+
+  __comparator: null,
+  get _comparator() {
+    if (!this.__comparator) {
+        this.__comparator = Cc["@mozilla.org/xpcom/version-comparator;1"]
+      .getService(Ci.nsIVersionComparator);
+    }
+    return this.__comparator;
+  },
+
+  __appVersion: null,
+  get _appVersion() {
+    if (!this.__appVersion) {
+      let appInfo = Cc["@mozilla.org/xre/app-info;1"]
+        .getService(Ci.nsIXULAppInfo);
+      this.__appVersion = appInfo.version;
+    }
+    return this.__appVersion;
   },
 
   buildTestPilotInterface: function(window) {
@@ -115,17 +136,16 @@ var TestPilotUIBuilder = {
 
   appVersionIsFinal: function() {
     // Return true iff app version >= 4.0 AND there is no "beta" or "rc" in version string.
-    let appInfo = Cc["@mozilla.org/xre/app-info;1"]
-      .getService(Ci.nsIXULAppInfo);
-    let version = appInfo.version;
-    let versionChecker = Components.classes["@mozilla.org/xpcom/version-comparator;1"]
-      .getService(Components.interfaces.nsIVersionComparator);
-    if (versionChecker.compare(version, "4.0") >= 0) {
-      if (version.indexOf("b") == -1 && version.indexOf("rc") == -1) {
+    if (this.__comparator.compare(this._appVersion, "4.0") >= 0) {
+      if (this._appVersion.indexOf("b") == -1 && this._appVersion.indexOf("rc") == -1) {
         return true;
       }
     }
     return false;
+  },
+
+  isFirefox4: function() {
+    return (this._comparator.compare(this._appVersion, "4.0") >= 0 );
   },
 
   buildCorrectInterface: function(window) {
@@ -147,12 +167,28 @@ var TestPilotUIBuilder = {
                                      }
                                    }});
     } else {
-      window.document.loadOverlay("chrome://testpilot/content/tp-browser.xul",
+      let testPilotOverlay = (this.isFirefox4() ? "chrome://testpilot/content/tp-browser-4.xul" :
+                              "chrome://testpilot/content/tp-browser-3.xul");
+      window.document.loadOverlay(testPilotOverlay,
                                   {observe: function(subject, topic, data) {
                                      if (topic == "xul-overlay-merged") {
                                        self.buildTestPilotInterface(window);
                                      }
                                   }});
+    }
+  },
+
+  getNotificationManager: function() {
+    let ntfnModule = {};
+    Cu.import("resource://testpilot/modules/notifications.js", ntfnModule);
+    if (this.isBetaChannel()) {
+      return new ntfnModule.OldNotificationManager(true); // true = anchor to feedback button
+    } else {
+      if (this.isFirefox4()) {
+        return new ntfnModule.NewNotificationManager();
+      } else {
+        return new ntfnModule.OldNotificationManager(false); // false = anchor to test pilot menu
+      }
     }
   }
 };

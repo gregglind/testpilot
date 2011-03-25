@@ -49,6 +49,8 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 const UPDATE_CHANNEL_PREF = "app.update.channel";
+const POPUP_SHOW_ON_NEW = "extensions.testpilot.popup.showOnNewStudy";
+const POPUP_CHECK_INTERVAL = "extensions.testpilot.popup.delayAfterStartup";
 
 var TestPilotUIBuilder = {
   __prefs: null,
@@ -58,6 +60,16 @@ var TestPilotUIBuilder = {
         .getService(Ci.nsIPrefBranch);
     }
     return this.__prefs;
+  },
+
+  __prefDefaultBranch: null,
+  get _prefDefaultBranch() {
+    if (!__prefDefaultBranch) {
+      let ps = Cc["@mozilla.org/preferences-service;1"]
+                      .getService(Ci.nsIPrefService);
+      this.__prefDefaultBranch = ps.getDefaultBranch("");
+    }
+    return this.__prefDefaultBranch;
   },
 
   __comparator: null,
@@ -88,6 +100,11 @@ var TestPilotUIBuilder = {
       feedbackButton = palette.getElementsByAttribute("id", "feedback-menu-button").item(0);
     }
     feedbackButton.parentNode.removeChild(feedbackButton);
+
+    /* Default prefs for test pilot version - default to not notifying user about new
+     * studies starting. */
+    this._prefDefaultBranch.setBoolPref(POPUP_SHOW_ON_NEW, false);
+    this._prefDefaultBranch.setIntPref(POPUP_CHECK_INTERVAL, 180000);
   },
 
   buildFeedbackInterface: function(window) {
@@ -127,6 +144,10 @@ var TestPilotUIBuilder = {
       window.document.getElementById("feedback-menu-broken-button").setAttribute("hidden", "true");
       window.document.getElementById("feedback-menu-idea-button").setAttribute("hidden", "true");
     }
+
+    // Pref defaults for Feedback version: default to notifying user about new studies starting
+    this._prefDefaultBranch.setBoolPref(POPUP_SHOW_ON_NEW, true);
+    this._prefDefaultBranch.setIntPref(POPUP_CHECK_INTERVAL, 600000);
   },
 
   isBetaChannel: function() {

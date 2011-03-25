@@ -66,7 +66,6 @@ OldNotificationManager.prototype = {
       anchor = doc.getElementById("feedback-menu-button");
       popup.setAttribute("class", "tail-up");
     } else {
-      dump("Set class to tail-down and anchor to button.\n");
       anchor = doc.getElementById("pilot-notifications-button");
       popup.setAttribute("class", "tail-down");
     }
@@ -131,13 +130,10 @@ OldNotificationManager.prototype = {
     };
 
     // Show the popup:
-    dump("Setting hidden to false\n");
     popup.hidden = false;
-    dump("Setting open to true\n");
     popup.setAttribute("open", "true");
-    dump("Opening popup\n");
     popup.openPopup( anchor, "after_end");
-    dump("Popup opened.  Function done\n");
+    dump("Opened popup.\n");
   },
 
   hideNotification: function TP_OldNotfn_hideNotification(window, callback) {
@@ -153,11 +149,72 @@ OldNotificationManager.prototype = {
 };
 OldNotificationManager.prototype.__proto__ = new BaseNotificationManager();
 
-// The one where it comes down from an icon in the toolbar... somewhere... somehow. For 4.0 and plus.
+// For Fx 4.0 + , uses the built-in doorhanger notification system (but with my own anchor icon)
 function NewNotificationManager() {
+  // TODO this is recreating PopupNotifications every time... shoudl create once and store ref, but
+  // can we do that without the window ref?
 }
 NewNotificationManager.prototype = {
   showNotification: function TP_NewNotfn_showNotification(window, options) {
+    Components.utils.import("resource://gre/modules/PopupNotifications.jsm");
+    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
+                getService(Components.interfaces.nsIWindowMediator);
+    let win = wm.getMostRecentWindow("navigator:browser");
+    let tabbrowser = window.getBrowser();
+    let panel = win.document.getElementById("notification-popup"); // borrowing the built-in panel
+    let iconBox = win.document.getElementById("tp-notification-popup-box");
+    let pn = new PopupNotifications(tabbrowser, panel, iconBox);
+
+    let popupId = "tp-complete-popup";
+    if (options.iconClass) {
+      popupId = "tp-" + options.iconClass + "-popup";
+    }
+
+    let moreInfoOption = null;
+    let defaultOption = null;
+    let additionalOptions = [];
+
+    // There must be at least one of submit button and link, otherwise this doesn't work.
+    if (options.linkText) {
+      moreInfoOption = {label: options.linkText,
+                        accessKey: "M",
+                        callback: options.linkCallback};
+    }
+
+    if (options.showSubmit) {
+      defaultOption = { label: options.submitButtonLabel,
+                        accessKey: "S",
+                        callback: options.submitButtonCallback};
+      if (moreInfoOption) {
+        additionalOptions.push(moreInfoOption);
+      }
+      // If there's a submit button, there needs to be a cancel button:
+      // TODO info for cancel button needs to be provided!!
+      additionalOptions.push({ label: "Cancel",
+                               accessKey: "C",
+                               callback: function() {
+                               } });
+      // Instead of checkbox, put an 'always submit' option:
+      additionalOptions.push({ label: "Submit automatically (stop asking)",
+                               callback: function() {
+                                 // TODO this needs to come from somewhere??
+                               } });
+
+    } else if (moreInfoOption) {
+      // If submit not provided, use the 'more info' as the default button.
+      defaultOption = moreInfoOption;
+    }
+
+    pn.show(window.getBrowser().selectedBrowser,
+            popupId,
+            options.title + options.text,  // TODO how to make title look.... title-y?
+            "tp-notification-popup-icon", // All TP notifications use this icon
+            defaultOption,
+            additionalOptions,
+            {persistWhileVisible: true});
+
+    // Options Currently Unimplemented:  options.closeCallback, options.fragile,
+    // options.isExtensionUpdate.
   },
 
   hideNotification: function TP_NewNotfn_hideNotification() {

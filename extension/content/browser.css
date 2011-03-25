@@ -19,9 +19,24 @@
   -moz-padding-start: 5px;
 }
 
-
 #pilot-notifications-button {
   margin-right: 10px;
+}
+
+/* For Firefox 4 built-in popup notification system */
+#tp-notification-popup-box {
+    /* ?? */
+}
+#tp-notification-popup-icon {
+  list-style-image: url("chrome://testpilot/skin/testpilot_16x16.png");
+}
+.popup-notification-icon[popupid="tp-complete-popup"] {
+  height: 48px;
+  width: 48px;
+  list-style-image: url("chrome://testpilot/skin/tp-submit-48x48.png");
+}
+#tp-notification-popup-box[anchorid="tp-notification-popup-icon"] > #tp-notification-popup-icon {
+  display: -moz-box;
 }
 
 /* Popup Bounding Box */

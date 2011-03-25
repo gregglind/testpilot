@@ -108,7 +108,7 @@
 
   function makeThereBeAPopup() {
     Components.utils.import("resource://testpilot/modules/notifications.js");
-    var notifier = new OldNotificationManager();
+    var notifier = new NewNotificationManager();
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
                getService(Components.interfaces.nsIWindowMediator);
     var window = wm.getMostRecentWindow("navigator:browser");

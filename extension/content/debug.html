@@ -25,9 +25,8 @@
       let str;
       if (errors.length > 0) {
         str = "<ul>";
-        for each (let err in errors) {
-          str += "<li>" + err.name + " on line " + err.lineNumber + " of file " + err.fileName + "<br/>";
-          str += err.message + "</li>";
+        for each (let errStr in errors) {
+          str += "<li>" + errStr + "</li>";          
         }
         str += "</ul>";
       } else {

@@ -129,14 +129,11 @@ ExperimentDataStore.prototype = {
     for (i = 0; i < this._columns.length; i++) {
       let datum =  uiEvent[this._columns[i].property];
       switch (this._columns[i].type) {
-        case TYPE_INT_32:
-          insStmt.bindInt32Parameter(i, datum);
-        break;
-        case TYPE_DOUBLE:
-          insStmt.bindDoubleParameter(i, datum);
+        case TYPE_INT_32: case TYPE_DOUBLE:
+          insStmt.params[i] = datum;
         break;
         case TYPE_STRING:
-          insStmt.bindUTF8StringParameter(i, sanitizeString(datum));
+          insStmt.params[i] = sanitizeString(datum);
         break;
       }
     }
@@ -166,11 +163,10 @@ ExperimentDataStore.prototype = {
   logException: function EDS_logException(exception) {
     let insertSql = "INSERT INTO " + EXCEPTION_TABLE_NAME + " VALUES (?1, ?2);";
     let insStmt =  this._createStatement(insertSql);
-    // Even though the SQL says ?1 and ?2, the bind methods count from 0.
-    // What a confusing API!
-    insStmt.bindDoubleParameter(0, Date.now());
+    // Even though the SQL says ?1 and ?2, the param indices count from 0.
+    insStmt.params[0] = Date.now();
     let txt = exception.message ? exception.message : exception.toString();
-    insStmt.bindUTF8StringParameter(1, txt);
+    insStmt.params[1] = txt;
     insStmt.executeAsync();
     insStmt.finalize(); // TODO Is this the right thing to do when calling asynchronously?
   },

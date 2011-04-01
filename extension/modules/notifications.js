@@ -98,9 +98,9 @@ OldNotificationManager.prototype = {
       icon.setAttribute("class", options.iconClass);
     }
 
-    alwaysSubmitCheckbox.setAttribute("hidden", !options.showAlwaysSubmitCheckbox);
+    alwaysSubmitCheckbox.setAttribute("hidden", !options.alwaysSubmitLabel);
     if (options.showSubmit) {
-      submitBtn.setAttribute("label", options.submitButtonLabel);
+      submitBtn.setAttribute("label", options.submitLabel);
       submitBtn.onclick = function() {
         if (event.button == 0) {
           options.submitButtonCallback();
@@ -108,15 +108,15 @@ OldNotificationManager.prototype = {
         }
       };
     }
-    submitBtn.setAttribute("hidden", !options.showSubmit);
+    submitBtn.setAttribute("hidden", !options.submitLabel);
 
     // Create the link if specified:
-    if (options.linkText && (options.linkCallback)) {
-      link.setAttribute("value", options.linkText);
+    if (options.moreInfoText) {
+      link.setAttribute("value", options.moreInfoText);
       link.setAttribute("class", "notification-link");
       link.onclick = function(event) {
         if (event.button == 0) {
-          options.linkCallback();
+          options.moreInfoCallback();
           self.hideNotification(window, options.closeCallback);
         }
       };
@@ -150,9 +150,10 @@ OldNotificationManager.prototype = {
 OldNotificationManager.prototype.__proto__ = new BaseNotificationManager();
 
 // For Fx 4.0 + , uses the built-in doorhanger notification system (but with my own anchor icon)
-function NewNotificationManager() {
-  // TODO this is recreating PopupNotifications every time... shoudl create once and store ref, but
+function NewNotificationManager(anchorToFeedbackButton) {
+  // TODO this is recreating PopupNotifications every time... should create once and store ref, but
   // can we do that without the window ref?
+  this._anchorToFeedbackButton = anchorToFeedbackButton;
 }
 NewNotificationManager.prototype = {
   showNotification: function TP_NewNotfn_showNotification(window, options) {
@@ -163,6 +164,7 @@ NewNotificationManager.prototype = {
     let tabbrowser = window.getBrowser();
     let panel = win.document.getElementById("notification-popup"); // borrowing the built-in panel
     let iconBox = win.document.getElementById("tp-notification-popup-box");
+    // TODO implement the anchorToFeedbackButton case!
     let pn = new PopupNotifications(tabbrowser, panel, iconBox);
 
     let popupId = "tp-complete-popup";
@@ -175,34 +177,34 @@ NewNotificationManager.prototype = {
     let additionalOptions = [];
 
     // There must be at least one of submit button and link, otherwise this doesn't work.
-    if (options.linkText) {
-      moreInfoOption = {label: options.linkText,
+    if (options.moreInfoLabel) {
+      moreInfoOption = {label: options.moreInfoLabel,
                         accessKey: "M",
-                        callback: options.linkCallback};
+                        callback: options.moreInfoCallback};
     }
 
-    if (options.showSubmit) {
+    if (options.submitButtonLabel) {
       defaultOption = { label: options.submitButtonLabel,
                         accessKey: "S",
                         callback: options.submitButtonCallback};
       if (moreInfoOption) {
         additionalOptions.push(moreInfoOption);
       }
-      // If there's a submit button, there needs to be a cancel button:
-      // TODO info for cancel button needs to be provided!!
-      additionalOptions.push({ label: "Cancel",
-                               accessKey: "C",
-                               callback: function() {
-                               } });
-      // Instead of checkbox, put an 'always submit' option:
-      additionalOptions.push({ label: "Submit automatically (stop asking)",
-                               callback: function() {
-                                 // TODO this needs to come from somewhere??
-                               } });
+
+      if (options.alwaysSubmitLabel) {
+        additionalOptions.push({ label: options.alwaysSubmitLabel,
+                                 callback: options.alwaysSubmitCallback });
+      }
 
     } else if (moreInfoOption) {
       // If submit not provided, use the 'more info' as the default button.
       defaultOption = moreInfoOption;
+    }
+
+    if (options.cancelLabel) {
+      additionalOptions.push({ label: options.cancelLabel,
+                               accessKey: "C",
+                               callback: options.cancelCallback });
     }
 
     pn.show(window.getBrowser().selectedBrowser,

@@ -381,17 +381,10 @@ let TestPilotSetup = {
         "testpilot.notification.readyToSubmit.message", [task.title], 1),
       text: self._stringBundle.GetStringFromName("testpilot.notification.readyToSubmit"),
       iconClass: "study-finished",
-      showSubmit: true,
-      showAlwaysSubmitCheckbox: true,
-      linkText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
-      linkCallback: function() { task.loadPage(); },
-      submitButtonLabel: self._stringBundle.GetStringFromName("testpilot.submit"),
-      submitButtonCallback: function(checkBoxChecked) {
-        // TODO break entanglement with notificaiton manager -- figure out what happens if
-        // user checks the box / picks the 'always submit' option from drop-down.
-        if (checkBoxChecked) {
-          self._prefs.setValue(ALWAYS_SUBMIT_DATA, true);
-        }
+      moreInfoLabel: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+      moreInfoCallback: function() { task.loadPage(); },
+      submitLabel: self._stringBundle.GetStringFromName("testpilot.submit"),
+      submitCallback: function() {
         task.upload( function(success) {
           if (success) {
             self._notifier.showNotification(win, {
@@ -408,6 +401,18 @@ let TestPilotSetup = {
               // TODO any point in showing an error message here?
           } }
         );
+      },
+      cancelLabel: self._stringBundle.GetStringFromName("testpilot.notification.cancelLabel"),
+      cancelCallback: function() {
+        // TODO
+      },
+      seeAllStudiesLabel: self._stringBundle.GetStringFromName("testpilot.notification.seeAllStudiesLabel"),
+      seeAllStudiesCallback: function() {
+        // TODO
+      },
+      alwaysSubmitLabel: self._stringBundle.GetStringFromName("testpilot.notification.alwaysSubmitLabel"),
+      alwaysSubmitCallback: function() {
+        self._prefs.setValue(ALWAYS_SUBMIT_DATA, true);
       }
     });
   },
@@ -451,8 +456,16 @@ let TestPilotSetup = {
 	      text: self._stringBundle.GetStringFromName(
 		"testpilot.notification.newTestPilotStudy"),
 	      iconClass: "new-study",
-	      linkText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
-              linkCallback: function() { task.loadPage(); },
+	      moreInfoText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+              moreInfoCallback: function() { task.loadPage(); },
+              cancelLabel: self._stringBundle.GetStringFromName("testpilot.notification.cancelLabel"),
+              cancelCallback: function() {
+                // TODO
+              },
+              seeAllStudiesLabel: self._stringBundle.GetStringFromName("testpilot.notification.seeAllStudiesLabel"),
+              seeAllStudiesCallback: function() {
+                // TODO
+              },
               closeCallback: function() {
                 /* on close callback (Bug 575767) -- when the "new study
                  * starting" popup is dismissed, then the study can start. */
@@ -468,8 +481,8 @@ let TestPilotSetup = {
               text: self._stringBundle.GetStringFromName(
 		"testpilot.notification.newTestPilotSurvey"),
 	      iconClass: "new-study",
-	      linkText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
-	      linkCallback: function() { task.loadPage(); }
+	      moreInfoText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+	      moreInfoCallback: function() { task.loadPage(); }
             });
             task.changeStatus(TaskConstants.STATUS_IN_PROGRESS, true);
             return;
@@ -491,8 +504,8 @@ let TestPilotSetup = {
                 text: this._stringBundle.GetStringFromName(
 	          "testpilot.notification.newTestPilotResults"),
 	        iconClass: "new-results",
-	        linkText: this._stringBundle.GetStringFromName("testpilot.moreInfo"),
-                linkCallback: function() { task.loadPage(); }
+	        moreInfoText: this._stringBundle.GetStringFromName("testpilot.moreInfo"),
+                moreInfoCallback: function() { task.loadPage(); }
               });
               /* Having shown the notification, advance the status of the
                * results, so that this notification won't be shown again */
@@ -530,8 +543,8 @@ let TestPilotSetup = {
       text: self._stringBundle.GetStringFromName(
 	"testpilot.notification.autoUploadedData"),
       iconClass: "study-submitted",
-      linkText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
-      linkCallback: function() { task.loadPage(); }
+      moreInfoText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+      moreInfoCallback: function() { task.loadPage(); }
     });
   },
 
@@ -611,9 +624,9 @@ let TestPilotSetup = {
 	    text: self._stringBundle.GetStringFromName(
 	      "testpilot.notification.extensionUpdate"),
 	    iconClass: "update-extension",
-            showSubmit: true,
             submitButtonLabel: self._stringBundle.GetStringFromName("testpilot.notification.update"),
-            submitButtonCallback: function() { self._extensionUpdater.check(EXTENSION_ID); }
+            submitButtonCallback: function() { self._extensionUpdater.check(EXTENSION_ID); },
+            isExtensionUpdate: true
           });
 	}
         return false;

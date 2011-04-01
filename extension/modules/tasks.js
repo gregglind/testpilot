@@ -808,6 +808,7 @@ TestPilotExperiment.prototype = {
         for (let i = 0; i < moreMd.length; i++) {
           if (moreMd[i].name && moreMd[i].value) {
             json.metadata[ moreMd[i].name ] = moreMd[i].value; // TODO sanitize strings?
+            // TODO handle case where name or value are something other than strings?
           }
         }
       }

@@ -118,17 +118,6 @@ let TestPilotSetup = {
     return this.__dataStoreModule;
   },
 
-  __extensionUpdater: null,
-  get _extensionUpdater() {
-    if (this.__extensionUpdater == null) {
-      let ExUpdate = {};
-      Cu.import("resource://testpilot/modules/extension-update.js",
-                   ExUpdate);
-      this.__extensionUpdater = ExUpdate.TestPilotExtensionUpdate;
-    }
-    return this.__extensionUpdater;
-  },
-
   __logRepo: null,
   get _logRepo() {
     // Note: This hits the disk so it's an expensive operation; don't call it
@@ -363,16 +352,6 @@ let TestPilotSetup = {
     window.TestPilotWindowUtils.openChromeless(url);
   },
 
-  _isShowingUpdateNotification : function() {
-    // TODO break entanglement with notification manager here
-    /*let window = this._getFrontBrowserWindow();
-    let popup = window.document.getElementById("pilot-notification-popup");
-
-    return popup.hasAttribute("tpisextensionupdate");
-    */
-    return false;
-  },
-
   _showSubmitNotification: function(task) {
     let win = this._getFrontBrowserWindow();
     let self = this;
@@ -422,11 +401,6 @@ let TestPilotSetup = {
     // found, show the popup door-hanger thingy.
     let i, task;
     let TaskConstants = this._taskModule.TaskConstants;
-
-    // if showing extension update notification, don't do anything.
-    if (this._isShowingUpdateNotification()) {
-      return;
-    }
 
     // Highest priority is if there is a finished test (needs a decision)
     if (this._prefs.getValue(POPUP_SHOW_ON_FINISH, false)) {
@@ -615,20 +589,6 @@ let TestPilotSetup = {
       if (minTpVer && this._isNewerThanMe(minTpVer)) {
         logger.warn("Not loading " + expName);
         logger.warn("Because it requires Test Pilot version " + minTpVer);
-
-        // Let user know there is a newer version of Test Pilot available:
-        if (!this._isShowingUpdateNotification()) {
-          this._showNotification(win, {
-            title: self._stringBundle.GetStringFromName(
-	      "testpilot.notification.extensionUpdate.message"),
-	    text: self._stringBundle.GetStringFromName(
-	      "testpilot.notification.extensionUpdate"),
-	    iconClass: "update-extension",
-            submitButtonLabel: self._stringBundle.GetStringFromName("testpilot.notification.update"),
-            submitButtonCallback: function() { self._extensionUpdater.check(EXTENSION_ID); },
-            isExtensionUpdate: true
-          });
-	}
         return false;
       }
 

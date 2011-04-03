@@ -79,10 +79,6 @@ OldNotificationManager.prototype = {
       doc.getElementById("pilot-notification-always-submit-checkbox");
     let self = this;
 
-    // Set all appropriate attributes on popup:
-    if (options.isExtensionUpdate) {
-      popup.setAttribute("tpisextensionupdate", "true");
-    }
     popup.setAttribute("noautohide", !(options.fragile));
     if (options.title) {
       titleLabel.setAttribute("value", options.title);
@@ -140,7 +136,6 @@ OldNotificationManager.prototype = {
     let popup = window.document.getElementById("pilot-notification-popup");
     popup.hidden = true;
     popup.setAttribute("open", "false");
-    popup.removeAttribute("tpisextensionupdate");
     popup.hidePopup();
     if (callback) {
       callback();

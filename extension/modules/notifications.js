@@ -107,8 +107,8 @@ OldNotificationManager.prototype = {
     submitBtn.setAttribute("hidden", !options.submitLabel);
 
     // Create the link if specified:
-    if (options.moreInfoText) {
-      link.setAttribute("value", options.moreInfoText);
+    if (options.moreInfoLabel) {
+      link.setAttribute("value", options.moreInfoLabel);
       link.setAttribute("class", "notification-link");
       link.onclick = function(event) {
         if (event.button == 0) {
@@ -162,11 +162,7 @@ NewNotificationManager.prototype = {
     // TODO implement the anchorToFeedbackButton case!
     let pn = new PopupNotifications(tabbrowser, panel, iconBox);
 
-    let popupId = "tp-complete-popup";
-    if (options.iconClass) {
-      popupId = "tp-" + options.iconClass + "-popup";
-    }
-
+    let popupId = options.iconClass ? options.iconClass : "study-submitted";
     let moreInfoOption = null;
     let defaultOption = null;
     let additionalOptions = [];
@@ -175,20 +171,27 @@ NewNotificationManager.prototype = {
     if (options.moreInfoLabel) {
       moreInfoOption = {label: options.moreInfoLabel,
                         accessKey: "M",
-                        callback: options.moreInfoCallback};
+                        callback: options.moreInfoCallback
+                        };
     }
 
     if (options.submitButtonLabel) {
       defaultOption = { label: options.submitButtonLabel,
                         accessKey: "S",
-                        callback: options.submitButtonCallback};
+                        callback: options.submitButtonCallback
+                       };
       if (moreInfoOption) {
         additionalOptions.push(moreInfoOption);
       }
 
       if (options.alwaysSubmitLabel) {
         additionalOptions.push({ label: options.alwaysSubmitLabel,
-                                 callback: options.alwaysSubmitCallback });
+                                 callback: function() {
+                                   options.alwaysSubmitCallback();
+                                   if (options.submitButtonCallback) {
+                                     options.submitButtonCallback();
+                                   }
+                                 }});
       }
 
     } else if (moreInfoOption) {
@@ -202,16 +205,26 @@ NewNotificationManager.prototype = {
                                callback: options.cancelCallback });
     }
 
-    pn.show(window.getBrowser().selectedBrowser,
-            popupId,
-            options.title + options.text,  // TODO how to make title look.... title-y?
-            "tp-notification-popup-icon", // All TP notifications use this icon
-            defaultOption,
-            additionalOptions,
-            {persistWhileVisible: true});
+    dump("popupId is " + popupId + "\n");
+    this._notifRef = pn.show(window.getBrowser().selectedBrowser,
+                             popupId,
+                             options.title + options.text,  // TODO how to make title look.... title-y?
+                             "tp-notification-popup-icon", // All TP notifications use this icon
+                             defaultOption,
+                             additionalOptions,
+                             {persistWhileVisible: true,
+                              timeout: 5000,
+                              eventCallback: function(stateChange){
+                                dump("State change is " + stateChange + "\n");
+                                if (stateChange == "removed" && options.closeCallback) {
+                                  options.closeCallback();
+                                  // This appears to get called AFTER the callback for the option
+                                  // clicked.  (So if the button callback cancels the study, and then this
+                                  // callback sets it to starting... hmmm, careful here.)
+                                }
+                              }}); // should make it not disappear for at least 5s?
 
-    // Options Currently Unimplemented:  options.closeCallback, options.fragile,
-    // options.isExtensionUpdate.
+    // See http://mxr.mozilla.org/mozilla-central/source/toolkit/content/PopupNotifications.jsm
   },
 
   hideNotification: function TP_NewNotfn_hideNotification() {

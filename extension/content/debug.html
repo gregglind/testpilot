@@ -115,8 +115,10 @@
     notifier.showNotification(window, { title: "This is title",
                                         text: "This is text",
                                         iconClass: "study-submitted",
-                                        linkText: "This is a link",
-                                        linkCallback: function() {alert("You clicked link");} });
+                                        moreInfoLabel: "This is a link",
+                                        moreInfoCallback: function() {dump("You picked More Info\n");},
+                                        closeCallback: function() {dump("You closed the notfn\n");}
+});
     } catch(e) {
       document.getElementById("debug").innerHTML = "Error: " + e;
     }

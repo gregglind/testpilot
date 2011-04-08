@@ -383,11 +383,11 @@ let TestPilotSetup = {
       },
       cancelLabel: self._stringBundle.GetStringFromName("testpilot.notification.cancelLabel"),
       cancelCallback: function() {
-        // TODO
+        // TODO notfn
       },
       seeAllStudiesLabel: self._stringBundle.GetStringFromName("testpilot.notification.seeAllStudiesLabel"),
       seeAllStudiesCallback: function() {
-        // TODO
+        // TODO notfn
       },
       alwaysSubmitLabel: self._stringBundle.GetStringFromName("testpilot.notification.alwaysSubmitLabel"),
       alwaysSubmitCallback: function() {
@@ -434,17 +434,21 @@ let TestPilotSetup = {
               moreInfoCallback: function() { task.loadPage(); },
               cancelLabel: self._stringBundle.GetStringFromName("testpilot.notification.cancelLabel"),
               cancelCallback: function() {
-                // TODO
+                // TODO notfn
               },
               seeAllStudiesLabel: self._stringBundle.GetStringFromName("testpilot.notification.seeAllStudiesLabel"),
               seeAllStudiesCallback: function() {
-                // TODO
+                // TODO notfn
               },
               closeCallback: function() {
                 /* on close callback (Bug 575767) -- when the "new study
                  * starting" popup is dismissed, then the study can start. */
-                task.changeStatus(TaskConstants.STATUS_STARTING, true);
-                TestPilotSetup.reloadRemoteExperiments();
+                // closeCallback gets called after cancelCallback, so make sure study isn't already
+                // canceled.
+                if (task.status < TaskConstants.STATUS_STARTING) {
+                  task.changeStatus(TaskConstants.STATUS_STARTING, true);
+                  TestPilotSetup.reloadRemoteExperiments();
+                }
               }});
             return;
           } else if (task.taskType == TaskConstants.TYPE_SURVEY) {

@@ -896,7 +896,6 @@ TestPilotExperiment.prototype = {
   optOut: function TestPilotExperiment_optOut(reason, callback) {
     // Regardless of study ID, post the opt-out message to a special
     // database table of just opt-out messages; include study ID in metadata.
-    let url = Application.prefs.getValue(DATA_UPLOAD_PREF, "") + "opt-out";
     let logger = this._logger;
 
     this.onExperimentShutdown();
@@ -909,6 +908,7 @@ TestPilotExperiment.prototype = {
     if (reason) {
       // Send us the reason...
       // (TODO: include metadata?)
+      let url = Application.prefs.getValue(DATA_UPLOAD_PREF, "") + "opt-out";
       let answer = {id: this._id,
                     reason: reason};
       let dataString = JSON.stringify(answer);
@@ -924,17 +924,23 @@ TestPilotExperiment.prototype = {
         if (req.readyState == 4) {
           if (req.status == 200 || req.status == 201 || req.status == 202) {
 	    logger.info("Quit reason posted successfully " + req.responseText);
-    	    callback(true);
+            if (callback) {
+              callback(true);
+            }
 	  } else {
 	    logger.warn(req.status + " posting error " + req.responseText);
-	    callback(false);
+            if (callback) {
+              callback(false);
+            }
 	  }
 	}
       };
       logger.trace("Sending quit reason.");
       req.send(dataString);
     } else {
-      callback(false);
+      if (callback) {
+        callback(false);
+      }
     }
   },
 

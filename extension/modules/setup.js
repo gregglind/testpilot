@@ -383,11 +383,11 @@ let TestPilotSetup = {
       },
       cancelLabel: self._stringBundle.GetStringFromName("testpilot.notification.cancelLabel"),
       cancelCallback: function() {
-        // TODO notfn
+        task.optOut(null, null);
       },
       seeAllStudiesLabel: self._stringBundle.GetStringFromName("testpilot.notification.seeAllStudiesLabel"),
       seeAllStudiesCallback: function() {
-        // TODO notfn
+        self._getFrontBrowserWindow().TestPilotWindowUtils.openAllStudiesWindow();
       },
       alwaysSubmitLabel: self._stringBundle.GetStringFromName("testpilot.notification.alwaysSubmitLabel"),
       alwaysSubmitCallback: function() {
@@ -400,6 +400,7 @@ let TestPilotSetup = {
     // Check whether there are tasks needing attention, and if any are
     // found, show the popup door-hanger thingy.
     let i, task;
+    let self = this;
     let TaskConstants = this._taskModule.TaskConstants;
 
     // Highest priority is if there is a finished test (needs a decision)
@@ -430,15 +431,20 @@ let TestPilotSetup = {
 	      text: self._stringBundle.GetStringFromName(
 		"testpilot.notification.newTestPilotStudy"),
 	      iconClass: "new-study",
-	      moreInfoText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+	      moreInfoLabel: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
               moreInfoCallback: function() { task.loadPage(); },
               cancelLabel: self._stringBundle.GetStringFromName("testpilot.notification.cancelLabel"),
               cancelCallback: function() {
-                // TODO notfn
+                task.optOut(null, null);
               },
               seeAllStudiesLabel: self._stringBundle.GetStringFromName("testpilot.notification.seeAllStudiesLabel"),
               seeAllStudiesCallback: function() {
-                // TODO notfn
+                self._getFrontBrowserWindow().TestPilotWindowUtils.openAllStudiesWindow();
+              },
+              alwaysSubmitLabel: self._stringBundle.GetStringFromName("testpilot.notification.alwaysSubmitLabel"),
+               // TODO notfn the above needs a different string.
+              alwaysSubmitCallback: function() {
+                self._prefs.setValue(POPUP_SHOW_ON_NEW, false);
               },
               closeCallback: function() {
                 /* on close callback (Bug 575767) -- when the "new study
@@ -459,7 +465,7 @@ let TestPilotSetup = {
               text: self._stringBundle.GetStringFromName(
 		"testpilot.notification.newTestPilotSurvey"),
 	      iconClass: "new-study",
-	      moreInfoText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+	      moreInfoLabel: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
 	      moreInfoCallback: function() { task.loadPage(); }
             });
             task.changeStatus(TaskConstants.STATUS_IN_PROGRESS, true);

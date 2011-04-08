@@ -441,8 +441,7 @@ let TestPilotSetup = {
               seeAllStudiesCallback: function() {
                 self._getFrontBrowserWindow().TestPilotWindowUtils.openAllStudiesWindow();
               },
-              alwaysSubmitLabel: self._stringBundle.GetStringFromName("testpilot.notification.alwaysSubmitLabel"),
-               // TODO notfn the above needs a different string.
+              alwaysSubmitLabel: self._stringBundle.GetStringFromName("testpilot.notification.dontShowNewLabel"),
               alwaysSubmitCallback: function() {
                 self._prefs.setValue(POPUP_SHOW_ON_NEW, false);
               },

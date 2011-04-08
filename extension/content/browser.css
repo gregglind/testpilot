@@ -24,20 +24,37 @@
 }
 
 /* For Firefox 4 built-in popup notification system */
-#tp-notification-popup-box {
-    /* ?? */
-}
 #tp-notification-popup-icon {
   list-style-image: url("chrome://testpilot/skin/testpilot_16x16.png");
 }
-.popup-notification-icon[popupid="tp-complete-popup"] {
-  height: 48px;
-  width: 48px;
-  list-style-image: url("chrome://testpilot/skin/tp-submit-48x48.png");
-}
+
 #tp-notification-popup-box[anchorid="tp-notification-popup-icon"] > #tp-notification-popup-icon {
   display: -moz-box;
 }
+
+.popup-notification-icon[popupid="study-finished"] {
+  list-style-image: url("chrome://testpilot/skin/tp-submit-48x48.png");
+  height: 48px;
+  width: 48px;
+}
+.popup-notification-icon[popupid="new-study"] {
+  list-style-image: url("chrome://testpilot/skin/tp-study-48x48.png");
+  height: 48px;
+  width: 48px;
+}
+.popup-notification-icon[popupid="new-results"] {
+  list-style-image: url("chrome://testpilot/skin/tp-results-48x48.png");
+  height: 48px;
+  width: 48px;
+}
+.popup-notification-icon[popupid="study-submitted"] {
+  list-style-image: url("chrome://testpilot/skin/status-completed.png");
+  height: 32px;
+  width: 64px;
+}
+
+
+/* For older notification system */
 
 /* Popup Bounding Box */
 #pilot-notification-popup {

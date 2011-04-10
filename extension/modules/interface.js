@@ -139,10 +139,10 @@ var TestPilotUIBuilder = {
     this._prefDefaultBranch.setIntPref(POPUP_CHECK_INTERVAL, 600000);
   },
 
-  isBetaChannel: function() {
-    // Nightly channel is treated the same as default channel.
+  channelUsesFeedback: function() {
+    // Beta and aurora channels use feedback interface; nightly and release channels don't.
     let channel = this._prefs.getCharPref(UPDATE_CHANNEL_PREF);
-    return (channel == "beta") || (channel == "betatest");
+    return (channel == "beta") || (channel == "betatest") || (channel == "aurora");
   },
 
   appVersionIsFinal: function() {
@@ -155,7 +155,7 @@ var TestPilotUIBuilder = {
     return false;
   },
 
-  isFirefox4: function() {
+  hasDoorhangerNotifications: function() {
     return (this._comparator.compare(this._appVersion, "4.0") >= 0 );
   },
 
@@ -170,7 +170,7 @@ var TestPilotUIBuilder = {
     /* Overlay Feedback XUL if we're in the beta update channel, Test Pilot XUL otherwise.
      * Once the overlay is complete, call buildFeedbackInterface() or buildTestPilotInterface(). */
     let self = this;
-    if (this.isBetaChannel()) {
+    if (this.channelUsesFeedback()) {
       window.document.loadOverlay("chrome://testpilot/content/feedback-browser.xul",
                                   {observe: function(subject, topic, data) {
                                      if (topic == "xul-overlay-merged") {
@@ -178,7 +178,8 @@ var TestPilotUIBuilder = {
                                      }
                                    }});
     } else {
-      let testPilotOverlay = (this.isFirefox4() ? "chrome://testpilot/content/tp-browser-4.xul" :
+      let testPilotOverlay = (this.hasDoorhangerNotifications() ?
+                              "chrome://testpilot/content/tp-browser-4.xul" :
                               "chrome://testpilot/content/tp-browser-3.xul");
       window.document.loadOverlay(testPilotOverlay,
                                   {observe: function(subject, topic, data) {
@@ -192,10 +193,10 @@ var TestPilotUIBuilder = {
   getNotificationManager: function() {
     let ntfnModule = {};
     Cu.import("resource://testpilot/modules/notifications.js", ntfnModule);
-    if (this.isBetaChannel()) {
+    if (this.channelUsesFeedback()) {
       return new ntfnModule.OldNotificationManager(true); // true = anchor to feedback button
     } else {
-      if (this.isFirefox4()) {
+      if (this.hasDoorhangerNotifications()) {
         return new ntfnModule.NewNotificationManager();
       } else {
         return new ntfnModule.OldNotificationManager(false); // false = anchor to test pilot menu

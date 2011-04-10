@@ -240,7 +240,7 @@ let TestPilotSetup = {
         let currVersion = self._prefs.getValue(VERSION_PREF, "firstrun");
 
         if (currVersion != self.version) {
-          if(!self._interfaceBuilder.isBetaChannel()) {
+          if(!self._interfaceBuilder.channelUsesFeedback()) {
             // Don't show first run page in beta-channel version.
             self._prefs.setValue(VERSION_PREF, self.version);
             let browser = self._getFrontBrowserWindow().getBrowser();

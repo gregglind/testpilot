@@ -205,10 +205,9 @@ NewNotificationManager.prototype = {
                                callback: options.cancelCallback });
     }
 
-    dump("popupId is " + popupId + "\n");
     this._notifRef = pn.show(window.getBrowser().selectedBrowser,
                              popupId,
-                             options.title + options.text,  // TODO how to make title look.... title-y?
+                             options.title + " " + options.text, // TODO how to format or apply styles?
                              "tp-notification-popup-icon", // All TP notifications use this icon
                              defaultOption,
                              additionalOptions,

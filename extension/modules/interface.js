@@ -64,7 +64,7 @@ var TestPilotUIBuilder = {
 
   __prefDefaultBranch: null,
   get _prefDefaultBranch() {
-    if (!__prefDefaultBranch) {
+    if (!this.__prefDefaultBranch) {
       let ps = Cc["@mozilla.org/preferences-service;1"]
                       .getService(Ci.nsIPrefService);
       this.__prefDefaultBranch = ps.getDefaultBranch("");

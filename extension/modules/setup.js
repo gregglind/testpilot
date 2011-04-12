@@ -179,7 +179,7 @@ let TestPilotSetup = {
   get _interfaceBuilder() {
     if (this.__interfaceBuilder == null) {
       let interfaceModule = {};
-      Cu.import("resource://testpilot/modules/tasks.js", interfaceModule);
+      Cu.import("resource://testpilot/modules/interface.js", interfaceModule);
       this.__interfaceBuilder = interfaceModule.TestPilotUIBuilder;
     }
     return this.__interfaceBuilder;
@@ -356,9 +356,9 @@ let TestPilotSetup = {
     let win = this._getFrontBrowserWindow();
     let self = this;
     this._notifier.showNotification(win, {
-      title: self._stringBundle.formatStringFromName(
+      text: self._stringBundle.formatStringFromName(
         "testpilot.notification.readyToSubmit.message", [task.title], 1),
-      text: self._stringBundle.GetStringFromName("testpilot.notification.readyToSubmit"),
+      title: self._stringBundle.GetStringFromName("testpilot.notification.readyToSubmit"),
       iconClass: "study-finished",
       moreInfoLabel: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
       moreInfoCallback: function() { task.loadPage(); },
@@ -367,9 +367,9 @@ let TestPilotSetup = {
         task.upload( function(success) {
           if (success) {
             self._notifier.showNotification(win, {
-              title: self._stringBundle.GetStringFromName(
-		"testpilot.notification.thankYouForUploadingData.message"),
               text: self._stringBundle.GetStringFromName(
+		"testpilot.notification.thankYouForUploadingData.message"),
+              title: self._stringBundle.GetStringFromName(
 		  "testpilot.notification.thankYouForUploadingData"),
 	      iconClass:"study-submitted",
               linkText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
@@ -425,10 +425,10 @@ let TestPilotSetup = {
             task.status == TaskConstants.STATUS_NEW) {
           if (task.taskType == TaskConstants.TYPE_EXPERIMENT) {
             this._notifier.showNotification(win, {
-	      title: self._stringBundle.formatStringFromName(
+	      text: self._stringBundle.formatStringFromName(
 		"testpilot.notification.newTestPilotStudy.pre.message",
 		[task.title], 1),
-	      text: self._stringBundle.GetStringFromName(
+	      title: self._stringBundle.GetStringFromName(
 		"testpilot.notification.newTestPilotStudy"),
 	      iconClass: "new-study",
 	      moreInfoLabel: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
@@ -458,10 +458,10 @@ let TestPilotSetup = {
             return;
           } else if (task.taskType == TaskConstants.TYPE_SURVEY) {
             this._notifier.showNotification(win, {
-	      title: self._stringBundle.formatStringFromName(
+	      text: self._stringBundle.formatStringFromName(
 		"testpilot.notification.newTestPilotSurvey.message",
 		[task.title], 1),
-              text: self._stringBundle.GetStringFromName(
+              title: self._stringBundle.GetStringFromName(
 		"testpilot.notification.newTestPilotSurvey"),
 	      iconClass: "new-study",
 	      moreInfoLabel: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
@@ -481,10 +481,10 @@ let TestPilotSetup = {
         if (task.taskType == TaskConstants.TYPE_RESULTS &&
             task.status == TaskConstants.STATUS_NEW) {
               this._notifier.showNotification( win, {
-	        title: this._stringBundle.formatStringFromName(
+	        text: this._stringBundle.formatStringFromName(
 	          "testpilot.notification.newTestPilotResults.message",
 	          [task.title], 1),
-                text: this._stringBundle.GetStringFromName(
+                title: this._stringBundle.GetStringFromName(
 	          "testpilot.notification.newTestPilotResults"),
 	        iconClass: "new-results",
 	        moreInfoText: this._stringBundle.GetStringFromName("testpilot.moreInfo"),
@@ -520,10 +520,10 @@ let TestPilotSetup = {
   _onTaskDataAutoSubmitted: function(subject, data) {
     let task = subject;
     this._notifier.showNotification( win, {
-      title: self._stringBundle.formatStringFromName(
+      text: self._stringBundle.formatStringFromName(
 	"testpilot.notification.autoUploadedData.message",
 	[subject.title], 1),
-      text: self._stringBundle.GetStringFromName(
+      title: self._stringBundle.GetStringFromName(
 	"testpilot.notification.autoUploadedData"),
       iconClass: "study-submitted",
       moreInfoText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),

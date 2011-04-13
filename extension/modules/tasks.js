@@ -660,6 +660,7 @@ TestPilotExperiment.prototype = {
     // This method handles all date-related status changes and should be
     // called periodically.
     let currentDate = this._now();
+    let self = this;
 
     // Reset automatically recurring tests:
     if (this._recursAutomatically &&
@@ -703,7 +704,6 @@ TestPilotExperiment.prototype = {
         currentDate <= this._endDate) {
       this._logger.info("Study now starting.");
       // clear the data before starting.
-      let self = this;
       this._dataStore.wipeAllData(function() {
         // Experiment is now in progress.
         self.changeStatus(TaskConstants.STATUS_IN_PROGRESS, true);
@@ -714,7 +714,6 @@ TestPilotExperiment.prototype = {
     // What happens when a test finishes:
     if (this._status < TaskConstants.STATUS_FINISHED &&
 	currentDate > this._endDate) {
-      let self = this;
       let setDataDeletionDate = true;
       this._logger.info("Passed End Date - Switched Task Status to Finished");
       this.changeStatus(TaskConstants.STATUS_FINISHED);

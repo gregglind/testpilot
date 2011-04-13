@@ -402,6 +402,7 @@ let TestPilotSetup = {
     let i, task;
     let self = this;
     let TaskConstants = this._taskModule.TaskConstants;
+    let win = this._getFrontBrowserWindow();
 
     // Highest priority is if there is a finished test (needs a decision)
     if (this._prefs.getValue(POPUP_SHOW_ON_FINISH, false)) {
@@ -439,7 +440,7 @@ let TestPilotSetup = {
               },
               seeAllStudiesLabel: self._stringBundle.GetStringFromName("testpilot.notification.seeAllStudiesLabel"),
               seeAllStudiesCallback: function() {
-                self._getFrontBrowserWindow().TestPilotWindowUtils.openAllStudiesWindow();
+                win.TestPilotWindowUtils.openAllStudiesWindow();
               },
               alwaysSubmitLabel: self._stringBundle.GetStringFromName("testpilot.notification.dontShowNewLabel"),
               alwaysSubmitCallback: function() {
@@ -480,16 +481,17 @@ let TestPilotSetup = {
         task = this.taskList[i];
         if (task.taskType == TaskConstants.TYPE_RESULTS &&
             task.status == TaskConstants.STATUS_NEW) {
-              this._notifier.showNotification( win, {
-	        text: this._stringBundle.formatStringFromName(
+              self._notifier.showNotification( win, {
+	        text: self._stringBundle.formatStringFromName(
 	          "testpilot.notification.newTestPilotResults.message",
 	          [task.title], 1),
-                title: this._stringBundle.GetStringFromName(
+                title: self._stringBundle.GetStringFromName(
 	          "testpilot.notification.newTestPilotResults"),
 	        iconClass: "new-results",
-	        moreInfoText: this._stringBundle.GetStringFromName("testpilot.moreInfo"),
+	        moreInfoLabel: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
                 moreInfoCallback: function() { task.loadPage(); }
               });
+                // TODO have a "don't tell me about these anymore" option?
               /* Having shown the notification, advance the status of the
                * results, so that this notification won't be shown again */
               task.changeStatus(TaskConstants.STATUS_ARCHIVED, true);

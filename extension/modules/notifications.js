@@ -175,34 +175,41 @@ NewNotificationManager.prototype = {
                         };
     }
 
-    if (options.submitButtonLabel) {
-      defaultOption = { label: options.submitButtonLabel,
+    if (options.submitLabel) {
+      defaultOption = { label: options.submitLabel,
                         accessKey: "S",
-                        callback: options.submitButtonCallback
+                        callback: options.submitCallback
                        };
       if (moreInfoOption) {
         additionalOptions.push(moreInfoOption);
       }
-
-      if (options.alwaysSubmitLabel) {
-        additionalOptions.push({ label: options.alwaysSubmitLabel,
-                                 callback: function() {
-                                   options.alwaysSubmitCallback();
-                                   if (options.submitButtonCallback) {
-                                     options.submitButtonCallback();
-                                   }
-                                 }});
-      }
-
     } else if (moreInfoOption) {
       // If submit not provided, use the 'more info' as the default button.
       defaultOption = moreInfoOption;
+    }
+
+    if (options.alwaysSubmitLabel) {
+      additionalOptions.push({ label: options.alwaysSubmitLabel,
+                               accessKey: "D",
+                               callback: function() {
+                                 options.alwaysSubmitCallback();
+                                 if (options.submitButtonCallback) {
+                                   options.submitButtonCallback();
+                                 }
+                               }});
     }
 
     if (options.cancelLabel) {
       additionalOptions.push({ label: options.cancelLabel,
                                accessKey: "C",
                                callback: options.cancelCallback });
+    }
+
+    if (options.seeAllStudiesLabel) {
+      additionalOptions.push({ label: options.seeAllStudiesLabel,
+                               accessKey: "A",
+                               callback: options.seeAllStudiesCallback });
+
     }
 
     this._notifRef = pn.show(window.getBrowser().selectedBrowser,
@@ -222,7 +229,6 @@ NewNotificationManager.prototype = {
                                   // callback sets it to starting... hmmm, careful here.)
                                 }
                               }}); // should make it not disappear for at least 5s?
-
     // See http://mxr.mozilla.org/mozilla-central/source/toolkit/content/PopupNotifications.jsm
   },
 

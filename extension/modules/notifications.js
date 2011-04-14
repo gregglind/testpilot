@@ -146,21 +146,24 @@ OldNotificationManager.prototype.__proto__ = new BaseNotificationManager();
 
 // For Fx 4.0 + , uses the built-in doorhanger notification system (but with my own anchor icon)
 function NewNotificationManager(anchorToFeedbackButton) {
-  // TODO this is recreating PopupNotifications every time... should create once and store ref, but
-  // can we do that without the window ref?
+  this._popupModule = {};
+  Components.utils.import("resource://gre/modules/PopupNotifications.jsm", this._popupModule);
   this._anchorToFeedbackButton = anchorToFeedbackButton;
+  this._pn = null;
 }
 NewNotificationManager.prototype = {
   showNotification: function TP_NewNotfn_showNotification(window, options) {
-    Components.utils.import("resource://gre/modules/PopupNotifications.jsm");
-    let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"].
-                getService(Components.interfaces.nsIWindowMediator);
-    let win = wm.getMostRecentWindow("navigator:browser");
+    // hide any existing notification so we don't get a weird stack
+    this.hideNotification();
+
     let tabbrowser = window.getBrowser();
-    let panel = win.document.getElementById("notification-popup"); // borrowing the built-in panel
-    let iconBox = win.document.getElementById("tp-notification-popup-box");
+    let panel = window.document.getElementById("notification-popup"); // borrowing the built-in panel
+    let iconBox = window.document.getElementById("tp-notification-popup-box");
     // TODO implement the anchorToFeedbackButton case!
-    let pn = new PopupNotifications(tabbrowser, panel, iconBox);
+
+    // TODO this is recreating PopupNotifications every time... should create once and store ref, but
+    // can we do that without the window ref?
+    this._pn = new this._popupModule.PopupNotifications(tabbrowser, panel, iconBox);
 
     let popupId = options.iconClass ? options.iconClass : "study-submitted";
     let moreInfoOption = null;
@@ -211,8 +214,7 @@ NewNotificationManager.prototype = {
                                callback: options.seeAllStudiesCallback });
 
     }
-
-    this._notifRef = pn.show(window.getBrowser().selectedBrowser,
+    this._notifRef = this._pn.show(window.getBrowser().selectedBrowser,
                              popupId,
                              options.title + " " + options.text, // TODO how to format or apply styles?
                              "tp-notification-popup-icon", // All TP notifications use this icon
@@ -233,6 +235,9 @@ NewNotificationManager.prototype = {
   },
 
   hideNotification: function TP_NewNotfn_hideNotification() {
+    if (this._notifRef && this._pn) {
+      this._pn.remove(this._notifRef);
+    }
   }
 };
 NewNotificationManager.prototype.__proto__ = new BaseNotificationManager();

@@ -50,8 +50,8 @@
   </menupopup>
 </menu>
 
-<toolbar id="addon-bar">
-  <toolbaritem id="pilot-notifications-button"
+<statusbar id="status-bar">
+  <statusbarpanel id="pilot-notifications-button"
                   class="statusbarpanel-iconic"
                   insertbefore="security-button"
                   onmousedown="
@@ -85,5 +85,5 @@
       </hbox>
     </vbox>
   </panel>
-</toolbar>
+</statusbar>
 </overlay>

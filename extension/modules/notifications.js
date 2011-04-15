@@ -161,8 +161,12 @@ NewNotificationManager.prototype = {
     let iconBox = window.document.getElementById("tp-notification-popup-box");
     // TODO implement the anchorToFeedbackButton case!
 
+    // all that's in xul for built-in panel is just this: (http://mxr.mozilla.org/mozilla-central/source/browser/base/content/browser.xul)
+    // <panel id="notification-popup" type="arrow" position="after_start"
+    //            hidden="true" orient="vertical"/>
     // TODO this is recreating PopupNotifications every time... should create once and store ref, but
     // can we do that without the window ref?
+    // looks like it's going to take some heavy hacking to add our own titles.  Fagedabawdit.
     this._pn = new this._popupModule.PopupNotifications(tabbrowser, panel, iconBox);
 
     let popupId = options.iconClass ? options.iconClass : "study-submitted";
@@ -183,12 +187,20 @@ NewNotificationManager.prototype = {
                         accessKey: "S",
                         callback: options.submitCallback
                        };
-      if (moreInfoOption) {
-        additionalOptions.push(moreInfoOption);
-      }
     } else if (moreInfoOption) {
       // If submit not provided, use the 'more info' as the default button.
       defaultOption = moreInfoOption;
+    }
+
+    if (options.submitLabel && moreInfoOption) {
+      additionalOptions.push(moreInfoOption);
+    }
+
+    if (options.seeAllStudiesLabel) {
+      additionalOptions.push({ label: options.seeAllStudiesLabel,
+                               accessKey: "A",
+                               callback: options.seeAllStudiesCallback });
+
     }
 
     if (options.alwaysSubmitLabel) {
@@ -207,16 +219,9 @@ NewNotificationManager.prototype = {
                                accessKey: "C",
                                callback: options.cancelCallback });
     }
-
-    if (options.seeAllStudiesLabel) {
-      additionalOptions.push({ label: options.seeAllStudiesLabel,
-                               accessKey: "A",
-                               callback: options.seeAllStudiesCallback });
-
-    }
     this._notifRef = this._pn.show(window.getBrowser().selectedBrowser,
                              popupId,
-                             options.title + " " + options.text, // TODO how to format or apply styles?
+                             options.title + ": " + options.text,
                              "tp-notification-popup-icon", // All TP notifications use this icon
                              defaultOption,
                              additionalOptions,

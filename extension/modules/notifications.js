@@ -94,12 +94,21 @@ OldNotificationManager.prototype = {
       icon.setAttribute("class", options.iconClass);
     }
 
-    alwaysSubmitCheckbox.setAttribute("hidden", !options.alwaysSubmitLabel);
-    if (options.showSubmit) {
+    if (options.submitLabel && options.alwaysSubmitLabel) {
+      alwaysSubmitCheckbox.setAttribute("hidden", false);
+      alwaysSubmitCheckbox.setAttribute("label", options.alwaysSubmitLabel);
+    } else {
+      alwaysSubmitCheckbox.setAttribute("hidden", true);
+    }
+
+    if (options.submitLabel) {
       submitBtn.setAttribute("label", options.submitLabel);
-      submitBtn.onclick = function() {
+      submitBtn.onclick = function(event) {
         if (event.button == 0) {
-          options.submitButtonCallback();
+          if (alwaysSubmitCheckbox.checked && options.alwaysSubmitCallback) {
+            options.alwaysSubmitCallback();
+          }
+          options.submitCallback();
           self.hideNotification(window, options.closeCallback);
         }
       };
@@ -129,7 +138,6 @@ OldNotificationManager.prototype = {
     popup.hidden = false;
     popup.setAttribute("open", "true");
     popup.openPopup( anchor, "after_end");
-    dump("Opened popup.\n");
   },
 
   hideNotification: function TP_OldNotfn_hideNotification(window, callback) {
@@ -208,8 +216,8 @@ NewNotificationManager.prototype = {
                                accessKey: "D",
                                callback: function() {
                                  options.alwaysSubmitCallback();
-                                 if (options.submitButtonCallback) {
-                                   options.submitButtonCallback();
+                                 if (options.submitCallback) {
+                                   options.submitCallback();
                                  }
                                }});
     }

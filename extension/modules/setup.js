@@ -236,18 +236,15 @@ let TestPilotSetup = {
       Ci.nsITimer.TYPE_REPEATING_SLACK);
 
       this.getVersion(function() {
-      // Show first run page (in front window) if newly installed or upgraded.
-        let currVersion = self._prefs.getValue(VERSION_PREF, "firstrun");
-
-        if (currVersion != self.version) {
-          if(!self._interfaceBuilder.channelUsesFeedback()) {
-            // Don't show first run page in beta-channel version.
+        /* Show first run page (in front window) only the first time after install;
+         * Don't show first run page in Feedback UI version. */
+        if ((self._prefs.getValue(VERSION_PREF, "") == "") &&
+           (!self._interfaceBuilder.channelUsesFeedback())) {
             self._prefs.setValue(VERSION_PREF, self.version);
             let browser = self._getFrontBrowserWindow().getBrowser();
             let url = self._prefs.getValue(FIRST_RUN_PREF, "");
             let tab = browser.addTab(url);
             browser.selectedTab = tab;
-          }
         }
 
         // Install tasks. (This requires knowing the version, so it is

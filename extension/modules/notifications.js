@@ -235,6 +235,7 @@ NewNotificationManager.prototype = {
                              additionalOptions,
                              {persistWhileVisible: true,
                               timeout: 5000,
+                              removeOnDismissal: !(!options.fragile),
                               eventCallback: function(stateChange){
                                 dump("State change is " + stateChange + "\n");
                                 if (stateChange == "removed" && options.closeCallback) {
@@ -256,6 +257,7 @@ NewNotificationManager.prototype = {
 NewNotificationManager.prototype.__proto__ = new BaseNotificationManager();
 
 // The one where it goes into Android notification bar.
+// To be developed for Android version.
 function AndroidNotificationManager() {
 }
 AndroidNotificationManager.prototype = {

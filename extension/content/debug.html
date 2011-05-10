@@ -117,8 +117,9 @@
                                         iconClass: "study-submitted",
                                         moreInfoLabel: "This is a link",
                                         moreInfoCallback: function() {dump("You picked More Info\n");},
-                                        closeCallback: function() {dump("You closed the notfn\n");}
-});
+                                        closeCallback: function() {dump("You closed the notfn\n");},
+                                        fragile: true
+     });
     } catch(e) {
       document.getElementById("debug").innerHTML = "Error: " + e;
     }

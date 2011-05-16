@@ -32,6 +32,30 @@
   display: -moz-box;
 }
 
+#study-submitted-notification {
+  -moz-binding: url("chrome://testpilot/content/notificationBindings.xml#testpilot-notification");
+}
+#new-study-notification {
+  -moz-binding: url("chrome://testpilot/content/notificationBindings.xml#testpilot-notification");
+}
+#new-results-notification {
+  -moz-binding: url("chrome://testpilot/content/notificationBindings.xml#testpilot-notification");
+}
+#study-finished-notification {
+  -moz-binding: url("chrome://testpilot/content/notificationBindings.xml#testpilot-notification");
+}
+
+/* hide menu separator */
+#study-sumitted-notification menuseparator { visibility: hidden }
+#new-study-notification menuseparator { visibility: hidden }
+#new-results-notification menuseparator { visibility: hidden }
+#study-finished-notification menuseparator { visibility: hidden }
+
+.testpilot-notification-title {
+    text-align: center;
+    font-size: large;
+}
+
 .popup-notification-icon[popupid="study-finished"] {
   list-style-image: url("chrome://testpilot/skin/tp-submit-48x48.png");
   height: 48px;

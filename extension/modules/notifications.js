@@ -163,18 +163,15 @@ NewNotificationManager.prototype = {
   showNotification: function TP_NewNotfn_showNotification(window, options) {
     // hide any existing notification so we don't get a weird stack
     this.hideNotification();
+    let self = this;
 
     let tabbrowser = window.getBrowser();
-    let panel = window.document.getElementById("notification-popup"); // borrowing the built-in panel
+    let panel = window.document.getElementById("testpilot-notification-popup");
     let iconBox = window.document.getElementById("tp-notification-popup-box");
     // TODO implement the anchorToFeedbackButton case!
 
-    // all that's in xul for built-in panel is just this: (http://mxr.mozilla.org/mozilla-central/source/browser/base/content/browser.xul)
-    // <panel id="notification-popup" type="arrow" position="after_start"
-    //            hidden="true" orient="vertical"/>
     // TODO this is recreating PopupNotifications every time... should create once and store ref, but
     // can we do that without the window ref?
-    // looks like it's going to take some heavy hacking to add our own titles.  Fagedabawdit.
     this._pn = new this._popupModule.PopupNotifications(tabbrowser, panel, iconBox);
 
     let popupId = options.iconClass ? options.iconClass : "study-submitted";
@@ -227,9 +224,20 @@ NewNotificationManager.prototype = {
                                accessKey: "C",
                                callback: options.cancelCallback });
     }
+
+    function customize() {
+      let notfn = window.document.getElementById(popupId + "-notification");
+      let title = window.document.getAnonymousElementByAttribute(notfn,"anonid","notification-title");
+      title.setAttribute("value", options.title);
+      let btn = window.document.getAnonymousElementByAttribute(notfn,"anonid","closebutton");
+      btn.addEventListener("command", function() {
+        self._pn._dismiss();
+      }, false);
+    }
+
     this._notifRef = this._pn.show(window.getBrowser().selectedBrowser,
                              popupId,
-                             options.title + ": " + options.text,
+                             options.text,
                              "tp-notification-popup-icon", // All TP notifications use this icon
                              defaultOption,
                              additionalOptions,
@@ -238,6 +246,9 @@ NewNotificationManager.prototype = {
                               removeOnDismissal: !(!options.fragile),
                               eventCallback: function(stateChange){
                                 dump("State change is " + stateChange + "\n");
+                                if (stateChange == "shown" && options.title) {
+                                  customize();
+                                }
                                 if (stateChange == "removed" && options.closeCallback) {
                                   options.closeCallback();
                                   // This appears to get called AFTER the callback for the option

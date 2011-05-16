@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+ 
+<bindings id="popupBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:xbl="http://www.mozilla.org/xbl">
+
+  <binding id="testpilot-notification"
+           extends="chrome://global/content/bindings/notification.xml#popup-notification">
+    <content align="start">
+      <xul:image class="popup-notification-icon" xbl:inherits="popupid"/>
+      <xul:vbox flex="1">
+        <xul:label anonid="notification-title" class="testpilot-notification-title"/>
+        <xul:description class="popup-notification-description" xbl:inherits="xbl:text=label"/>
+        <xul:spacer flex="1"/>
+        <xul:hbox class="popup-notification-button-container" pack="end" align="center">
+          <xul:button anonid="button" class="popup-notification-menubutton" type="menu-button"
+                      xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey">
+            <xul:menupopup anonid="menupopup" xbl:inherits="oncommand=menucommand">
+              <children/>
+            </xul:menupopup>
+          </xul:button>
+        </xul:hbox>
+      </xul:vbox>
+      <xul:vbox pack="start">
+        <xul:toolbarbutton anonid="closebutton" class="messageCloseButton popup-notification-closebutton"
+                           tooltiptext="Close this message"/>
+      </xul:vbox>
+    </content>
+  </binding>
+</bindings>

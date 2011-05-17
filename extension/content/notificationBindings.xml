@@ -15,7 +15,7 @@
         <xul:spacer flex="1"/>
         <xul:hbox class="popup-notification-button-container" pack="end" align="center">
           <xul:button anonid="button" class="popup-notification-menubutton" type="menu-button"
-                      xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey">
+                      xbl:inherits="label=buttonlabel,accesskey=buttonaccesskey">
             <xul:menupopup anonid="menupopup" xbl:inherits="oncommand=menucommand">
               <children/>
             </xul:menupopup>
@@ -24,8 +24,20 @@
       </xul:vbox>
       <xul:vbox pack="start">
         <xul:toolbarbutton anonid="closebutton" class="messageCloseButton popup-notification-closebutton"
-                           tooltiptext="Close this message"/>
+              xbl:inherits="oncommand=closebuttoncommand" tooltiptext="Close this message"/>
       </xul:vbox>
     </content>
+    <implementation>
+      <constructor><![CDATA[
+                     this.title.setAttribute("value", this.notification.options.title);
+                     this.closebutton.addEventListener("command",
+                                                       this.notification.options.closeButtonFunc,
+                                                       false);
+                     ]]>
+      </constructor>
+      <field name="title" readonly="true">
+            document.getAnonymousElementByAttribute(this, "anonid", "notification-title");
+      </field>
+    </implementation>
   </binding>
 </bindings>

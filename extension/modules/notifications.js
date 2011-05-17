@@ -168,7 +168,6 @@ NewNotificationManager.prototype = {
     let tabbrowser = window.getBrowser();
     let panel = window.document.getElementById("testpilot-notification-popup");
     let iconBox = window.document.getElementById("tp-notification-popup-box");
-    // TODO implement the anchorToFeedbackButton case!
 
     // TODO this is recreating PopupNotifications every time... should create once and store ref, but
     // can we do that without the window ref?
@@ -225,16 +224,6 @@ NewNotificationManager.prototype = {
                                callback: options.cancelCallback });
     }
 
-    function customize() {
-      let notfn = window.document.getElementById(popupId + "-notification");
-      let title = window.document.getAnonymousElementByAttribute(notfn,"anonid","notification-title");
-      title.setAttribute("value", options.title);
-      let btn = window.document.getAnonymousElementByAttribute(notfn,"anonid","closebutton");
-      btn.addEventListener("command", function() {
-        self._pn._dismiss();
-      }, false);
-    }
-
     this._notifRef = this._pn.show(window.getBrowser().selectedBrowser,
                              popupId,
                              options.text,
@@ -244,11 +233,11 @@ NewNotificationManager.prototype = {
                              {persistWhileVisible: true,
                               timeout: 5000,
                               removeOnDismissal: !(!options.fragile),
+                              title: options.title,
+                              closeButtonFunc: function() {
+                                self.hideNotification();
+                              },
                               eventCallback: function(stateChange){
-                                dump("State change is " + stateChange + "\n");
-                                if (stateChange == "shown" && options.title) {
-                                  customize();
-                                }
                                 if (stateChange == "removed" && options.closeCallback) {
                                   options.closeCallback();
                                   // This appears to get called AFTER the callback for the option

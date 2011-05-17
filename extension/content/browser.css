@@ -46,7 +46,7 @@
 }
 
 /* hide menu separator */
-#study-sumitted-notification menuseparator { visibility: hidden }
+#study-submitted-notification menuseparator { visibility: hidden }
 #new-study-notification menuseparator { visibility: hidden }
 #new-results-notification menuseparator { visibility: hidden }
 #study-finished-notification menuseparator { visibility: hidden }
@@ -76,7 +76,6 @@
   height: 32px;
   width: 64px;
 }
-
 
 /* For older notification system */
 

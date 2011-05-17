@@ -34,23 +34,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// let's be DISENTANGLEBUDDIES
-
 // The TestPilotSetup object will choose one of these implementations to instantiate
 
 EXPORTED_SYMBOLS = ["OldNotificationManager", "NewNotificationManager", "AndroidNotificationManager"];
 
-function BaseNotificationManager() {
-}
-BaseNotificationManager.prototype = {
-  showNotification: function TP_BaseNotfn_showNotification(window, task, options, callback) {
-  },
+/* The notification manager interface looks like this:
+  showNotification: function(window, task, options, callback) {},
+  hideNotification: function(window, callback) {}
+*/
 
-  hideNotification: function TP_BaseNotfn_hideNotification(window, callback) {
-  }
-};
-
-// The one where they come up from the Test Pilot icon in the addon bar.  For 3.6.
+/* OldNotificationManager: the one where notifications
+ * come up from the Test Pilot icon in the addon bar.  For Firefox 3.6. */
 function OldNotificationManager(anchorToFeedbackButton) {
   this._anchorToFeedback = anchorToFeedbackButton;
 }
@@ -150,7 +144,6 @@ OldNotificationManager.prototype = {
     }
   }
 };
-OldNotificationManager.prototype.__proto__ = new BaseNotificationManager();
 
 // For Fx 4.0 + , uses the built-in doorhanger notification system (but with my own anchor icon)
 function NewNotificationManager(anchorToFeedbackButton) {
@@ -182,15 +175,19 @@ NewNotificationManager.prototype = {
     if (options.moreInfoLabel) {
       moreInfoOption = {label: options.moreInfoLabel,
                         accessKey: "M",
-                        callback: options.moreInfoCallback
-                        };
+                        callback: function() {
+                          options.moreInfoCallback();
+                          self.hideNotification();
+                        }};
     }
 
     if (options.submitLabel) {
       defaultOption = { label: options.submitLabel,
                         accessKey: "S",
-                        callback: options.submitCallback
-                       };
+                        callback: function() {
+                          options.submitCallback();
+                          self.hideNotification();
+                        }};
     } else if (moreInfoOption) {
       // If submit not provided, use the 'more info' as the default button.
       defaultOption = moreInfoOption;
@@ -203,7 +200,10 @@ NewNotificationManager.prototype = {
     if (options.seeAllStudiesLabel) {
       additionalOptions.push({ label: options.seeAllStudiesLabel,
                                accessKey: "A",
-                               callback: options.seeAllStudiesCallback });
+                               callback: function() {
+                                 options.seeAllStudiesCallback();
+                                 self.hideNotification();
+                               }});
 
     }
 
@@ -215,13 +215,17 @@ NewNotificationManager.prototype = {
                                  if (options.submitCallback) {
                                    options.submitCallback();
                                  }
+                                 self.hideNotification();
                                }});
     }
 
     if (options.cancelLabel) {
       additionalOptions.push({ label: options.cancelLabel,
                                accessKey: "C",
-                               callback: options.cancelCallback });
+                               callback: function() {
+                                 options.cancelCallback();
+                                 self.hideNotification();
+                               }});
     }
 
     this._notifRef = this._pn.show(window.getBrowser().selectedBrowser,
@@ -238,11 +242,12 @@ NewNotificationManager.prototype = {
                                 self.hideNotification();
                               },
                               eventCallback: function(stateChange){
+                                /* Note - closeCallback() will be called AFTER the button handler,
+                                 * and will be called no matter whether the notification is closed via
+                                 * close button or a menu button item.
+                                 */
                                 if (stateChange == "removed" && options.closeCallback) {
                                   options.closeCallback();
-                                  // This appears to get called AFTER the callback for the option
-                                  // clicked.  (So if the button callback cancels the study, and then this
-                                  // callback sets it to starting... hmmm, careful here.)
                                 }
                               }}); // should make it not disappear for at least 5s?
     // See http://mxr.mozilla.org/mozilla-central/source/toolkit/content/PopupNotifications.jsm
@@ -254,10 +259,9 @@ NewNotificationManager.prototype = {
     }
   }
 };
-NewNotificationManager.prototype.__proto__ = new BaseNotificationManager();
 
-// The one where it goes into Android notification bar.
-// To be developed for Android version.
+/* The one where it goes into Android notification bar.
+ * To be implemented later and used on the Android version. */
 function AndroidNotificationManager() {
 }
 AndroidNotificationManager.prototype = {
@@ -267,4 +271,3 @@ AndroidNotificationManager.prototype = {
   hideNotification: function TP_AndNotfn_hideNotification() {
   }
 };
-AndroidNotificationManager.prototype.__proto__ = new BaseNotificationManager();

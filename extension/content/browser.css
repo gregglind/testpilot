@@ -45,11 +45,15 @@
   -moz-binding: url("chrome://testpilot/content/notificationBindings.xml#testpilot-notification");
 }
 
-/* hide menu separator */
-#study-submitted-notification menuseparator { visibility: hidden }
-#new-study-notification menuseparator { visibility: hidden }
-#new-results-notification menuseparator { visibility: hidden }
-#study-finished-notification menuseparator { visibility: hidden }
+/* hide menu separator and "not now" item: */
+#study-submitted-notification menuseparator { display: none }
+#study-submitted-notification .popup-notification-closeitem { display: none }
+#new-study-notification menuseparator { display: none }
+#new-study-notification .popup-notification-closeitem { display: none }
+#new-results-notification menuseparator { display: none }
+#new-results-notification .popup-notification-closeitem { display: none }
+#study-finished-notification menuseparator { display: none }
+#study-finished-notification .popup-notification-closeitem { display: none }
 
 .testpilot-notification-title {
     text-align: center;

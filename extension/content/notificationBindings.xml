@@ -15,9 +15,11 @@
         <xul:spacer flex="1"/>
         <xul:hbox class="popup-notification-button-container" pack="end" align="center">
           <xul:button anonid="button" class="popup-notification-menubutton" type="menu-button"
-                      xbl:inherits="label=buttonlabel,accesskey=buttonaccesskey">
+                      xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey">
             <xul:menupopup anonid="menupopup" xbl:inherits="oncommand=menucommand">
               <children/>
+              <xul:menuitem class="menuitem-iconic popup-notification-closeitem" label="Not Now"
+                            xbl:inherits="oncommand=closeitemcommand"/>
             </xul:menupopup>
           </xul:button>
         </xul:hbox>

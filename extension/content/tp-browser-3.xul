@@ -37,7 +37,7 @@
                     TestPilotMenuUtils.togglePref('popup.showOnNewResults');"/>
         <menuseparator />
         <menuitem id="pilot-menu-always-submit-data"
-                  label="&testpilot.settings.alwaysSubmitData.label;"
+                  label="&testpilot.settings.alwaysSubmitData.shortLabel;"
                   type="checkbox"
                   oncommand="
                     TestPilotMenuUtils.togglePref('alwaysSubmitData');"/>
@@ -77,7 +77,7 @@
       <hbox align="right"><label id="pilot-notification-link" /></hbox>
       <hbox>
         <checkbox id="pilot-notification-always-submit-checkbox"
-          label="&testpilot.settings.alwaysSubmitData.label;" />
+          label="&testpilot.settings.alwaysSubmitData.shortLabel;" />
         <spacer flex="1" />
       </hbox>
       <hbox align="right">

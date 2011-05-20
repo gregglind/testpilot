@@ -357,7 +357,7 @@ let TestPilotSetup = {
         "testpilot.notification.readyToSubmit.message", [task.title], 1),
       title: self._stringBundle.GetStringFromName("testpilot.notification.readyToSubmit"),
       iconClass: "study-finished",
-      moreInfoLabel: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+      moreInfoLabel: self._stringBundle.GetStringFromName("testpilot.notification.seeYourData"),
       moreInfoCallback: function() { task.loadPage(); },
       submitLabel: self._stringBundle.GetStringFromName("testpilot.submit"),
       submitCallback: function() {
@@ -369,7 +369,7 @@ let TestPilotSetup = {
               title: self._stringBundle.GetStringFromName(
 		  "testpilot.notification.thankYouForUploadingData"),
 	      iconClass:"study-submitted",
-              linkText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+              linkText: self._stringBundle.GetStringFromName("testpilot.notification.seeYourData"),
               linkCallback: function() {task.loadPage(); },
               fragile: true
             });
@@ -462,7 +462,7 @@ let TestPilotSetup = {
               title: self._stringBundle.GetStringFromName(
 		"testpilot.notification.newTestPilotSurvey"),
 	      iconClass: "new-study",
-	      moreInfoLabel: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+	      moreInfoLabel: self._stringBundle.GetStringFromName("testpilot.takeSurvey"),
 	      moreInfoCallback: function() { task.loadPage(); }
             });
             task.changeStatus(TaskConstants.STATUS_IN_PROGRESS, true);
@@ -525,7 +525,7 @@ let TestPilotSetup = {
       title: self._stringBundle.GetStringFromName(
 	"testpilot.notification.autoUploadedData"),
       iconClass: "study-submitted",
-      moreInfoText: self._stringBundle.GetStringFromName("testpilot.moreInfo"),
+      moreInfoText: self._stringBundle.GetStringFromName("testpilot.notification.seeYourData"),
       moreInfoCallback: function() { task.loadPage(); }
     });
   },

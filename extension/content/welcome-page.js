@@ -43,6 +43,7 @@ var TestPilotWelcomePage = {
     // taken it.
     Components.utils.import("resource://testpilot/modules/setup.js");
     Components.utils.import("resource://testpilot/modules/tasks.js");
+    Components.utils.import("resource://testpilot/modules/interface.js");
     this._setStrings();
     let survey = TestPilotSetup.getTaskById(this.surveyId);
     if (!survey) {
@@ -67,6 +68,10 @@ var TestPilotWelcomePage = {
       Components.classes["@mozilla.org/intl/stringbundle;1"].
         getService(Components.interfaces.nsIStringBundleService).
 	  createBundle("chrome://testpilot/locale/main.properties");
+    /* Use slightly different wording on this page depending on whether
+     * the user has the version with the doorhanger notifications (Firefox 4.0+)
+     * or not. */
+    let doorhangerUI = TestPilotUIBuilder.hasDoorhangerNotifications();
     let map = [
       { id: "page-title", stringKey: "testpilot.fullBrandName" },
       { id: "thank-you-text",
@@ -82,11 +87,14 @@ var TestPilotWelcomePage = {
       { id: "testpilot-addon-text",
         stringKey: "testpilot.welcomePage.testpilotAddon" },
       { id: "icon-explanation-text",
-        stringKey: "testpilot.welcomePage.iconExplanation" },
+        stringKey: (doorhangerUI ? "testpilot.welcomePage.iconExplanation2":
+                    "testpilot.welcomePage.iconExplanation")},
       { id: "icon-explanation-more-text",
-        stringKey: "testpilot.welcomePage.moreIconExplanation" },
+        stringKey: (doorhangerUI ? "testpilot.welcomePage.moreIconExplanation2":
+                    "testpilot.welcomePage.moreIconExplanation")},
       { id: "notification-info-text",
-	stringKey: "testpilot.welcomePage.notificationInfo" },
+	stringKey: (doorhangerUI ? "testpilot.welcomePage.notificationInfo2":
+                    "testpilot.welcomePage.notificationInfo")},
       { id: "privacy-policy-link",
 	stringKey: "testpilot.welcomePage.privacyPolicy" },
       { id: "legal-notices-link",
@@ -96,8 +104,8 @@ var TestPilotWelcomePage = {
     let mapLength = map.length;
     for (let i = 0; i < mapLength; i++) {
       let entry = map[i];
-      document.getElementById(entry.id).innerHTML =
-        stringBundle.GetStringFromName(entry.stringKey);
-    }
+        document.getElementById(entry.id).innerHTML =
+          stringBundle.GetStringFromName(entry.stringKey);
+      }
   }
 };

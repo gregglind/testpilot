@@ -966,6 +966,7 @@ TestPilotBuiltinSurvey.prototype = {
     this._versionNumber = surveyInfo.versionNumber;
     this._questions = surveyInfo.surveyQuestions;
     this._explanation = surveyInfo.surveyExplanation;
+    this._onPageLoad = surveyInfo.onPageLoad;
   },
 
   get taskType() {
@@ -991,6 +992,12 @@ TestPilotBuiltinSurvey.prototype = {
 
   get relatedStudyId() {
     return this._studyId;
+  },
+
+  onPageLoad: function(task, document) {
+    if (this._onPageLoad) {
+      this._onPageLoad(task, document);
+    }
   },
 
   onDetailPageOpened: function TPS_onDetailPageOpened() {

@@ -36,19 +36,19 @@
 
 // The TestPilotSetup object will choose one of these implementations to instantiate
 
-EXPORTED_SYMBOLS = ["OldNotificationManager", "NewNotificationManager", "AndroidNotificationManager"];
+EXPORTED_SYMBOLS = ["CustomNotificationManager", "PopupNotificationManager"];
 
 /* The notification manager interface looks like this:
   showNotification: function(window, task, options, callback) {},
   hideNotification: function(window, callback) {}
 */
 
-/* OldNotificationManager: the one where notifications
+/* CustomNotificationManager: the one where notifications
  * come up from the Test Pilot icon in the addon bar.  For Firefox 3.6. */
-function OldNotificationManager(anchorToFeedbackButton) {
+function CustomNotificationManager(anchorToFeedbackButton) {
   this._anchorToFeedback = anchorToFeedbackButton;
 }
-OldNotificationManager.prototype = {
+CustomNotificationManager.prototype = {
   showNotification: function TP_OldNotfn_showNotification(window, options) {
     let doc = window.document;
     let popup = doc.getElementById("pilot-notification-popup");
@@ -146,13 +146,13 @@ OldNotificationManager.prototype = {
 };
 
 // For Fx 4.0 + , uses the built-in doorhanger notification system (but with my own anchor icon)
-function NewNotificationManager(anchorToFeedbackButton) {
+function PopupNotificationManager(anchorToFeedbackButton) {
   this._popupModule = {};
   Components.utils.import("resource://gre/modules/PopupNotifications.jsm", this._popupModule);
   this._anchorToFeedbackButton = anchorToFeedbackButton;
   this._pn = null;
 }
-NewNotificationManager.prototype = {
+PopupNotificationManager.prototype = {
   showNotification: function TP_NewNotfn_showNotification(window, options) {
     // hide any existing notification so we don't get a weird stack
     this.hideNotification();
@@ -257,17 +257,5 @@ NewNotificationManager.prototype = {
     if (this._notifRef && this._pn) {
       this._pn.remove(this._notifRef);
     }
-  }
-};
-
-/* The one where it goes into Android notification bar.
- * To be implemented later and used on the Android version. */
-function AndroidNotificationManager() {
-}
-AndroidNotificationManager.prototype = {
-  showNotification: function TP_AndNotfn_showNotification(window, options) {
-  },
-
-  hideNotification: function TP_AndNotfn_hideNotification() {
   }
 };

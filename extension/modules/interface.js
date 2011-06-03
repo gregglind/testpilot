@@ -156,7 +156,13 @@ var TestPilotUIBuilder = {
   },
 
   hasDoorhangerNotifications: function() {
-    return (this._comparator.compare(this._appVersion, "4.0") >= 0 );
+    try {
+      let popupModule = {};
+      Components.utils.import("resource://gre/modules/PopupNotifications.jsm", popupModule);
+      return true;
+    } catch (e) {
+      return false;
+    }
   },
 
   buildCorrectInterface: function(window) {
@@ -179,8 +185,8 @@ var TestPilotUIBuilder = {
                                    }});
     } else {
       let testPilotOverlay = (this.hasDoorhangerNotifications() ?
-                              "chrome://testpilot/content/tp-browser-4.xul" :
-                              "chrome://testpilot/content/tp-browser-3.xul");
+                              "chrome://testpilot/content/tp-browser-popupNotifications.xul" :
+                              "chrome://testpilot/content/tp-browser-customNotifications.xul");
       window.document.loadOverlay(testPilotOverlay,
                                   {observe: function(subject, topic, data) {
                                      if (topic == "xul-overlay-merged") {
@@ -194,12 +200,12 @@ var TestPilotUIBuilder = {
     let ntfnModule = {};
     Cu.import("resource://testpilot/modules/notifications.js", ntfnModule);
     if (this.channelUsesFeedback()) {
-      return new ntfnModule.OldNotificationManager(true); // true = anchor to feedback button
+      return new ntfnModule.CustomNotificationManager(true); // true = anchor to feedback button
     } else {
       if (this.hasDoorhangerNotifications()) {
-        return new ntfnModule.NewNotificationManager();
+        return new ntfnModule.PopupNotificationManager();
       } else {
-        return new ntfnModule.OldNotificationManager(false); // false = anchor to test pilot menu
+        return new ntfnModule.CustomNotificationManager(false); // false = anchor to test pilot menu
       }
     }
   }

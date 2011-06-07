@@ -166,7 +166,7 @@ PopupNotificationManager.prototype = {
     // can we do that without the window ref?
     this._pn = new this._popupModule.PopupNotifications(tabbrowser, panel, iconBox);
 
-    let popupId = options.iconClass ? options.iconClass : "study-submitted";
+    // TODO where do we put options.iconClass????
     let moreInfoOption = null;
     let defaultOption = null;
     let additionalOptions = [];
@@ -229,7 +229,7 @@ PopupNotificationManager.prototype = {
     }
 
     this._notifRef = this._pn.show(window.getBrowser().selectedBrowser,
-                             popupId,
+                             "testpilot",
                              options.text,
                              "tp-notification-popup-icon", // All TP notifications use this icon
                              defaultOption,
@@ -238,6 +238,7 @@ PopupNotificationManager.prototype = {
                               timeout: 5000,
                               removeOnDismissal: !(!options.fragile),
                               title: options.title,
+                              iconClass: options.iconClass,
                               closeButtonFunc: function() {
                                 self.hideNotification();
                               },

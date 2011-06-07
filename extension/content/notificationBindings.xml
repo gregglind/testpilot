@@ -8,7 +8,7 @@
   <binding id="testpilot-notification"
            extends="chrome://global/content/bindings/notification.xml#popup-notification">
     <content align="start">
-      <xul:image class="popup-notification-icon" xbl:inherits="popupid"/>
+      <xul:image class="popup-notification-icon" anonid="notification-icon" xbl:inherits="popupid"/>
       <xul:vbox flex="1">
         <xul:label anonid="notification-title" class="testpilot-notification-title"/>
         <xul:description class="popup-notification-description" xbl:inherits="xbl:text=label"/>
@@ -32,6 +32,7 @@
     <implementation>
       <constructor><![CDATA[
                      this.title.setAttribute("value", this.notification.options.title);
+                     this.icon.setAttribute("class", "popup-notification-icon " + this.notification.options.iconClass);
                      this.closebutton.addEventListener("command",
                                                        this.notification.options.closeButtonFunc,
                                                        false);
@@ -39,6 +40,9 @@
       </constructor>
       <field name="title" readonly="true">
             document.getAnonymousElementByAttribute(this, "anonid", "notification-title");
+      </field>
+      <field name="icon" readonly="true">
+            document.getAnonymousElementByAttribute(this, "anonid", "notification-icon");
       </field>
     </implementation>
   </binding>

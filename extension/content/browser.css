@@ -32,35 +32,20 @@
   display: -moz-box;
 }
 
-#study-submitted-notification {
-  -moz-binding: url("chrome://testpilot/content/notificationBindings.xml#testpilot-notification");
-}
-#new-study-notification {
-  -moz-binding: url("chrome://testpilot/content/notificationBindings.xml#testpilot-notification");
-}
-#new-results-notification {
-  -moz-binding: url("chrome://testpilot/content/notificationBindings.xml#testpilot-notification");
-}
-#study-finished-notification {
+#testpilot-notification {
   -moz-binding: url("chrome://testpilot/content/notificationBindings.xml#testpilot-notification");
 }
 
 /* hide menu separator and "not now" item: */
-#study-submitted-notification menuseparator { display: none }
-#study-submitted-notification .popup-notification-closeitem { display: none }
-#new-study-notification menuseparator { display: none }
-#new-study-notification .popup-notification-closeitem { display: none }
-#new-results-notification menuseparator { display: none }
-#new-results-notification .popup-notification-closeitem { display: none }
-#study-finished-notification menuseparator { display: none }
-#study-finished-notification .popup-notification-closeitem { display: none }
+#testpilot-notification menuseparator { display: none }
+#testpilot-notification .popup-notification-closeitem { display: none }
 
 .testpilot-notification-title {
     text-align: center;
     font-size: large;
 }
 
-.popup-notification-icon[popupid="study-finished"] {
+/* .popup-notification-icon[popupid="study-finished"] {
   list-style-image: url("chrome://testpilot/skin/tp-submit-48x48.png");
   height: 48px;
   width: 48px;
@@ -79,7 +64,7 @@
   list-style-image: url("chrome://testpilot/skin/status-completed.png");
   height: 32px;
   width: 64px;
-}
+}*/
 
 /* For older notification system */
 

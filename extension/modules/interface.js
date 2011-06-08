@@ -53,42 +53,28 @@ const POPUP_SHOW_ON_NEW = "extensions.testpilot.popup.showOnNewStudy";
 const POPUP_CHECK_INTERVAL = "extensions.testpilot.popup.delayAfterStartup";
 
 var TestPilotUIBuilder = {
-  __prefs: null,
   get _prefs() {
-    if (!this.__prefs) {
-      this.__prefs = Cc["@mozilla.org/preferences-service;1"]
-        .getService(Ci.nsIPrefBranch);
-    }
-    return this.__prefs;
+    delete this._prefs;
+    return this._prefs = Cc["@mozilla.org/preferences-service;1"]
+      .getService(Ci.nsIPrefBranch);
   },
 
-  __prefDefaultBranch: null,
   get _prefDefaultBranch() {
-    if (!this.__prefDefaultBranch) {
-      let ps = Cc["@mozilla.org/preferences-service;1"]
-                      .getService(Ci.nsIPrefService);
-      this.__prefDefaultBranch = ps.getDefaultBranch("");
-    }
-    return this.__prefDefaultBranch;
+    delete this._prefDefaultBranch;
+    return this._prefDefaultBranch = Cc["@mozilla.org/preferences-service;1"]
+      .getService(Ci.nsIPrefService).getDefaultBranch("");
   },
 
-  __comparator: null,
   get _comparator() {
-    if (!this.__comparator) {
-        this.__comparator = Cc["@mozilla.org/xpcom/version-comparator;1"]
+    delete this._comparator;
+    return this._comparator = Cc["@mozilla.org/xpcom/version-comparator;1"]
       .getService(Ci.nsIVersionComparator);
-    }
-    return this.__comparator;
   },
 
-  __appVersion: null,
   get _appVersion() {
-    if (!this.__appVersion) {
-      let appInfo = Cc["@mozilla.org/xre/app-info;1"]
-        .getService(Ci.nsIXULAppInfo);
-      this.__appVersion = appInfo.version;
-    }
-    return this.__appVersion;
+    delete this._appVersion;
+    return this.__appVersion = Cc["@mozilla.org/xre/app-info;1"]
+      .getService(Ci.nsIXULAppInfo).version;
   },
 
   buildTestPilotInterface: function(window) {
@@ -101,8 +87,9 @@ var TestPilotUIBuilder = {
     }
     feedbackButton.parentNode.removeChild(feedbackButton);
 
-    /* Default prefs for test pilot version - default to not notifying user about new
-     * studies starting. */
+    /* Default prefs for test pilot version - default to NOT notifying user about new
+     * studies starting. Note we're setting default values, not current values -- we
+     * want these to be overridden by any user set values!!*/
     this._prefDefaultBranch.setBoolPref(POPUP_SHOW_ON_NEW, false);
     this._prefDefaultBranch.setIntPref(POPUP_CHECK_INTERVAL, 180000);
   },
@@ -134,7 +121,9 @@ var TestPilotUIBuilder = {
       }
     }
 
-    // Pref defaults for Feedback version: default to notifying user about new studies starting
+    /* Pref defaults for Feedback version: default to notifying user about new
+     * studies starting. Note we're setting default values, not current values -- we
+     * want these to be overridden by any user set values!!*/
     this._prefDefaultBranch.setBoolPref(POPUP_SHOW_ON_NEW, true);
     this._prefDefaultBranch.setIntPref(POPUP_CHECK_INTERVAL, 600000);
   },
@@ -199,14 +188,16 @@ var TestPilotUIBuilder = {
   getNotificationManager: function() {
     let ntfnModule = {};
     Cu.import("resource://testpilot/modules/notifications.js", ntfnModule);
+
+    // Use custom notifications anchored to the Feedback button, if there is a Feedback button
     if (this.channelUsesFeedback()) {
-      return new ntfnModule.CustomNotificationManager(true); // true = anchor to feedback button
-    } else {
-      if (this.hasDoorhangerNotifications()) {
-        return new ntfnModule.PopupNotificationManager();
-      } else {
-        return new ntfnModule.CustomNotificationManager(false); // false = anchor to test pilot menu
-      }
+      return new ntfnModule.CustomNotificationManager(true);
     }
+    // If no feedback button, and popup notifications available, use those
+    if (this.hasDoorhangerNotifications()) {
+      return new ntfnModule.PopupNotificationManager();
+    }
+    // If neither one is available, use custom notifications anchored to Test Pilot status icon
+    return new ntfnModule.CustomNotificationManager(false);
   }
 };

@@ -59,6 +59,8 @@ const UPDATE_CHANNEL_PREF = "app.update.channel";
 const LOG_FILE_NAME = "TestPilotErrorLog.log";
 const RANDOM_DEPLOY_PREFIX = "extensions.testpilot.deploymentRandomizer";
 
+Cu.import("resource://testpilot/modules/interface.js", interfaceModule);
+
 let TestPilotSetup = {
   didReminderAfterStartup: false,
   startupComplete: false,
@@ -175,20 +177,10 @@ let TestPilotSetup = {
     return this.__obs;
   },
 
-  __interfaceBuilder: null,
-  get _interfaceBuilder() {
-    if (this.__interfaceBuilder == null) {
-      let interfaceModule = {};
-      Cu.import("resource://testpilot/modules/interface.js", interfaceModule);
-      this.__interfaceBuilder = interfaceModule.TestPilotUIBuilder;
-    }
-    return this.__interfaceBuilder;
-  },
-
   __notifier: null,
   get _notifier() {
     if (this.__notifier == null) {
-      this.__notifier = this._interfaceBuilder.getNotificationManager();
+      this.__notifier = TestPilotUIBuilder.getNotificationManager();
     }
     return this.__notifier;
   },
@@ -239,7 +231,7 @@ let TestPilotSetup = {
         /* Show first run page (in front window) only the first time after install;
          * Don't show first run page in Feedback UI version. */
         if ((self._prefs.getValue(VERSION_PREF, "") == "") &&
-           (!self._interfaceBuilder.channelUsesFeedback())) {
+           (!TestPilotUIBuilder.channelUsesFeedback())) {
             self._prefs.setValue(VERSION_PREF, self.version);
             let browser = self._getFrontBrowserWindow().getBrowser();
             let url = self._prefs.getValue(FIRST_RUN_PREF, "");
@@ -365,10 +357,10 @@ let TestPilotSetup = {
           if (success) {
             self._notifier.showNotification(win, {
               text: self._stringBundle.GetStringFromName(
-		"testpilot.notification.thankYouForUploadingData.message"),
+                  "testpilot.notification.thankYouForUploadingData.message"),
               title: self._stringBundle.GetStringFromName(
-		  "testpilot.notification.thankYouForUploadingData"),
-	      iconClass:"study-submitted",
+                  "testpilot.notification.thankYouForUploadingData"),
+              iconClass:"study-submitted",
               linkText: self._stringBundle.GetStringFromName("testpilot.notification.seeYourData"),
               linkCallback: function() {task.loadPage(); },
               fragile: true

@@ -39,8 +39,8 @@
 EXPORTED_SYMBOLS = ["CustomNotificationManager", "PopupNotificationManager"];
 
 /* The notification manager interface looks like this:
-  showNotification: function(window, task, options, callback) {},
-  hideNotification: function(window, callback) {}
+  showNotification: function(window, options) {},
+  hideNotification: function(window) {}
 */
 
 /* CustomNotificationManager: the one where notifications
@@ -89,7 +89,7 @@ CustomNotificationManager.prototype = {
     }
 
     if (options.submitLabel && options.alwaysSubmitLabel) {
-      alwaysSubmitCheckbox.setAttribute("hidden", false);
+      alwaysSubmitCheckbox.removeAttribute("hidden");
       alwaysSubmitCheckbox.setAttribute("label", options.alwaysSubmitLabel);
     } else {
       alwaysSubmitCheckbox.setAttribute("hidden", true);
@@ -103,11 +103,18 @@ CustomNotificationManager.prototype = {
             options.alwaysSubmitCallback();
           }
           options.submitCallback();
-          self.hideNotification(window, options.closeCallback);
+          self.hideNotification(window);
+          if (options.closeCallback) {
+            options.closeCallback();
+          }
         }
       };
     }
-    submitBtn.setAttribute("hidden", !options.submitLabel);
+    if (options.submitLabel) {
+      submitBtn.removeAttribute("hidden");
+    } else {
+      submitBtn.setAttribute("hidden", true);
+    }
 
     // Create the link if specified:
     if (options.moreInfoLabel) {
@@ -116,16 +123,22 @@ CustomNotificationManager.prototype = {
       link.onclick = function(event) {
         if (event.button == 0) {
           options.moreInfoCallback();
-          self.hideNotification(window, options.closeCallback);
+          self.hideNotification(window);
+          if (options.closeCallback) {
+            options.closeCallback();
+          }
         }
       };
-      link.setAttribute("hidden", false);
+      link.removeAttribute("hidden");
     } else {
       link.setAttribute("hidden", true);
     }
 
     closeBtn.onclick = function() {
-      self.hideNotification(window, options.closeCallback);
+      self.hideNotification(window);
+      if (options.closeCallback) {
+        options.closeCallback();
+      }
     };
 
     // Show the popup:
@@ -134,14 +147,10 @@ CustomNotificationManager.prototype = {
     popup.openPopup( anchor, "after_end");
   },
 
-  hideNotification: function TP_OldNotfn_hideNotification(window, callback) {
+  hideNotification: function TP_OldNotfn_hideNotification(window) {
     let popup = window.document.getElementById("pilot-notification-popup");
-    popup.hidden = true;
-    popup.setAttribute("open", "false");
+    popup.removeAttribute("open");
     popup.hidePopup();
-    if (callback) {
-      callback();
-    }
   }
 };
 
@@ -154,47 +163,43 @@ function PopupNotificationManager(anchorToFeedbackButton) {
 }
 PopupNotificationManager.prototype = {
   showNotification: function TP_NewNotfn_showNotification(window, options) {
-    // hide any existing notification so we don't get a weird stack
-    this.hideNotification();
+    let additionalOptions = [];
+    let defaultOption;
     let self = this;
-
     let tabbrowser = window.getBrowser();
     let panel = window.document.getElementById("testpilot-notification-popup");
     let iconBox = window.document.getElementById("tp-notification-popup-box");
+
+    // hide any existing notification so we don't get a weird stack
+    this.hideNotification();
 
     // TODO this is recreating PopupNotifications every time... should create once and store ref, but
     // can we do that without the window ref?
     this._pn = new this._popupModule.PopupNotifications(tabbrowser, panel, iconBox);
 
-    // TODO where do we put options.iconClass????
-    let moreInfoOption = null;
-    let defaultOption = null;
-    let additionalOptions = [];
-
-    // There must be at least one of submit button and link, otherwise this doesn't work.
-    if (options.moreInfoLabel) {
-      moreInfoOption = {label: options.moreInfoLabel,
-                        accessKey: "M",
-                        callback: function() {
-                          options.moreInfoCallback();
-                          self.hideNotification();
-                        }};
-    }
-
-    if (options.submitLabel) {
-      defaultOption = { label: options.submitLabel,
+    let submitOption = { label: options.submitLabel,
                         accessKey: "S",
                         callback: function() {
                           options.submitCallback();
                           self.hideNotification();
                         }};
-    } else if (moreInfoOption) {
+    let moreInfoOption = {label: options.moreInfoLabel,
+                        accessKey: "M",
+                        callback: function() {
+                          options.moreInfoCallback();
+                          self.hideNotification();
+                        }};
+
+    if (submitOption.label && moreInfoOption.label) {
+      // If both provided, then submit is default button, moreInfo is in the menu:
+      defaultOption = submitOption;
+      additionalOptions.push(moreInfoOption);
+    } else if (moreInfoOption.label) {
       // If submit not provided, use the 'more info' as the default button.
       defaultOption = moreInfoOption;
-    }
-
-    if (options.submitLabel && moreInfoOption) {
-      additionalOptions.push(moreInfoOption);
+    } else {
+      // There must be at least one of submit option and/or moreInfo option.
+      throw "No valid default option specified.";
     }
 
     if (options.seeAllStudiesLabel) {
@@ -236,7 +241,7 @@ PopupNotificationManager.prototype = {
                              additionalOptions,
                              {persistWhileVisible: true,
                               timeout: 5000,
-                              removeOnDismissal: !(!options.fragile),
+                              removeOnDismissal: options.fragile,
                               title: options.title,
                               iconClass: options.iconClass,
                               closeButtonFunc: function() {
@@ -257,6 +262,7 @@ PopupNotificationManager.prototype = {
   hideNotification: function TP_NewNotfn_hideNotification() {
     if (this._notifRef && this._pn) {
       this._pn.remove(this._notifRef);
+      this._notifRef = null;
     }
   }
 };

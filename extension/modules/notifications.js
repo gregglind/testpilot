@@ -162,6 +162,17 @@ function PopupNotificationManager(anchorToFeedbackButton) {
   this._pn = null;
 }
 PopupNotificationManager.prototype = {
+  get _stringBundle() {
+    delete this._stringBundle;
+    return this._stringBundle = Cc["@mozilla.org/intl/stringbundle;1"].
+        getService(Ci.nsIStringBundleService).
+          createBundle("chrome://testpilot/locale/main.properties");
+  },
+
+  _getLocalizedAccessKey: function(command) {
+    return this._stringBundle.GetStringFromName("testpilot.notification.accessKey." + command);
+  },
+
   showNotification: function TP_NewNotfn_showNotification(window, options) {
     let additionalOptions = [];
     let defaultOption;
@@ -177,18 +188,18 @@ PopupNotificationManager.prototype = {
     // can we do that without the window ref?
     this._pn = new this._popupModule.PopupNotifications(tabbrowser, panel, iconBox);
 
-    let submitOption = { label: options.submitLabel,
-                        accessKey: "S",
+    let submitOption = {label: options.submitLabel,
+                        accessKey: self._getLocalizedAccessKey("submit"),
                         callback: function() {
                           options.submitCallback();
                           self.hideNotification();
                         }};
     let moreInfoOption = {label: options.moreInfoLabel,
-                        accessKey: "M",
-                        callback: function() {
-                          options.moreInfoCallback();
-                          self.hideNotification();
-                        }};
+                          accessKey: self._getLocalizedAccessKey("moreInfo"),
+                          callback: function() {
+                            options.moreInfoCallback();
+                            self.hideNotification();
+                          }};
 
     if (submitOption.label && moreInfoOption.label) {
       // If both provided, then submit is default button, moreInfo is in the menu:
@@ -204,7 +215,7 @@ PopupNotificationManager.prototype = {
 
     if (options.seeAllStudiesLabel) {
       additionalOptions.push({ label: options.seeAllStudiesLabel,
-                               accessKey: "A",
+                               accessKey: self._getLocalizedAccessKey("allStudies"),
                                callback: function() {
                                  options.seeAllStudiesCallback();
                                  self.hideNotification();
@@ -214,7 +225,7 @@ PopupNotificationManager.prototype = {
 
     if (options.alwaysSubmitLabel) {
       additionalOptions.push({ label: options.alwaysSubmitLabel,
-                               accessKey: "D",
+                               accessKey: self._getLocalizedAccessKey("alwaysSubmit"),
                                callback: function() {
                                  options.alwaysSubmitCallback();
                                  if (options.submitCallback) {
@@ -226,7 +237,7 @@ PopupNotificationManager.prototype = {
 
     if (options.cancelLabel) {
       additionalOptions.push({ label: options.cancelLabel,
-                               accessKey: "C",
+                               accessKey: self._getLocalizedAccessKey("cancel"),
                                callback: function() {
                                  options.cancelCallback();
                                  self.hideNotification();

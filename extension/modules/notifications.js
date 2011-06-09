@@ -34,14 +34,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// The TestPilotSetup object will choose one of these implementations to instantiate
+/* The TestPilotSetup object will choose one of these implementations to instantiate.
+ * The interface for all NotificationManager implementations is:
+     showNotification: function(window, options) {},
+     hideNotification: function(window) {}
+ */
 
 EXPORTED_SYMBOLS = ["CustomNotificationManager", "PopupNotificationManager"];
 
-/* The notification manager interface looks like this:
-  showNotification: function(window, options) {},
-  hideNotification: function(window) {}
-*/
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cu = Components.utils;
 
 /* CustomNotificationManager: the one where notifications
  * come up from the Test Pilot icon in the addon bar.  For Firefox 3.6. */

@@ -173,15 +173,26 @@ var TestPilotUIBuilder = {
                                      }
                                    }});
     } else {
-      let testPilotOverlay = (this.hasDoorhangerNotifications() ?
-                              "chrome://testpilot/content/tp-browser-popupNotifications.xul" :
-                              "chrome://testpilot/content/tp-browser-customNotifications.xul");
-      window.document.loadOverlay(testPilotOverlay,
-                                  {observe: function(subject, topic, data) {
-                                     if (topic == "xul-overlay-merged") {
-                                       self.buildTestPilotInterface(window);
-                                     }
-                                  }});
+      /* Overlay Test Pilot XUL -- that means the base overlay tp-browser.xul to make the menu,
+       * and another overlay (either popupNotifications or customNofications) to make the
+       * notification system.  Call buildTestPilotInterface only after both overlays are applied;
+       * since loadOverlay is async, need to queue them up with callbacks:
+       */
+      let notfnOverlay = (this.hasDoorhangerNotifications() ?
+                          "chrome://testpilot/content/tp-browser-popupNotifications.xul" :
+                          "chrome://testpilot/content/tp-browser-customNotifications.xul");
+
+      window.document.loadOverlay("chrome://testpilot/content/tp-browser.xul",
+        {observe: function(subject, topic, data) {
+           if (topic == "xul-overlay-merged") {
+             window.document.loadOverlay(notfnOverlay,
+                                         {observe: function(subject, topic, data) {
+                                            if (topic == "xul-overlay-merged") {
+                                              self.buildTestPilotInterface(window);
+                                            }
+                                          }});
+           }
+         }});
     }
   },
 

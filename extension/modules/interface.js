@@ -73,7 +73,7 @@ var TestPilotUIBuilder = {
 
   get _appVersion() {
     delete this._appVersion;
-    return this.__appVersion = Cc["@mozilla.org/xre/app-info;1"]
+    return this._appVersion = Cc["@mozilla.org/xre/app-info;1"]
       .getService(Ci.nsIXULAppInfo).version;
   },
 
@@ -136,7 +136,7 @@ var TestPilotUIBuilder = {
 
   appVersionIsFinal: function() {
     // Return true iff app version >= 4.0 AND there is no "beta" or "rc" in version string.
-    if (this.__comparator.compare(this._appVersion, "4.0") >= 0) {
+    if (this._comparator.compare(this._appVersion, "4.0") >= 0) {
       if (this._appVersion.indexOf("b") == -1 && this._appVersion.indexOf("rc") == -1) {
         return true;
       }

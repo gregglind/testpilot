@@ -74,8 +74,8 @@ let TestPilotSetup = {
   __application: null,
   get _application() {
     if (this.__application == null) {
-      this.__application = Cc["@mozilla.org/fuel/application;1"]
-                             .getService(Ci.fuelIApplication);
+      this.__application = Cc["@mozilla.org/steel/application;1"]
+                             .getService(Ci.steelIApplication);
     }
     return this.__application;
   },
@@ -223,37 +223,26 @@ let TestPilotSetup = {
       { notify: function(timer) {
           self.reloadRemoteExperiments(function() {
             self._notifyUserOfTasks();
-	  });
+	      });
       }}, this._prefs.getValue(POPUP_REMINDER_INTERVAL, 86400000),
       Ci.nsITimer.TYPE_REPEATING_SLACK);
 
-      this.getVersion(function() {
-        /* Show first run page (in front window) only the first time after install;
-         * Don't show first run page in Feedback UI version. */
-        if ((self._prefs.getValue(VERSION_PREF, "") == "") &&
-           (!TestPilotUIBuilder.channelUsesFeedback())) {
-            self._prefs.setValue(VERSION_PREF, self.version);
-            let browser = self._getFrontBrowserWindow().getBrowser();
-            let url = self._prefs.getValue(FIRST_RUN_PREF, "");
-            let tab = browser.addTab(url);
-            browser.selectedTab = tab;
+    this.getVersion(function() {
+      // Install tasks. (This requires knowing the version, so it is
+      // inside the callback from getVersion.)
+      self.checkForTasks(function() {
+        /* Callback to complete startup after we finish
+         * checking for tasks. */
+        self.startupComplete = true;
+        logger.trace("I'm in the callback from checkForTasks.");
+        // Send startup message to each task:
+        for (let i = 0; i < self.taskList.length; i++) {
+          self.taskList[i].onAppStartup();
         }
-
-        // Install tasks. (This requires knowing the version, so it is
-        // inside the callback from getVersion.)
-        self.checkForTasks(function() {
-          /* Callback to complete startup after we finish
-           * checking for tasks. */
-         self.startupComplete = true;
-         logger.trace("I'm in the callback from checkForTasks.");
-         // Send startup message to each task:
-         for (let i = 0; i < self.taskList.length; i++) {
-           self.taskList[i].onAppStartup();
-         }
-         self._obs.notify("testpilot:startup:complete", "", null);
-         /* onWindowLoad gets called once for each window,
-          * but only after we fire this notification. */
-         logger.trace("Testpilot startup complete.");
+        self._obs.notify("testpilot:startup:complete", "", null);
+        /* onWindowLoad gets called once for each window,
+         * but only after we fire this notification. */
+        logger.trace("Testpilot startup complete.");
       });
     });
     } catch(e) {

@@ -12,7 +12,7 @@
 <script src="chrome://testpilot/content/window-utils.js"
   type="application/x-javascript" />
 
-<toolbarpalette id="BrowserToolbarPalette">
+<toolbarpalette id="MailToolbarPalette">
   <toolbarbutton id="feedback-menu-button"
     type="menu" class="toolbarbutton-1" label="&testpilot.feedbackbutton.label;"
     onmousedown="event.preventDefault();

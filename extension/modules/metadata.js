@@ -54,8 +54,8 @@ const UPDATE_CHANNEL_PREF = "app.update.channel";
  * with any upload.*/
 const SURVEY_ANS = "extensions.testpilot.surveyAnswers.basic_panel_survey_2";
 
-let Application = Cc["@mozilla.org/fuel/application;1"]
-                  .getService(Ci.fuelIApplication);
+let Application = Cc["@mozilla.org/steel/application;1"]
+                  .getService(Ci.steelIApplication);
 
 // This function copied over from Weave:
 function Weave_sha1(string) {

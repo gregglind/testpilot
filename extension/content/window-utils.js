@@ -105,8 +105,8 @@ var TestPilotWindowUtils;
     },
 
     openHomepage: function() {
-      let Application = Cc["@mozilla.org/fuel/application;1"]
-                          .getService(Ci.fuelIApplication);
+      let Application = Cc["@mozilla.org/steel/application;1"]
+                          .getService(Ci.steelIApplication);
       let url = Application.prefs.getValue("extensions.testpilot.homepageURL",
                                            "");
       this.openInTab(url);

@@ -46,7 +46,7 @@ TestPilotComponent.prototype = {
   classDescription: "Test Pilot Component",
   contractID: "@mozilla.org/testpilot/service;1",
   classID: Components.ID("{e6e5e58f-7977-485a-b076-2f74bee2677b}"),
-  _xpcom_categories: [{ category: "profile-after-change" }],
+  _xpcom_categories: [{ category: "profile-after-change" },],
   _startupTimer: null,
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
@@ -57,12 +57,12 @@ TestPilotComponent.prototype = {
         getService(Ci.nsIObserverService);
     switch (topic) {
     case "profile-after-change":
-      os.addObserver(this, "sessionstore-windows-restored", true);
+      os.addObserver(this, "mail-startup-done", true);
       break;
-    case "sessionstore-windows-restored":
+    case "mail-startup-done":
       /* Stop oberver, to ensure that globalStartup doesn't get
        * called more than once. */
-      os.removeObserver(this, "sessionstore-windows-restored", false);
+      os.removeObserver(this, "mail-startup-done", false);
       /* Call global startup on a timer so that it's off of the main
        * thread... delay a few seconds to give firefox time to finish
        * starting up.
@@ -72,7 +72,7 @@ TestPilotComponent.prototype = {
         {notify: function(timer) {
            Cu.import("resource://testpilot/modules/setup.js");
            TestPilotSetup.globalStartup();
-         }}, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
+         }}, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
       break;
     }
   }

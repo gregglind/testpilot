@@ -39,8 +39,8 @@ EXPORTED_SYMBOLS = ["FeedbackManager"];
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 
-let Application = Cc["@mozilla.org/fuel/application;1"]
-                  .getService(Ci.fuelIApplication);
+let Application = Cc["@mozilla.org/steel/application;1"]
+                  .getService(Ci.steelIApplication);
 
 var FeedbackManager = {
   _lastVisitedUrl: null,

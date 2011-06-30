@@ -52,8 +52,8 @@ var TestPilotMenuUtils;
       let ntfyMenuResults = document.getElementById("pilot-menu-notify-results");
       let alwaysSubmitData =
         document.getElementById("pilot-menu-always-submit-data");
-      let Application = Cc["@mozilla.org/fuel/application;1"]
-                      .getService(Ci.fuelIApplication);
+      let Application = Cc["@mozilla.org/steel/application;1"]
+                      .getService(Ci.steelIApplication);
       ntfyMenuFinished.setAttribute("checked", Application.prefs.getValue(
                                     POPUP_SHOW_ON_FINISH, false));
       ntfyMenuNew.setAttribute("checked", Application.prefs.getValue(

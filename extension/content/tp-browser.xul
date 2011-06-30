@@ -7,8 +7,8 @@
 ]>
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <menupopup id="menu_ToolsPopup">
-    <menu id="pilot-menu" insertafter="menu_openAddons" />
+  <menupopup id="taskPopup">
+    <menu id="pilot-menu" insertafter="addonsManager" />
   </menupopup>
 
   <menu id="pilot-menu" class="menu-iconic" label="&testpilot.brand.label;"

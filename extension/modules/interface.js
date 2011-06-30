@@ -81,7 +81,7 @@ var TestPilotUIBuilder = {
     // Don't need Feedback button: remove it
     let feedbackButton = window.document.getElementById("feedback-menu-button");
     if (!feedbackButton) {
-      let toolbox = window.document.getElementById("navigator-toolbox");
+      let toolbox = window.document.getElementById("mail-toolbox");
       let palette = toolbox.palette;
       feedbackButton = palette.getElementsByAttribute("id", "feedback-menu-button").item(0);
     }
@@ -145,23 +145,19 @@ var TestPilotUIBuilder = {
   },
 
   hasDoorhangerNotifications: function() {
-    try {
+    // Thunderbird doesn't have doorhangers... I think.
+    return false;
+
+    /*try {
       let popupModule = {};
       Components.utils.import("resource://gre/modules/PopupNotifications.jsm", popupModule);
       return true;
     } catch (e) {
       return false;
-    }
+    }*/
   },
 
   buildCorrectInterface: function(window) {
-    let firefoxnav = window.document.getElementById("nav-bar");
-    /* This is sometimes called for windows that don't have a navbar - in
-     * that case, do nothing. TODO maybe this should be in onWindowLoad?*/
-    if (!firefoxnav) {
-      return;
-    }
-
     /* Overlay Feedback XUL if we're in the beta update channel, Test Pilot XUL otherwise.
      * Once the overlay is complete, call buildFeedbackInterface() or buildTestPilotInterface(). */
     let self = this;

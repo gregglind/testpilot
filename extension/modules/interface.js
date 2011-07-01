@@ -102,7 +102,7 @@ var TestPilotUIBuilder = {
     /* Check if we've already done this customization -- if not, don't do it
      * again  (don't want to put it back in after user explicitly takes it out-
      * bug 577243 )*/
-    let firefoxnav = window.document.getElementById("nav-bar");
+    let firefoxnav = window.document.getElementById("mail-bar3");
     let pref = "extensions.testpilot.alreadyCustomizedToolbar";
     let alreadyCustomized = this._prefs.getBoolPref(pref);
     let curSet = firefoxnav.currentSet;
@@ -116,7 +116,7 @@ var TestPilotUIBuilder = {
       this._prefs.setBoolPref(pref, true);
       // if you don't do the following call, funny things happen.
       try {
-        window.BrowserToolboxCustomizeDone(true);
+        window.MailToolboxCustomizeDone(true);
       } catch (e) {
       }
     }
@@ -131,6 +131,7 @@ var TestPilotUIBuilder = {
   channelUsesFeedback: function() {
     // Beta and aurora channels use feedback interface; nightly and release channels don't.
     let channel = this._prefDefaultBranch.getCharPref(UPDATE_CHANNEL_PREF);
+
     return (channel == "beta") || (channel == "betatest") || (channel == "aurora");
   },
 

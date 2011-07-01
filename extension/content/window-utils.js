@@ -62,45 +62,36 @@ var TestPilotWindowUtils;
     openInTab: function(url) {
       let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                  .getService(Components.interfaces.nsIWindowMediator);
-      let enumerator = wm.getEnumerator("navigator:browser");
+      let enumerator = wm.getEnumerator("mail:3pane");
       let found = false;
 
       while(enumerator.hasMoreElements()) {
         let win = enumerator.getNext();
-        let tabbrowser = win.getBrowser();
+        let tabmail = win.document.getElementById("tabmail");
+        let contentTabs = tabmail.tabModes["contentTab"].tabs;
 
         // Check each tab of this browser instance
-        let numTabs = tabbrowser.browsers.length;
+        let numTabs = contentTabs.length;
         for (let i = 0; i < numTabs; i++) {
-          let currentBrowser = tabbrowser.getBrowserAtIndex(i);
+          let currentBrowser = contentTabs[i].browser;
+
           if (url == currentBrowser.currentURI.spec) {
-            tabbrowser.selectedTab = tabbrowser.tabContainer.childNodes[i];
-            found = true;
-            win.focus();
+            tabmail.switchToTab(contentTabs[i]);
             break;
           }
         }
       }
 
-      if (!found) {
-        let win = wm.getMostRecentWindow("navigator:browser");
-        if (win) {
-          let browser = win.getBrowser();
-          let tab = browser.addTab(url);
-          browser.selectedTab = tab;
-          win.focus();
-        } else {
-          window.open(url);
-        }
-      }
+      if (!found)
+        openContentTab(url, "tab");
     },
 
     getCurrentTabUrl: function() {
       let wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                  .getService(Components.interfaces.nsIWindowMediator);
-      let win = wm.getMostRecentWindow("navigator:browser");
-      let tabbrowser = win.getBrowser();
-      let currentBrowser = tabbrowser.selectedBrowser;
+      let win = wm.getMostRecentWindow("mail:3pane");
+      let currentBrowser = win.document.getElementById("tabmail")
+                              .getBrowserForSelectedTab();
       return currentBrowser.currentURI.spec;
     },
 

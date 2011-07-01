@@ -8,11 +8,11 @@
 ]>
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<menupopup id="menu_ToolsPopup">
-  <menu id="pilot-menu" insertafter="menu_openAddons" />
+<menupopup id="taskPopup">
+  <menu id="pilot-menu" insertafter="addonsManager" />
 </menupopup>
 
-<toolbar id="nav-bar">
+<toolbar id="mail-bar3">
   <panel id="pilot-notification-popup" hidden="true" noautofocus="true"
     level="parent" position="after_start">
     <vbox class="pilot-notification-popup-container">
